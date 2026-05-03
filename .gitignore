@@ -1,0 +1,19 @@
+# NestJS
+colabs-backend/node_modules
+colabs-backend/dist
+colabs-backend/.env
+
+# Flutter
+colabs-frontend/.dart_tool
+colabs-frontend/.flutter-plugins
+colabs-frontend/build
+colabs-frontend/.env
+
+# Docker
+*.env
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+*Zone.Identifier

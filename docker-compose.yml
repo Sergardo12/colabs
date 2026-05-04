@@ -1,0 +1,106 @@
+services:
+
+## Base de datos PostGIS
+  db:
+    image: postgis/postgis:15-alpine
+    container_name: colabs_db
+    environment:
+      PGTZ: America/Lima
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - colabs_db_data:/var/lib/postgresql/data
+    networks:
+      - colabs_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+## Redis para caching
+  redis:
+    image: redis:7-alpine
+    container_name: colabs_redis
+    ports:
+      - "6380:6379"
+    networks:
+      - colabs_network
+    restart: unless-stopped
+
+## Backend de Node.js con NestJS
+  backend:
+    build:
+      context: ./colabs-backend
+      dockerfile: Dockerfile
+    container_name: colabs_backend
+    working_dir: /app
+    volumes:
+      - ./colabs-backend:/app
+      - /app/node_modules
+    command: yarn start:dev
+    environment:
+      TZ: America/Lima
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${BACKEND_PORT}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DATABASE_USER}
+      DB_PASSWORD: ${DATABASE_PASSWORD}
+      DB_NAME: ${DATABASE_DB}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+    expose:
+      - "${BACKEND_PORT}"
+    networks:
+      - colabs_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+## Nginx para servir el backend y frontend
+  nginx:
+    image: nginx:alpine
+    container_name: colabs_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - colabs_network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+### pgAdmin para administrar la base de datos
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: colabs_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "5051:80"
+    networks:
+      - colabs_network
+    depends_on:
+      - db
+    restart: unless-stopped
+
+## Red interna para comunicación entre servicios
+networks:
+  colabs_network:
+    driver: bridge
+
+## Volumen para persistencia de datos de la base de datos
+volumes:
+  colabs_db_data:

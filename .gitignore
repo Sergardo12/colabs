@@ -17,3 +17,9 @@ colabs-frontend/.env
 .DS_Store
 Thumbs.db
 *Zone.Identifier
+
+# Editor temp files
+*.swp
+*.swo
+*~
+*.save

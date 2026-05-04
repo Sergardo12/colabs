@@ -601,8 +601,8 @@ uuid: ^4.0.0
 - [x] Repositorio GitHub configurado
 - [x] Docker Compose + Dockerfile + Nginx
 - [x] Estructura de carpetas NestJS
-- [ ] Instalar dependencias NestJS
-- [ ] Configurar TypeORM y conexión a BD
+- [x] Instalar dependencias NestJS
+- [x] Configurar TypeORM y conexión a BD
 - [ ] Módulo de autenticación
 - [ ] Resto de módulos del negocio
 - [ ] App Flutter

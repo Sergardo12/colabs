@@ -607,4 +607,116 @@ uuid: ^4.0.0
 - [ ] Resto de módulos del negocio
 - [ ] App Flutter
 - [ ] Panel de administración
+
+---
+
+## Flujo de trabajo Git
+
+Usamos **GitHub Flow** adaptado con rama `develop` como integración.
+
+### Ramas
+
+| Rama | Propósito |
+|---|---|
+| `main` | Código en producción. Nadie pushea directo aquí. |
+| `develop` | Integración. Aquí se unen todos los cambios probados. |
+| `feature/xxx` | Una rama por funcionalidad. Sale de develop, vuelve a develop. |
+| `fix/xxx` | Corrección de bugs. Sale de develop. |
+| `hotfix/xxx` | Bugs críticos en producción. Sale de main. |
+
+### Convención de nombres de ramas
+feature/auth-login
+feature/user-registration
+fix/jwt-expiration
+hotfix/critical-login-error
+docs/update-readme
+chore/install-dependencies
+
+### Conventional Commits
+
+Todo commit debe seguir este formato:
+tipo(alcance): descripción corta en minúsculas
+
+| Tipo | Cuándo usarlo |
+|---|---|
+| `feat` | Nueva funcionalidad |
+| `fix` | Corrección de bug |
+| `chore` | Dependencias, configuración |
+| `docs` | Documentación |
+| `refactor` | Reorganizar sin cambiar funcionalidad |
+| `test` | Agregar o corregir tests |
+| `style` | Formato, espacios, punto y coma |
+
+Ejemplos correctos:
+feat(auth): add google oauth login
+fix(auth): resolve jwt token expiration issue
+chore(deps): install typeorm and pg
+docs(readme): add git workflow section
+
+### Flujo día a día
+
+**1. Antes de empezar cualquier tarea — siempre desde develop actualizado:**
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/nombre-de-la-tarea
+```
+
+**2. Mientras trabajas — commits pequeños y frecuentes:**
+```bash
+git add .
+git commit -m "feat(auth): add jwt token generation"
+```
+
+**3. Si develop avanzó mientras trabajabas — sincroniza antes de subir:**
+```bash
+git fetch origin
+git rebase origin/develop
+```
+
+**4. Cuando terminas — sube tu rama y abre un Pull Request:**
+```bash
+git push origin feature/nombre-de-la-tarea
+```
+
+**5. Después del merge — limpia tu rama local:**
+```bash
+git checkout develop
+git pull origin develop
+git branch -d feature/nombre-de-la-tarea
+```
+
+### ¿Qué es un Pull Request (PR)?
+
+Un PR es una solicitud para integrar tu rama a `develop`. Es el momento donde el equipo revisa el código antes de que entre al proyecto.
+
+**Un PR debe tener:**
+- Título con formato Conventional Commits: `feat(auth): google oauth login`
+- Descripción breve de qué hace y cómo probarlo localmente
+- Al menos **1 aprobación** del equipo antes de mergear
+
+**Cómo mergearlo:**
+Usar siempre **Squash and merge** — agrupa todos tus commits en uno solo y mantiene el historial limpio.
+
+**Nunca mergees tu propio PR** — siempre que otro integrante lo revise primero.
+
+### Reglas de ramas en GitHub
+
+Ir a **Settings → Branches → Add branch ruleset** y configurar para `main` y `develop`:
+
+- ✅ Require a pull request before merging
+- ✅ Required approvals: 1
+- ✅ Require branches to be up to date before merging
+- ✅ Block force pushes
+
+Esto evita pushes directos accidentales a las ramas protegidas.
+
+### Resumen visual
+develop
+│
+├── feature/auth-login ──────────────── PR → develop
+├── feature/user-profile ────────────── PR → develop
+└── feature/occupation-crud ─────────── PR → develop
+│
+PR → main (release)
  

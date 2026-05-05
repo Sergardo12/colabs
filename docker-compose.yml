@@ -2,7 +2,7 @@ services:
 
 ## Base de datos PostGIS
   db:
-    image: postgis/postgis:15-alpine
+    image: postgis/postgis:15-3.5-alpine
     container_name: colabs_db
     environment:
       PGTZ: America/Lima

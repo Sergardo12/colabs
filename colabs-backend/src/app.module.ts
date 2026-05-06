@@ -21,7 +21,7 @@ import jwtConfig from './config/jwt.config';
         username: configService.get<string>('database.username'),
         password: configService.get<string>('database.password'),
         database: configService.get<string>('database.database'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        entities: [__dirname + '/modules/**/entities/*.entity{.ts,.js}'],
         synchronize: process.env.NODE_ENV !== 'production',
         logging: process.env.NODE_ENV === 'development',
       }),

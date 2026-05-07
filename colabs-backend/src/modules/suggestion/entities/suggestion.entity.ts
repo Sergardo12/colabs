@@ -8,11 +8,10 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { AdminUser } from '../../admin/entities/admin-user.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('suggestions')
-export class Suggestion {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class Suggestion extends BaseEntity {
 
   @Column({ name: 'user_id' })
   userId!: string;
@@ -25,9 +24,6 @@ export class Suggestion {
 
   @CreateDateColumn()
   date!: Date;
-
-  @Column({ default: 'pending' })
-  status!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

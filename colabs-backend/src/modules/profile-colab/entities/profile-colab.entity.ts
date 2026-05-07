@@ -13,11 +13,10 @@ import { User } from '../../users/entities/user.entity';
 import { Post } from '../../post/entities/post.entity';
 import { Occupation } from 'src/modules/occupation/entities/occupation.entity';
 import { Proposal } from 'src/modules/proposal/entities/proposal.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('profile_colab')
-export class ProfileColab {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class ProfileColab extends BaseEntity {
 
   @Column({ name: 'user_id' })
   userId!: string;
@@ -33,9 +32,6 @@ export class ProfileColab {
 
   @Column({ name: 'verification_status', default: 'pending' })
   verificationStatus!: string;
-
-  @Column({ default: 'active' })
-  status!: string;
 
   @OneToOne(() => User, (user) => user.profileColab)
   @JoinColumn({ name: 'user_id' })

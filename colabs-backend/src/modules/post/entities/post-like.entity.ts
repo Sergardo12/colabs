@@ -8,17 +8,16 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Post } from './post.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('post_likes')
-export class PostLike {
+export class PostLike extends BaseEntity {
+
   @PrimaryColumn({ name: 'user_id' })
   userId!: string;
 
   @PrimaryColumn({ name: 'post_id' })
   postId!: string;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt!: Date;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

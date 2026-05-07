@@ -8,12 +8,11 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Post } from './post.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('post_comments')
-export class PostComment {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class PostComment extends BaseEntity {
+    
   @Column({ name: 'user_id' })
   userId!: string;
 

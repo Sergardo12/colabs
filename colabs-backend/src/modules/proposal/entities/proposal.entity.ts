@@ -7,11 +7,10 @@ import {
 } from 'typeorm';
 import { ProfileColab } from '../../profile-colab/entities/profile-colab.entity';
 import { ServiceRequest } from '../../service-request/entities/service-request.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('proposals')
-export class Proposal {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class Proposal extends BaseEntity {
 
   @Column({ name: 'profile_colab_id' })
   profileColabId!: string;
@@ -21,9 +20,6 @@ export class Proposal {
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount!: number;
-
-  @Column({ default: 'pending' })
-  status!: string;
 
   @ManyToOne(() => ProfileColab, (profile) => profile.proposals)
   @JoinColumn({ name: 'profile_colab_id' })

@@ -8,11 +8,10 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { AdminUser } from '../../admin/entities/admin-user.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('supports')
-export class Support {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class Support extends BaseEntity {
 
   @Column({ name: 'user_id' })
   userId!: string;
@@ -25,9 +24,6 @@ export class Support {
 
   @CreateDateColumn()
   date!: Date;
-
-  @Column({ default: 'pending' })
-  status!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

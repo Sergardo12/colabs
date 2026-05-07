@@ -6,11 +6,10 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('user_providers')
-export class UserProvider {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class UserProvider extends BaseEntity {
 
   @Column({ name: 'user_id' })
   userId!: string;

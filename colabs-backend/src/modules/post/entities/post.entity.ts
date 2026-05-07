@@ -10,11 +10,10 @@ import {
 import { ProfileColab } from '../../profile-colab/entities/profile-colab.entity';
 import { PostLike } from './post-like.entity';
 import { PostComment } from './post-comment.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('posts')
-export class Post {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class Post extends BaseEntity {
 
   @Column({ name: 'profile_colab_id' })
   profileColabId!: string;
@@ -27,9 +26,6 @@ export class Post {
 
   @CreateDateColumn({ name: 'creation_date' })
   creationDate!: Date;
-
-  @Column({ default: 'active' })
-  status!: string;
 
   @ManyToOne(() => ProfileColab, (profile) => profile.posts)
   @JoinColumn({ name: 'profile_colab_id' })

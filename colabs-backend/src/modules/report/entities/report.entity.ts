@@ -9,11 +9,10 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { ServiceRequest } from '../../service-request/entities/service-request.entity';
 import { AdminUser } from '../../admin/entities/admin-user.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('reports')
-export class Report {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class Report extends BaseEntity {
 
   @Column({ name: 'reporter_id' })
   reporterId!: string;
@@ -32,9 +31,6 @@ export class Report {
 
   @CreateDateColumn()
   date!: Date;
-
-  @Column({ default: 'pending' })
-  status!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'reporter_id' })

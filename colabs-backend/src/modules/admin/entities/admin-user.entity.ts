@@ -9,12 +9,10 @@ import { Notification } from '../../notification/entities/notification.entity';
 import { Report } from '../../report/entities/report.entity';
 import { Suggestion } from '../../suggestion/entities/suggestion.entity';
 import { Support } from '../../support/entities/support.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('admin_users')
-export class AdminUser {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
+export class AdminUser extends BaseEntity {
   @Column()
   name!: string;
 
@@ -26,12 +24,6 @@ export class AdminUser {
 
   @Column({ name: 'role_admin', default: 'moderator' })
   roleAdmin!: string;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt!: Date;
-
-  @Column({ default: 'active' })
-  status!: string;
 
   @OneToMany(() => Notification, (n) => n.adminSender)
   notifications!: Notification[];

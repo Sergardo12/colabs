@@ -8,11 +8,10 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Conversation } from '../../conversation/entities/conversation.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('messages')
-export class Message {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class Message extends BaseEntity{
 
   @Column({ name: 'conversation_id' })
   conversationId!: string;
@@ -31,9 +30,6 @@ export class Message {
 
   @Column({ name: 'is_read', default: false })
   isRead!: boolean;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt!: Date;
 
   @ManyToOne(() => Conversation, (conversation) => conversation.messages)
   @JoinColumn({ name: 'conversation_id' })

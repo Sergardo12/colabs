@@ -9,11 +9,10 @@ import {
 } from 'typeorm';
 import { ProfileColab } from '../../profile-colab/entities/profile-colab.entity';
 import { UserProvider } from './user-provider.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('users')
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class User extends BaseEntity {
 
   @Column({ unique: true })
   email!: string;
@@ -38,9 +37,6 @@ export class User {
 
   @CreateDateColumn({ name: 'registration_date' })
   registrationDate!: Date;
-
-  @Column({ default: 'active' })
-  status!: string;
 
   @OneToMany(() => UserProvider, (provider) => provider.user)
   providers!: UserProvider[];

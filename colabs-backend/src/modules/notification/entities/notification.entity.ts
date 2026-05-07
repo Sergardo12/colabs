@@ -8,11 +8,10 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { AdminUser } from '../../admin/entities/admin-user.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('notifications')
-export class Notification {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class Notification extends BaseEntity {
 
   @Column({ name: 'user_id' })
   userId!: string;

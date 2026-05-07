@@ -9,11 +9,10 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { ServiceRequest } from './service-request.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('comment_requests')
-export class CommentRequest {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class CommentRequest extends BaseEntity {
 
   @Column({ name: 'user_id' })
   userId!: string;
@@ -29,9 +28,6 @@ export class CommentRequest {
 
   @CreateDateColumn({ name: 'creation_date' })
   creationDate!: Date;
-
-  @Column({ default: 'active' })
-  status!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

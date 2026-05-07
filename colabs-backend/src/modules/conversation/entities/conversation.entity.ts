@@ -12,11 +12,10 @@ import { ProfileColab } from '../../profile-colab/entities/profile-colab.entity'
 import { Post } from '../../post/entities/post.entity';
 import { ServiceRequest } from '../../service-request/entities/service-request.entity';
 import { Message } from '../../message/entities/message.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('conversations')
-export class Conversation {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class Conversation extends BaseEntity {
 
   @Column({ name: 'user_id' })
   userId!: string;
@@ -30,14 +29,10 @@ export class Conversation {
   @Column({ name: 'service_request_id', nullable: true })
   serviceRequestId?: string;
 
-  @Column({ default: 'pending' })
-  status!: string;
 
   @Column({ name: 'expires_at', nullable: true })
   expiresAt?: Date;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt!: Date;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

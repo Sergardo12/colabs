@@ -12,12 +12,11 @@ import { User } from '../../users/entities/user.entity';
 import { Occupation } from '../../occupation/entities/occupation.entity';
 import { Proposal } from 'src/modules/proposal/entities/proposal.entity';
 import { CommentRequest } from './comment-request.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 
 @Entity('service_requests')
-export class ServiceRequest {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class ServiceRequest extends BaseEntity {
 
   @Column({ name: 'user_id' })
   userId!: string;
@@ -42,9 +41,6 @@ export class ServiceRequest {
 
   @Column({ name: 'completion_date', nullable: true })
   completionDate?: Date;
-
-  @Column({ default: 'pending' })
-  status!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

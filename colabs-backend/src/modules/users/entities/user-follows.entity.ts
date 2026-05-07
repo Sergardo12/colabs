@@ -6,17 +6,15 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('user_follows')
-export class UserFollows {
+export class UserFollows extends BaseEntity {
   @PrimaryColumn({ name: 'follower_id' })
   followerId!: string;
 
   @PrimaryColumn({ name: 'following_id' })
   followingId!: string;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt!: Date;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'follower_id' })

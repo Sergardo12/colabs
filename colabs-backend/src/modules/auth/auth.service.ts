@@ -79,6 +79,7 @@ export class AuthService {
     return user;
   }
 
+
   async login(user: User) {
     return this.generateToken(user);
   }
@@ -105,4 +106,57 @@ export class AuthService {
       },
     };
   }
+
+  async validateOAuthUser(oauthData: {
+  email: string;
+  name: string;
+  lastName: string;
+  imageProfile?: string;
+  provider: string;
+  providerId: string;
+}) {
+  // Buscar si ya existe el provider
+  let provider = await this.userProviderRepository.findOne({
+    where: {
+      provider: oauthData.provider,
+      providerId: oauthData.providerId,
+    },
+  });
+
+  if (provider) {
+    // Ya existe — busca el usuario y devuelve token
+    const user = await this.userRepository.findOne({
+      where: { id: provider.userId },
+    });
+    return this.generateToken(user!);
+  }
+
+  // Buscar si el email ya existe con otro provider
+  let user = await this.userRepository.findOne({
+    where: { email: oauthData.email },
+  });
+
+  if (!user) {
+    // Usuario nuevo — crear
+    user = this.userRepository.create({
+      email: oauthData.email,
+      name: oauthData.name,
+      lastName: oauthData.lastName,
+      imageProfile: oauthData.imageProfile,
+    });
+    user = await this.userRepository.save(user);
+  }
+
+  // Crear el provider OAuth
+  const newProvider = this.userProviderRepository.create({
+    userId: user.id,
+    provider: oauthData.provider,
+    providerId: oauthData.providerId,
+  });
+  await this.userProviderRepository.save(newProvider);
+
+  return this.generateToken(user);
+}
+
+
 }

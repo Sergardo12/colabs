@@ -6,6 +6,7 @@ import redisConfig from './config/redis.config';
 import jwtConfig from './config/jwt.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { OccupationModule } from './modules/occupation/occupation.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { OccupationModule } from './modules/occupation/occupation.module';
       inject: [ConfigService],
     }),
     AuthModule,
-    OccupationModule
+    OccupationModule,
+    UsersModule
   ],
 })
 export class AppModule {}

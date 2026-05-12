@@ -12,6 +12,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -39,4 +40,15 @@ export class AuthController {
   getMe(@Request() req: any) {
     return this.authService.getMe(req.user.id);
   }
+
+@Get('google')
+@ApiOperation({ summary: 'Login con Google' })
+@UseGuards(AuthGuard('google'))
+googleAuth() {}
+
+@Get('google/callback')
+@UseGuards(AuthGuard('google'))
+googleCallback(@Request() req: any) {
+  return req.user;
+}
 }

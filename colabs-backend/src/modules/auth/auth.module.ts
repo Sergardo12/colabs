@@ -12,6 +12,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 
 import { User } from '../users/entities/user.entity';
 import { UserProvider } from '../users/entities/user-provider.entity';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { UserProvider } from '../users/entities/user-provider.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

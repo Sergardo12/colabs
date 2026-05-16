@@ -7,6 +7,7 @@ import jwtConfig from './config/jwt.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { OccupationModule } from './modules/occupation/occupation.module';
 import { UsersModule } from './modules/users/users.module';
+import { ProfileColabModule } from './modules/profile-colab/profile-colab.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { UsersModule } from './modules/users/users.module';
     }),
     AuthModule,
     OccupationModule,
-    UsersModule
+    UsersModule,
+    ProfileColabModule
   ],
 })
 export class AppModule {}

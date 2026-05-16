@@ -33,6 +33,15 @@ export class ProfileColab extends BaseEntity {
   @Column({ name: 'verification_status', default: 'pending' })
   verificationStatus!: string;
 
+  @Column({ name: 'dni_image', nullable: true })
+  dniImage?: string;
+
+  @Column({ nullable: true })
+  certifications?: string;
+
+  @Column({ name: 'profile_video', nullable: true })
+  profileVideo?: string;
+
   @OneToOne(() => User, (user) => user.profileColab)
   @JoinColumn({ name: 'user_id' })
   user!: User;

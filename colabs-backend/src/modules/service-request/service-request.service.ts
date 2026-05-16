@@ -10,7 +10,8 @@ import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { RedisService } from '../../common/services/redis.service';
 import { CollabsGateway } from '../gateway/colabs.gateway';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
-import { ServiceRequestStatus, UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
+import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
+import { ServiceRequestStatus } from 'src/common/enums/service-request-status.enum';
 
 @Injectable()
 export class ServiceRequestService {
@@ -32,7 +33,7 @@ export class ServiceRequestService {
       occupationId: dto.occupationId,
       direction: dto.direction,
       description: dto.description,
-      status: 'pending',
+      status: ServiceRequestStatus.PENDING,
     });
 
     const saved = await this.serviceRequestRepository.save(serviceRequest) as ServiceRequest;
@@ -128,7 +129,7 @@ export class ServiceRequestService {
     // Buscar solicitudes pending en PostgreSQL
     const requests = await this.serviceRequestRepository
       .createQueryBuilder('sr')
-      .where('sr.status = :status', { status: 'pending' })
+      .where('sr.status = :status', { status: ServiceRequestStatus.PENDING })
       .andWhere('sr.occupationId IN (:...occupationIds)', { occupationIds })
       .leftJoinAndSelect('sr.occupation', 'occupation')
       .getMany();

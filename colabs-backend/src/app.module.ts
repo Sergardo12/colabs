@@ -8,6 +8,10 @@ import { AuthModule } from './modules/auth/auth.module';
 import { OccupationModule } from './modules/occupation/occupation.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProfileColabModule } from './modules/profile-colab/profile-colab.module';
+import { RedisService } from './common/services/redis.service';
+import { GatewayModule } from './modules/gateway/gateway.module';
+import { ServiceRequestModule } from './modules/service-request/service-request.module';
+import { RedisModule } from './common/redis.module';
 
 @Module({
   imports: [
@@ -31,10 +35,13 @@ import { ProfileColabModule } from './modules/profile-colab/profile-colab.module
       }),
       inject: [ConfigService],
     }),
+    RedisModule,
     AuthModule,
     OccupationModule,
     UsersModule,
-    ProfileColabModule
+    ProfileColabModule,
+    GatewayModule,
+    ServiceRequestModule,
   ],
 })
 export class AppModule {}

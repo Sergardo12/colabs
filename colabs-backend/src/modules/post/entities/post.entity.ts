@@ -21,6 +21,9 @@ export class Post extends BaseEntity {
   @Column({ nullable: true })
   description?: string;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  price?: number;
+
   @Column({ type: 'jsonb', nullable: true })
   media?: string[];
 

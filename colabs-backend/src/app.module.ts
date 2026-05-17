@@ -13,6 +13,7 @@ import { GatewayModule } from './modules/gateway/gateway.module';
 import { ServiceRequestModule } from './modules/service-request/service-request.module';
 import { RedisModule } from './common/redis.module';
 import { ProposalModule } from './modules/proposal/proposal.module';
+import { PostModule } from './modules/post/post.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { ProposalModule } from './modules/proposal/proposal.module';
     ProfileColabModule,
     GatewayModule,
     ServiceRequestModule,
-    ProposalModule
+    ProposalModule,
+    PostModule,
   ],
 })
 export class AppModule {}

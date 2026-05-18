@@ -700,23 +700,60 @@ git add .
 git commit -m "feat(auth): add jwt token generation"
 ```
 
-**3. Si develop avanzó mientras trabajabas — sincroniza antes de subir:**
-```bash
-git fetch origin
-git rebase origin/develop
-```
-
-**4. Cuando terminas — sube tu rama y abre un Pull Request:**
+**3. Cuando terminas — sube tu rama y abre un Pull Request:**
 ```bash
 git push origin feature/nombre-de-la-tarea
 ```
 
-**5. Después del merge — limpia tu rama local:**
+**4. Después del merge — limpia tu rama local:**
 ```bash
 git checkout develop
 git pull origin develop
 git branch -d feature/nombre-de-la-tarea
 ```
+---
+
+### Sincronizar tu rama cuando otros mergean PRs
+
+Si estás trabajando en tu rama y un compañero mergeó un PR a `develop`:
+
+**1. Guarda tus cambios actuales:**
+```bash
+git add .
+git commit -m "feat(x): work in progress"
+```
+
+**2. Baja los cambios remotos sin aplicarlos:**
+```bash
+git fetch origin
+```
+
+**3. Reescribe tu rama encima del develop actualizado:**
+```bash
+git rebase origin/develop
+```
+
+**4. Si hay conflictos — resuélvelos y continúa:**
+```bash
+# Abre el archivo en conflicto, resuelve manualmente y luego:
+git add archivo-con-conflicto.ts
+git rebase --continue
+```
+
+**5. Sube tu rama actualizada:**
+```bash
+git push origin feat/tu-rama --force
+```
+
+> ⚠️ El `--force` es necesario después de un rebase porque reescribiste el historial.
+> Solo úsalo en tus ramas personales — nunca en `develop` ni `main`.
+
+**¿Cuándo hacer esto?**
+- Cada vez que se mergee un PR a `develop`
+- Al inicio del día antes de empezar a trabajar
+- Antes de abrir un PR
+
+---
 
 ### ¿Qué es un Pull Request (PR)?
 

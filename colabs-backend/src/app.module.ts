@@ -16,6 +16,9 @@ import { PostModule } from './modules/post/post.module';
 import { CommentRequestModule } from './modules/comment-request/comment-request.module';
 import { ConversationModule } from './modules/conversation/conversation.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { ReportModule } from './modules/report/report.module';
+import { SuggestionModule } from './modules/suggestion/suggestion.module';
+import { SupportModule } from './modules/support/support.module';
 
 @Module({
   imports: [
@@ -50,7 +53,10 @@ import { NotificationModule } from './modules/notification/notification.module';
     PostModule,
     CommentRequestModule,
     ConversationModule,
-    NotificationModule
+    NotificationModule,
+    ReportModule,
+    SuggestionModule,
+    SupportModule,
   ],
 })
 export class AppModule {}

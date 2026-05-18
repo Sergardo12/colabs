@@ -23,8 +23,8 @@ export class CommentRequest extends BaseEntity {
   @Column({ nullable: true })
   comment?: string;
 
-  @Column({ type: 'int', nullable: true })
-  rating?: number;
+  @Column({ type: 'int' })
+  rating!: number;
 
   @CreateDateColumn({ name: 'creation_date' })
   creationDate!: Date;

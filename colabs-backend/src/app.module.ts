@@ -8,12 +8,12 @@ import { AuthModule } from './modules/auth/auth.module';
 import { OccupationModule } from './modules/occupation/occupation.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProfileColabModule } from './modules/profile-colab/profile-colab.module';
-import { RedisService } from './common/services/redis.service';
 import { GatewayModule } from './modules/gateway/gateway.module';
 import { ServiceRequestModule } from './modules/service-request/service-request.module';
 import { RedisModule } from './common/redis.module';
 import { ProposalModule } from './modules/proposal/proposal.module';
 import { PostModule } from './modules/post/post.module';
+import { CommentRequestModule } from './modules/comment-request/comment-request.module';
 
 @Module({
   imports: [
@@ -46,6 +46,7 @@ import { PostModule } from './modules/post/post.module';
     ServiceRequestModule,
     ProposalModule,
     PostModule,
+    CommentRequestModule,
   ],
 })
 export class AppModule {}

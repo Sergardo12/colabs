@@ -299,6 +299,9 @@ Flutter ← recibe JWT → lo guarda localmente
 | experience | string |
 | dni | string |
 | verification_status | string |
+| dni_image | string (nullable) |
+| certifications | string (nullable) |
+| profile_video | string (nullable — reservado V2) |
 | status | string |
  
 **`occupation`** — catálogo de oficios definido por Colabs
@@ -388,6 +391,7 @@ Flutter ← recibe JWT → lo guarda localmente
 | profile_colab_id | uuid FK → profile_colab |
 | description | string |
 | media | jsonb (array de URLs de Cloudinary) |
+| price | decimal (nullable — precio referencial) |
 | creation_date | timestamp |
 | status | string |
  
@@ -474,7 +478,7 @@ La ubicación del colaborador nunca toca PostgreSQL. Se almacena en Redis con TT
 {
   "lat": -12.046,
   "lng": -77.042,
-  "occupation": "Electricidad",
+  "occupationIds": ["uuid-occupation-1"],
   "status": "available"
 }
 ```
@@ -527,6 +531,21 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
  
+---
+
+## Seeds — datos iniciales
+
+Ejecutar una vez después de levantar los contenedores:
+
+```bash
+docker exec -it colabs_backend yarn seed
+```
+
+Inserta las 20 ocupaciones iniciales del catálogo. Es idempotente — seguro correrlo múltiples veces.
+
+**Ocupaciones incluidas:**
+Electricidad, Gasfitería, Carpintería, Albañilería, Pintura, Jardinería, Cerrajería, Fumigación, Limpieza del hogar, Mudanza, Refrigeración y AC, Techado, Soldadura, Mecánica, Electrónica, Repostería, Costura y Confección, Fotografía, Clases particulares.
+
 ---
  
 ## Dependencias del backend (NestJS)
@@ -603,10 +622,23 @@ uuid: ^4.0.0
 - [x] Estructura de carpetas NestJS
 - [x] Instalar dependencias NestJS
 - [x] Configurar TypeORM y conexión a BD
-- [ ] Módulo de autenticación
-- [ ] Resto de módulos del negocio
+- [x] Módulo de autenticación (local + Google OAuth)
+- [x] Módulo occupation (catálogo de oficios)
+- [x] Módulo users (perfil + follows)
+- [x] Módulo profile-colab (perfil colaborador + ubicación Redis)
+- [x] Módulo service-request (Flujo A + PostGIS + WebSocket)
+- [x] Módulo proposal (propuestas + notificaciones)
+- [x] Módulo post (feed + likes + comentarios)
+- [x] Módulo comment-request (calificaciones)
+- [x] Módulo conversation + message (Flujo B + chat + ofertas)
+- [x] Módulo notification (bandeja de notificaciones)
+- [x] Módulo report (reportar usuarios)
+- [x] Módulo suggestion (sugerencias)
+- [x] Módulo support (tickets de soporte)
+- [x] Seeds — 20 ocupaciones iniciales
 - [ ] App Flutter
 - [ ] Panel de administración
+- [ ] Despliegue en DigitalOcean
 
 ---
 
@@ -668,23 +700,60 @@ git add .
 git commit -m "feat(auth): add jwt token generation"
 ```
 
-**3. Si develop avanzó mientras trabajabas — sincroniza antes de subir:**
-```bash
-git fetch origin
-git rebase origin/develop
-```
-
-**4. Cuando terminas — sube tu rama y abre un Pull Request:**
+**3. Cuando terminas — sube tu rama y abre un Pull Request:**
 ```bash
 git push origin feature/nombre-de-la-tarea
 ```
 
-**5. Después del merge — limpia tu rama local:**
+**4. Después del merge — limpia tu rama local:**
 ```bash
 git checkout develop
 git pull origin develop
 git branch -d feature/nombre-de-la-tarea
 ```
+---
+
+### Sincronizar tu rama cuando otros mergean PRs
+
+Si estás trabajando en tu rama y un compañero mergeó un PR a `develop`:
+
+**1. Guarda tus cambios actuales:**
+```bash
+git add .
+git commit -m "feat(x): work in progress"
+```
+
+**2. Baja los cambios remotos sin aplicarlos:**
+```bash
+git fetch origin
+```
+
+**3. Reescribe tu rama encima del develop actualizado:**
+```bash
+git rebase origin/develop
+```
+
+**4. Si hay conflictos — resuélvelos y continúa:**
+```bash
+# Abre el archivo en conflicto, resuelve manualmente y luego:
+git add archivo-con-conflicto.ts
+git rebase --continue
+```
+
+**5. Sube tu rama actualizada:**
+```bash
+git push origin feat/tu-rama --force
+```
+
+> ⚠️ El `--force` es necesario después de un rebase porque reescribiste el historial.
+> Solo úsalo en tus ramas personales — nunca en `develop` ni `main`.
+
+**¿Cuándo hacer esto?**
+- Cada vez que se mergee un PR a `develop`
+- Al inicio del día antes de empezar a trabajar
+- Antes de abrir un PR
+
+---
 
 ### ¿Qué es un Pull Request (PR)?
 

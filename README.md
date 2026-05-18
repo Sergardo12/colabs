@@ -299,6 +299,9 @@ Flutter ← recibe JWT → lo guarda localmente
 | experience | string |
 | dni | string |
 | verification_status | string |
+| dni_image | string (nullable) |
+| certifications | string (nullable) |
+| profile_video | string (nullable — reservado V2) |
 | status | string |
  
 **`occupation`** — catálogo de oficios definido por Colabs
@@ -388,6 +391,7 @@ Flutter ← recibe JWT → lo guarda localmente
 | profile_colab_id | uuid FK → profile_colab |
 | description | string |
 | media | jsonb (array de URLs de Cloudinary) |
+| price | decimal (nullable — precio referencial) |
 | creation_date | timestamp |
 | status | string |
  
@@ -474,7 +478,7 @@ La ubicación del colaborador nunca toca PostgreSQL. Se almacena en Redis con TT
 {
   "lat": -12.046,
   "lng": -77.042,
-  "occupation": "Electricidad",
+  "occupationIds": ["uuid-occupation-1"],
   "status": "available"
 }
 ```
@@ -527,6 +531,21 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
  
+---
+
+## Seeds — datos iniciales
+
+Ejecutar una vez después de levantar los contenedores:
+
+```bash
+docker exec -it colabs_backend yarn seed
+```
+
+Inserta las 20 ocupaciones iniciales del catálogo. Es idempotente — seguro correrlo múltiples veces.
+
+**Ocupaciones incluidas:**
+Electricidad, Gasfitería, Carpintería, Albañilería, Pintura, Jardinería, Cerrajería, Fumigación, Limpieza del hogar, Mudanza, Refrigeración y AC, Techado, Soldadura, Mecánica, Electrónica, Repostería, Costura y Confección, Fotografía, Clases particulares.
+
 ---
  
 ## Dependencias del backend (NestJS)
@@ -603,10 +622,23 @@ uuid: ^4.0.0
 - [x] Estructura de carpetas NestJS
 - [x] Instalar dependencias NestJS
 - [x] Configurar TypeORM y conexión a BD
-- [ ] Módulo de autenticación
-- [ ] Resto de módulos del negocio
+- [x] Módulo de autenticación (local + Google OAuth)
+- [x] Módulo occupation (catálogo de oficios)
+- [x] Módulo users (perfil + follows)
+- [x] Módulo profile-colab (perfil colaborador + ubicación Redis)
+- [x] Módulo service-request (Flujo A + PostGIS + WebSocket)
+- [x] Módulo proposal (propuestas + notificaciones)
+- [x] Módulo post (feed + likes + comentarios)
+- [x] Módulo comment-request (calificaciones)
+- [x] Módulo conversation + message (Flujo B + chat + ofertas)
+- [x] Módulo notification (bandeja de notificaciones)
+- [x] Módulo report (reportar usuarios)
+- [x] Módulo suggestion (sugerencias)
+- [x] Módulo support (tickets de soporte)
+- [x] Seeds — 20 ocupaciones iniciales
 - [ ] App Flutter
 - [ ] Panel de administración
+- [ ] Despliegue en DigitalOcean
 
 ---
 

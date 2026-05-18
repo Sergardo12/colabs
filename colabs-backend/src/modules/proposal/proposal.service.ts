@@ -12,6 +12,7 @@ import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { ProposalStatus } from 'src/common/enums/proposal-status.enum';
 import { ServiceRequestStatus } from 'src/common/enums/service-request-status.enum';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ProposalService {
@@ -24,6 +25,8 @@ export class ProposalService {
 
     @InjectRepository(ProfileColab)
     private profileColabRepository: Repository<ProfileColab>,
+
+    private notificationService: NotificationService,
   ) {}
 
   async create(userId: string, dto: CreateProposalDto) {
@@ -68,8 +71,22 @@ export class ProposalService {
       status: ProposalStatus.PENDING,
     });
 
-    return this.proposalRepository.save(proposal);
+    const saved = await this.proposalRepository.save(proposal);
+
+    // Notifica al demandante
+    await this.notificationService.notify({
+      userId: serviceRequest.userId,
+      type: 'proposal_received',
+      title: 'Nueva propuesta',
+      body: `Un colaborador ofrece S/. ${dto.amount} por tu solicitud`,
+      entityType: 'proposal',
+      entityId: saved.id,
+    })
+
+    return saved;
   }
+
+  
 
   async findMyProposals(userId: string) {
     const profile = await this.profileColabRepository.findOne({
@@ -107,7 +124,7 @@ export class ProposalService {
   async accept(id: string, userId: string) {
     const proposal = await this.proposalRepository.findOne({
       where: { id },
-      relations: ['serviceRequest'],
+      relations: ['serviceRequest', 'profileColab'],
     });
 
     if (!proposal) throw new NotFoundException('Propuesta no encontrada');
@@ -141,6 +158,16 @@ export class ProposalService {
       { id: proposal.serviceRequestId },
       { status: ServiceRequestStatus.ACCEPTED, acceptanceDate: new Date() },
     );
+
+    // Notificar al colaborador 
+    await this.notificationService.notify({
+      userId: proposal.profileColab.userId,
+      type: 'proposal_accepted',
+      title: 'Propuesta aceptada',
+      body: `Tu propuesta de S/. ${proposal.amount} fue aceptada`,
+      entityType: 'service_request',
+      entityId: proposal.serviceRequestId,
+    });
 
     return this.proposalRepository.findOne({
       where: { id: proposal.id },

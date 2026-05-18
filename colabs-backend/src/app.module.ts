@@ -15,6 +15,7 @@ import { ProposalModule } from './modules/proposal/proposal.module';
 import { PostModule } from './modules/post/post.module';
 import { CommentRequestModule } from './modules/comment-request/comment-request.module';
 import { ConversationModule } from './modules/conversation/conversation.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ConversationModule } from './modules/conversation/conversation.module';
     PostModule,
     CommentRequestModule,
     ConversationModule,
+    NotificationModule
   ],
 })
 export class AppModule {}

@@ -5,10 +5,12 @@ import { ProfileColabService } from './profile-colab.service';
 import { ProfileColab } from './entities/profile-colab.entity';
 import { Occupation } from '../occupation/entities/occupation.entity';
 import { User } from '../users/entities/user.entity';
+import { RedisModule } from 'src/common/redis.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ProfileColab, Occupation, User]),
+    RedisModule
   ],
   controllers: [ProfileColabController],
   providers: [ProfileColabService],

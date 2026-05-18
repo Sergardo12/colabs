@@ -11,6 +11,7 @@ import { Occupation } from '../occupation/entities/occupation.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateProfileColabDto } from './dto/create-profile-colab.dto';
 import { UpdateProfileColabDto } from './dto/update-profile-colab.dto';
+import { RedisService } from 'src/common/services/redis.service';
 
 @Injectable()
 export class ProfileColabService {
@@ -23,6 +24,8 @@ export class ProfileColabService {
 
     @InjectRepository(User)
     private userRepository: Repository<User>,
+
+    private redisService: RedisService,
   ) {}
 
   async create(userId: string, dto: CreateProfileColabDto) {
@@ -109,4 +112,35 @@ export class ProfileColabService {
 
     return this.profileColabRepository.save(profile);
   }
+
+  async updateLocation(
+  userId: string,
+  lat: number,
+  lng: number,
+) {
+  const profile = await this.profileColabRepository.findOne({
+    where: { userId },
+    relations: ['occupations'],
+  });
+
+  if (!profile) {
+    throw new NotFoundException('No tienes perfil de colaborador');
+  }
+
+  const occupationIds = profile.occupations.map(o => o.id);
+
+  await this.redisService.setCollaboratorLocation(
+    userId,
+    lat,
+    lng,
+    occupationIds,
+  );
+
+  return { message: 'Ubicación actualizada', status: 'available' };
+}
+
+async deactivateLocation(userId: string) {
+  await this.redisService.removeCollaboratorLocation(userId);
+  return { message: 'Disponibilidad desactivada', status: 'offline' };
+}
 }

@@ -14,6 +14,7 @@ import { RedisModule } from './common/redis.module';
 import { ProposalModule } from './modules/proposal/proposal.module';
 import { PostModule } from './modules/post/post.module';
 import { CommentRequestModule } from './modules/comment-request/comment-request.module';
+import { ConversationModule } from './modules/conversation/conversation.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { CommentRequestModule } from './modules/comment-request/comment-request.
     ProposalModule,
     PostModule,
     CommentRequestModule,
+    ConversationModule,
   ],
 })
 export class AppModule {}

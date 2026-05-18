@@ -6,6 +6,8 @@ import {
   Body,
   UseGuards,
   Request,
+  Put,
+  Delete,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,6 +18,7 @@ import { ProfileColabService } from './profile-colab.service';
 import { CreateProfileColabDto } from './dto/create-profile-colab.dto';
 import { UpdateProfileColabDto } from './dto/update-profile-colab.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { UpdateLocationDto } from './dto/update-location.dto';
 
 @ApiTags('profile-colab')
 @ApiBearerAuth()
@@ -40,5 +43,24 @@ export class ProfileColabController {
   @ApiOperation({ summary: 'Actualizar mi perfil de colaborador' })
   update(@Request() req: any, @Body() dto: UpdateProfileColabDto) {
     return this.profileColabService.update(req.user.id, dto);
+  }
+
+  @Put('me/location')
+  @ApiOperation({ summary: 'Activar disponibilidad y actualizar ubicación' })
+  updateLocation(
+    @Request() req: any,
+    @Body() dto: UpdateLocationDto,
+  ) {
+    return this.profileColabService.updateLocation(
+      req.user.id,
+      dto.lat,
+      dto.lng,
+    );
+  }
+
+  @Delete('me/location')
+  @ApiOperation({ summary: 'Desactivar disponibilidad' })
+  deactivateLocation(@Request() req: any) {
+    return this.profileColabService.deactivateLocation(req.user.id);
   }
 }

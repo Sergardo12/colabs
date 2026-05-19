@@ -6,8 +6,8 @@ import {
   Body,
   Param,
   UseGuards,
-  Request,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,6 +19,7 @@ import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreatePostCommentDto } from './dto/create-post-comment.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @ApiTags('posts')
 @ApiBearerAuth()
@@ -29,8 +30,8 @@ export class PostController {
 
   @Post()
   @ApiOperation({ summary: 'Crear post (solo colaborador)' })
-  create(@Request() req: any, @Body() dto: CreatePostDto) {
-    return this.postService.create(req.user.id, dto);
+  create(@CurrentUser() user: any, @Body() dto: CreatePostDto) {
+    return this.postService.create(user.id, dto);
   }
 
   @Get()
@@ -38,50 +39,50 @@ export class PostController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   findFeed(
-    @Request() req: any,
+    @CurrentUser() user: any,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ) {
-    return this.postService.findFeed(req.user.id, +page, +limit);
+    return this.postService.findFeed(user.id, +page, +limit);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Detalle de un post' })
-  findOne(@Param('id') id: string, @Request() req: any) {
-    return this.postService.findOne(id, req.user.id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.postService.findOne(id, user.id);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar mi post (soft delete)' })
-  remove(@Param('id') id: string, @Request() req: any) {
-    return this.postService.remove(id, req.user.id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.postService.remove(id, user.id);
   }
 
   @Post(':id/like')
   @ApiOperation({ summary: 'Dar like a un post' })
-  like(@Param('id') id: string, @Request() req: any) {
-    return this.postService.like(id, req.user.id);
+  like(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.postService.like(id, user.id);
   }
 
   @Delete(':id/like')
   @ApiOperation({ summary: 'Quitar like de un post' })
-  unlike(@Param('id') id: string, @Request() req: any) {
-    return this.postService.unlike(id, req.user.id);
+  unlike(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {
+    return this.postService.unlike(id, user.id);
   }
 
   @Post(':id/comments')
   @ApiOperation({ summary: 'Comentar un post' })
   addComment(
-    @Param('id') id: string,
-    @Request() req: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: any,
     @Body() dto: CreatePostCommentDto,
   ) {
-    return this.postService.addComment(id, req.user.id, dto);
+    return this.postService.addComment(id, user.id, dto);
   }
 
   @Get(':id/comments')
   @ApiOperation({ summary: 'Ver comentarios de un post' })
-  findComments(@Param('id') id: string) {
+  findComments(@Param('id', ParseUUIDPipe) id: string) {
     return this.postService.findComments(id);
   }
 }

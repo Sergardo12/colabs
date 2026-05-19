@@ -5,7 +5,7 @@ import {
   Delete,
   Param,
   UseGuards,
-  Request,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,6 +14,8 @@ import {
 } from '@nestjs/swagger';
 import { NotificationService } from './notification.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -24,25 +26,25 @@ export class NotificationController {
 
   @Get()
   @ApiOperation({ summary: 'Mis notificaciones' })
-  findMyNotifications(@Request() req: any) {
-    return this.notificationService.findMyNotifications(req.user.id);
+  findMyNotifications(@CurrentUser() user: JwtPayload) {
+    return this.notificationService.findMyNotifications(user.id);
   }
 
   @Patch(':id/read')
   @ApiOperation({ summary: 'Marcar notificación como leída' })
-  markAsRead(@Param('id') id: string, @Request() req: any) {
-    return this.notificationService.markAsRead(id, req.user.id);
+  markAsRead(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+    return this.notificationService.markAsRead(id, user.id);
   }
 
   @Patch('read-all')
   @ApiOperation({ summary: 'Marcar todas como leídas' })
-  markAllAsRead(@Request() req: any) {
-    return this.notificationService.markAllAsRead(req.user.id);
+  markAllAsRead(@CurrentUser() user: JwtPayload) {
+    return this.notificationService.markAllAsRead(user.id);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar notificación' })
-  remove(@Param('id') id: string, @Request() req: any) {
-    return this.notificationService.remove(id, req.user.id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+    return this.notificationService.remove(id, user.id);
   }
 }

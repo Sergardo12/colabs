@@ -6,7 +6,7 @@ import {
   Body,
   Param,
   UseGuards,
-  Request,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,6 +17,8 @@ import { ServiceRequestService } from './service-request.service';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 
 @ApiTags('service-requests')
 @ApiBearerAuth()
@@ -27,35 +29,35 @@ export class ServiceRequestController {
 
   @Post()
   @ApiOperation({ summary: 'Crear solicitud de servicio (demandante)' })
-  create(@Request() req: any, @Body() dto: CreateServiceRequestDto) {
-    return this.serviceRequestService.create(req.user.id, dto);
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateServiceRequestDto) {
+    return this.serviceRequestService.create(user.id, dto);
   }
 
   @Get('my-requests')
   @ApiOperation({ summary: 'Mis solicitudes como demandante' })
-  findMyRequests(@Request() req: any) {
-    return this.serviceRequestService.findMyRequests(req.user.id);
+  findMyRequests(@CurrentUser() user: JwtPayload) {
+    return this.serviceRequestService.findMyRequests(user.id);
   }
 
   @Get('nearby')
   @ApiOperation({ summary: 'Solicitudes cercanas (colaborador activo)' })
-  findNearby(@Request() req: any) {
-    return this.serviceRequestService.findNearby(req.user.id);
+  findNearby(@CurrentUser() user: JwtPayload) {
+    return this.serviceRequestService.findNearby(user.id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Detalle de una solicitud' })
-  findOne(@Param('id') id: string, @Request() req: any) {
-    return this.serviceRequestService.findOne(id, req.user.id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+    return this.serviceRequestService.findOne(id, user.id);
   }
 
   @Patch(':id/status')
   @ApiOperation({ summary: 'Actualizar estado de solicitud' })
   updateStatus(
-    @Param('id') id: string,
-    @Request() req: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateServiceRequestStatusDto,
   ) {
-    return this.serviceRequestService.updateStatus(id, req.user.id, dto);
+    return this.serviceRequestService.updateStatus(id, user.id, dto);
   }
 }

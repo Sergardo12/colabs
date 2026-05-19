@@ -162,7 +162,7 @@ docker compose down -v
  
 ---
  
-## Estructura del repositorio
+## Estructura del repositorio 
  
 ```
 colabs/
@@ -200,7 +200,7 @@ colabs/
 │   │   └── main.ts
 │   ├── Dockerfile
 │   └── package.json
-├── colabs-frontend/         → App Flutter (próximamente)
+├── colabs_frontend/         → App Flutter (Flutter + BloC)
 ├── nginx/
 │   └── nginx.conf
 ├── docker-compose.yml
@@ -224,6 +224,48 @@ modules/auth/
 └── auth.service.ts          → lógica de negocio
 ```
  
+---
+
+### Estructura del frontend (Flutter)
+
+```
+colabs_frontend/
+├── lib/
+│   ├── main.dart                → entrada de la app
+│   ├── app.dart                 → MaterialApp, tema y rutas
+│   ├── core/                    → código transversal
+│   │   ├── constants/           → colores, textos, tamaños
+│   │   ├── network/             → cliente Dio e interceptors
+│   │   ├── routes/              → rutas nombradas
+│   │   ├── storage/             → wrapper secure storage
+│   │   └── theme/               → tema global Material
+│   ├── features/                → módulos del negocio
+│   │   ├── splash/
+│   │   ├── auth/
+│   │   ├── home/
+│   │   ├── profile/
+│   │   ├── search/
+│   │   ├── feed/
+│   │   ├── chat/
+│   │   └── service_request/
+│   └── shared/
+│       └── widgets/             → widgets reutilizables globales
+├── assets/
+│   ├── images/
+│   └── icons/
+├── test/
+└── pubspec.yaml
+```
+
+### Estructura interna de cada feature (Flutter)
+
+```
+features/auth/
+├── bloc/                        → AuthBloc, AuthEvent, AuthState
+├── data/                        → llamadas HTTP y repositorio
+├── models/                      → JSON → objeto Dart
+└── pages/                       → pantallas y widgets del módulo
+```
 ---
  
 ## Autenticación
@@ -622,6 +664,7 @@ uuid: ^4.0.0
 - [x] Estructura de carpetas NestJS
 - [x] Instalar dependencias NestJS
 - [x] Configurar TypeORM y conexión a BD
+- [x] Estructura de carpetas de Flutter
 - [x] Módulo de autenticación (local + Google OAuth)
 - [x] Módulo occupation (catálogo de oficios)
 - [x] Módulo users (perfil + follows)

@@ -4,10 +4,14 @@ colabs-backend/dist
 colabs-backend/.env
 
 # Flutter
-colabs-frontend/.dart_tool
-colabs-frontend/.flutter-plugins
-colabs-frontend/build
-colabs-frontend/.env
+colabs_frontend/.dart_tool/
+colabs_frontend/.flutter-plugins
+colabs_frontend/.flutter-plugins-dependencies
+colabs_frontend/build/
+colabs_frontend/.pub-cache/
+colabs_frontend/.pub/
+colabs_frontend/coverage/
+colabs_frontend/.env
 
 # Docker
 *.env

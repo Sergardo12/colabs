@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -31,7 +32,7 @@ export class OccupationController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un oficio por id' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.occupationService.findOne(id);
   }
 
@@ -48,7 +49,7 @@ export class OccupationController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateOccupationDto: UpdateOccupationDto,
   ) {
     return this.occupationService.update(id, updateOccupationDto);
@@ -58,7 +59,7 @@ export class OccupationController {
   @ApiOperation({ summary: 'Desactivar un oficio (solo admin)' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.occupationService.remove(id);
   }
 }

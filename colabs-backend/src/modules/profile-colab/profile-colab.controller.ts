@@ -5,7 +5,6 @@ import {
   Patch,
   Body,
   UseGuards,
-  Request,
   Put,
   Delete,
 } from '@nestjs/common';
@@ -19,6 +18,8 @@ import { CreateProfileColabDto } from './dto/create-profile-colab.dto';
 import { UpdateProfileColabDto } from './dto/update-profile-colab.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 
 @ApiTags('profile-colab')
 @ApiBearerAuth()
@@ -29,30 +30,30 @@ export class ProfileColabController {
 
   @Post()
   @ApiOperation({ summary: 'Convertirse en colaborador' })
-  create(@Request() req: any, @Body() dto: CreateProfileColabDto) {
-    return this.profileColabService.create(req.user.id, dto);
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateProfileColabDto) {
+    return this.profileColabService.create(user.id, dto);
   }
 
   @Get('me')
   @ApiOperation({ summary: 'Ver mi perfil de colaborador' })
-  getMyProfile(@Request() req: any) {
-    return this.profileColabService.getMyProfile(req.user.id);
+  getMyProfile(@CurrentUser() user: JwtPayload) {
+    return this.profileColabService.getMyProfile(user.id);
   }
 
   @Patch('me')
   @ApiOperation({ summary: 'Actualizar mi perfil de colaborador' })
-  update(@Request() req: any, @Body() dto: UpdateProfileColabDto) {
-    return this.profileColabService.update(req.user.id, dto);
+  update(@CurrentUser() user: JwtPayload, @Body() dto: UpdateProfileColabDto) {
+    return this.profileColabService.update(user.id, dto);
   }
 
   @Put('me/location')
   @ApiOperation({ summary: 'Activar disponibilidad y actualizar ubicación' })
   updateLocation(
-    @Request() req: any,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateLocationDto,
   ) {
     return this.profileColabService.updateLocation(
-      req.user.id,
+      user.id,
       dto.lat,
       dto.lng,
     );
@@ -60,7 +61,7 @@ export class ProfileColabController {
 
   @Delete('me/location')
   @ApiOperation({ summary: 'Desactivar disponibilidad' })
-  deactivateLocation(@Request() req: any) {
-    return this.profileColabService.deactivateLocation(req.user.id);
+  deactivateLocation(@CurrentUser() user: JwtPayload) {
+    return this.profileColabService.deactivateLocation(user.id);
   }
 }

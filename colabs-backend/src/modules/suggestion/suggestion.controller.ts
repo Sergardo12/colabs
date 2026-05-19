@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SuggestionService } from './suggestion.service';
 import { CreateSuggestionDto } from './dto/create-suggestion.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 
 @ApiTags('suggestions')
 @ApiBearerAuth()
@@ -13,13 +15,13 @@ export class SuggestionController {
 
   @Post()
   @ApiOperation({ summary: 'Enviar sugerencia a Colabs' })
-  create(@Request() req: any, @Body() dto: CreateSuggestionDto) {
-    return this.suggestionService.create(req.user.id, dto);
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateSuggestionDto) {
+    return this.suggestionService.create(user.id, dto);
   }
 
   @Get('my-suggestions')
   @ApiOperation({ summary: 'Mis sugerencias enviadas' })
-  findMySuggestions(@Request() req: any) {
-    return this.suggestionService.findMySuggestions(req.user.id);
+  findMySuggestions(@CurrentUser() user: JwtPayload) {
+    return this.suggestionService.findMySuggestions(user.id);
   }
 }

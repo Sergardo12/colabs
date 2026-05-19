@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ReportService } from './report.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 
 @ApiTags('reports')
 @ApiBearerAuth()
@@ -13,13 +15,13 @@ export class ReportController {
 
   @Post()
   @ApiOperation({ summary: 'Reportar un usuario' })
-  create(@Request() req: any, @Body() dto: CreateReportDto) {
-    return this.reportService.create(req.user.id, dto);
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateReportDto) {
+    return this.reportService.create(user.id, dto);
   }
 
   @Get('my-reports')
   @ApiOperation({ summary: 'Mis reportes enviados' })
-  findMyReports(@Request() req: any) {
-    return this.reportService.findMyReports(req.user.id);
+  findMyReports(@CurrentUser() user: JwtPayload) {
+    return this.reportService.findMyReports(user.id);
   }
 }

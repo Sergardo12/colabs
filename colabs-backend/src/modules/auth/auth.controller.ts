@@ -4,7 +4,6 @@ import {
   Body,
   Get,
   UseGuards,
-  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -13,6 +12,9 @@ import { LoginDto } from './dto/login.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
+import { User } from '../users/entities/user.entity';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -29,16 +31,16 @@ export class AuthController {
   @ApiOperation({ summary: 'Login con email y contraseña' })
   @ApiBody({ type: LoginDto })
   @UseGuards(LocalAuthGuard)
-  login(@Request() req: any) {
-    return this.authService.login(req.user);
+  login(@CurrentUser() user: User) {
+    return this.authService.login(user);
   }
 
   @Get('me')
   @ApiOperation({ summary: 'Obtener usuario autenticado' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  getMe(@Request() req: any) {
-    return this.authService.getMe(req.user.id);
+  getMe(@CurrentUser() user: JwtPayload) {
+    return this.authService.getMe(user.id);
   }
 
 @Get('google')
@@ -48,7 +50,7 @@ googleAuth() {}
 
 @Get('google/callback')
 @UseGuards(AuthGuard('google'))
-googleCallback(@Request() req: any) {
-  return req.user;
+googleCallback(@CurrentUser() user: any) {
+  return user;
 }
 }

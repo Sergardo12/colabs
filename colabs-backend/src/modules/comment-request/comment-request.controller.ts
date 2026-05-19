@@ -5,7 +5,7 @@ import {
   Body,
   Param,
   UseGuards,
-  Request,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,6 +15,8 @@ import {
 import { CommentRequestService } from './comment-request.service';
 import { CreateCommentRequestDto } from './dto/create-comment-request.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 
 @ApiTags('comment-requests')
 @ApiBearerAuth()
@@ -25,19 +27,19 @@ export class CommentRequestController {
 
   @Post()
   @ApiOperation({ summary: 'Calificar un servicio completado' })
-  create(@Request() req: any, @Body() dto: CreateCommentRequestDto) {
-    return this.commentRequestService.create(req.user.id, dto);
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateCommentRequestDto) {
+    return this.commentRequestService.create(user.id, dto);
   }
 
   @Get('my-reviews')
   @ApiOperation({ summary: 'Mis calificaciones como demandante' })
-  findMyReviews(@Request() req: any) {
-    return this.commentRequestService.findMyReviews(req.user.id);
+  findMyReviews(@CurrentUser() user: JwtPayload) {
+    return this.commentRequestService.findMyReviews(user.id);
   }
 
   @Get('colab/:profileColabId')
   @ApiOperation({ summary: 'Calificaciones de un colaborador' })
-  findByProfileColab(@Param('profileColabId') profileColabId: string) {
+  findByProfileColab(@Param('profileColabId', ParseUUIDPipe) profileColabId: string) {
     return this.commentRequestService.findByProfileColab(profileColabId);
   }
 }

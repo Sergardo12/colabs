@@ -6,7 +6,7 @@ import {
   Body,
   Param,
   UseGuards,
-  Request,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,6 +18,8 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 import { AcceptOfferDto } from './dto/accept-offer.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 
 @ApiTags('conversations')
 @ApiBearerAuth()
@@ -28,45 +30,45 @@ export class ConversationController {
 
   @Post()
   @ApiOperation({ summary: 'Iniciar conversación con un colaborador' })
-  create(@Request() req: any, @Body() dto: CreateConversationDto) {
-    return this.conversationService.create(req.user.id, dto);
+  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateConversationDto) {
+    return this.conversationService.create(user.id, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Mis conversaciones' })
-  findMyConversations(@Request() req: any) {
-    return this.conversationService.findMyConversations(req.user.id);
+  findMyConversations(@CurrentUser() user: JwtPayload) {
+    return this.conversationService.findMyConversations(user.id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Detalle de una conversación' })
-  findOne(@Param('id') id: string, @Request() req: any) {
-    return this.conversationService.findOne(id, req.user.id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+    return this.conversationService.findOne(id, user.id);
   }
 
   @Post(':id/messages')
   @ApiOperation({ summary: 'Enviar mensaje en una conversación' })
   sendMessage(
-    @Param('id') id: string,
-    @Request() req: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: SendMessageDto,
   ) {
-    return this.conversationService.sendMessage(id, req.user.id, dto);
+    return this.conversationService.sendMessage(id, user.id, dto);
   }
 
   @Get(':id/messages')
   @ApiOperation({ summary: 'Ver mensajes de una conversación' })
-  findMessages(@Param('id') id: string, @Request() req: any) {
-    return this.conversationService.findMessages(id, req.user.id);
+  findMessages(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+    return this.conversationService.findMessages(id, user.id);
   }
 
   @Patch(':id/accept-offer')
   @ApiOperation({ summary: 'Aceptar oferta y crear service request automáticamente' })
   acceptOffer(
-    @Param('id') id: string,
-    @Request() req: any,
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: AcceptOfferDto,
   ) {
-    return this.conversationService.acceptOffer(id, req.user.id, dto);
+    return this.conversationService.acceptOffer(id, user.id, dto);
   }
 }

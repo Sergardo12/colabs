@@ -664,7 +664,6 @@ uuid: ^4.0.0
 - [x] Estructura de carpetas NestJS
 - [x] Instalar dependencias NestJS
 - [x] Configurar TypeORM y conexión a BD
-- [x] Estructura de carpetas de Flutter
 - [x] Módulo de autenticación (local + Google OAuth)
 - [x] Módulo occupation (catálogo de oficios)
 - [x] Módulo users (perfil + follows)
@@ -679,7 +678,9 @@ uuid: ^4.0.0
 - [x] Módulo suggestion (sugerencias)
 - [x] Módulo support (tickets de soporte)
 - [x] Seeds — 20 ocupaciones iniciales
-- [ ] App Flutter
+- [x] Estructura de carpetas de Flutter
+- [x] Splash screen
+- [x] Welcome screen con carrusel
 - [ ] Panel de administración
 - [ ] Despliegue en DigitalOcean
 

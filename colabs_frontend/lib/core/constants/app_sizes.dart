@@ -20,6 +20,7 @@ class AppSizes {
 
   // Inputs
   static const double inputHeight      = 56.0;
+  static const double inputMedianHeight = 48.0;
 
   // Font sizes
   static const double fontS            = 12.0;

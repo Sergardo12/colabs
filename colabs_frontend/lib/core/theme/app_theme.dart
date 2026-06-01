@@ -42,6 +42,10 @@ class AppTheme {
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
         borderSide:   const BorderSide(color: AppColors.error, width: 1.5),
       ),
-    ),
+      contentPadding: const EdgeInsets.symmetric(
+      horizontal: AppSizes.paddingM,
+      vertical:   AppSizes.paddingS,
+      ),
+    ),    
   );
 }

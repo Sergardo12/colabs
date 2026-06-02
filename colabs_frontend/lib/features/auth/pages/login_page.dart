@@ -1,4 +1,8 @@
+import 'package:colabs_frontend/features/auth/bloc/auth_bloc.dart';
+import 'package:colabs_frontend/features/auth/bloc/auth_event.dart';
+import 'package:colabs_frontend/features/auth/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -25,14 +29,33 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onLogin() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: conectar con AuthBloc
-    }
+  if (_formKey.currentState!.validate()) {
+    context.read<AuthBloc>().add(
+      LoginRequested(
+        email:    _emailCtrl.text.trim(),
+        password: _passwordCtrl.text,
+      ),
+    );
   }
+}
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+Widget build(BuildContext context) {
+  return BlocListener<AuthBloc, AuthState>(
+    listener: (context, state) {
+      if (state is AuthSuccess) {
+        Navigator.pushReplacementNamed(context, AppRouter.home);
+      }
+      if (state is AuthError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:         Text(state.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    },
+    child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -206,26 +229,35 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: AppSizes.paddingL),
 
-                // Botón Google
+                // Botones sociales
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     InkWell(
                       onTap: () {},
-                      child: Image.asset('assets/icons/icon_logo_neutral_c.png', height: 48),
+                      child: Image.asset(
+                        'assets/icons/icon_logo_neutral_c.png',
+                        height: 48,
+                      ),
                     ),
                     const SizedBox(width: AppSizes.paddingL),
                     InkWell(
                       onTap: () {},
-                      child: const Icon(Icons.apple, size: 35, color: AppColors.textPrimary),
-                    ), 
+                      child: const Icon(
+                        Icons.apple,
+                        size:  35,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   ],
                 ),
+                const SizedBox(height: AppSizes.paddingXL),
               ],
             ),
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

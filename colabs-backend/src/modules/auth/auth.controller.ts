@@ -15,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 import { User } from '../users/entities/user.entity';
+import { GoogleMobileDto } from './dto/google-mobile.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -52,5 +53,11 @@ googleAuth() {}
 @UseGuards(AuthGuard('google'))
 googleCallback(@CurrentUser() user: any) {
   return user;
+}
+
+@Post('google/mobile')
+@ApiOperation({ summary: 'Login con Google desde Flutter (mobile)' })
+googleMobile(@Body() dto: GoogleMobileDto) {
+  return this.authService.validateGoogleMobileToken(dto.idToken);
 }
 }

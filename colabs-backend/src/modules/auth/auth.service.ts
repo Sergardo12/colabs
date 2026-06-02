@@ -6,6 +6,8 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../users/entities/user.entity';
 import { UserProvider } from '../users/entities/user-provider.entity';
 import { RegisterDto } from './dto/register.dto';
+import { ConfigService } from '@nestjs/config';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +19,7 @@ export class AuthService {
     private userProviderRepository: Repository<UserProvider>,
 
     private jwtService: JwtService,
+     private configService: ConfigService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -156,6 +159,35 @@ export class AuthService {
   await this.userProviderRepository.save(newProvider);
 
   return this.generateToken(user);
+}
+async validateGoogleMobileToken(idToken: string) {
+  const client = new OAuth2Client(
+    this.configService.get<string>('GOOGLE_CLIENT_ID'),
+  );
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: this.configService.get<string>('GOOGLE_CLIENT_ID')!,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      throw new UnauthorizedException('Token de Google inválido');
+    }
+
+    return this.validateOAuthUser({
+      email: payload.email!,
+      name: payload.given_name ?? '',
+      lastName: payload.family_name ?? '',
+      imageProfile: payload.picture,
+      provider: 'google',
+      providerId: payload.sub,
+    });
+  } catch {
+    throw new UnauthorizedException('Token de Google inválido o expirado');
+  }
 }
 
 

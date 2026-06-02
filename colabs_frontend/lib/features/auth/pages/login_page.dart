@@ -234,7 +234,7 @@ Widget build(BuildContext context) {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     InkWell(
-                      onTap: () {},
+                      onTap: () => context.read<AuthBloc>().add(const GoogleSignInRequested()),
                       child: Image.asset(
                         'assets/icons/icon_logo_neutral_c.png',
                         height: 48,

@@ -319,7 +319,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     InkWell(
-                      onTap: () {},
+                      onTap: () => context.read<AuthBloc>().add(const GoogleSignInRequested()),
                       child: Image.asset(
                         'assets/icons/icon_logo.png',
                         height: 48,

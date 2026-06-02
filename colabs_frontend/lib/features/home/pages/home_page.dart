@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/routes/app_router.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/data/auth_repository.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -8,14 +12,27 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: const Center(
-        child: Text(
-          '🎉 Bienvenido a Colabs',
-          style: TextStyle(
-            color:      AppColors.primary,
-            fontSize:   24,
-            fontWeight: FontWeight.bold,
-          ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              '🎉 Bienvenido a Colabs',
+              style: TextStyle(
+                color:      AppColors.primary,
+                fontSize:   24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () async {
+                await context.read<AuthBloc>().authRepository.deleteToken();
+                Navigator.pushReplacementNamed(context, AppRouter.welcome);
+              },
+              child: const Text('Cerrar sesión'),
+            ),
+          ],
         ),
       ),
     );

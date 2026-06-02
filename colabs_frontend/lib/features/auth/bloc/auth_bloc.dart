@@ -11,6 +11,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
+    on<GoogleSignInRequested>(_onGoogleSignInRequested);
   }
 
   /// Maneja el evento LoginRequested
@@ -49,6 +50,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(message: _parseError(e)));
     }
   }
+
+  /// Maneja el evento GoogleSignInRequested
+Future<void> _onGoogleSignInRequested(
+  GoogleSignInRequested event,
+  Emitter<AuthState> emit,
+) async {
+  emit(AuthLoading());
+  try {
+    await authRepository.loginWithGoogle();
+    emit(AuthSuccess());
+  } catch (e) {
+    emit(AuthError(message: _parseError(e)));
+  }
+}
 
   /// Convierte errores HTTP a mensajes legibles para el usuario
   String _parseError(Object e) {

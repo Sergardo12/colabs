@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "432327433683",
+    "project_id": "colabs-496100",
+    "storage_bucket": "colabs-496100.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:432327433683:android:6f9375c39c52560af22326",
+        "android_client_info": {
+          "package_name": "com.colabs.colabs_frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "432327433683-s7okimfa2p39uvd8bnb4lmiketcj0dv7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1AcQ1EFn0V5Mzu_I1MGRWi3y3G7eQPjo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "432327433683-s7okimfa2p39uvd8bnb4lmiketcj0dv7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

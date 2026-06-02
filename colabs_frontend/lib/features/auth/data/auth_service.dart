@@ -56,4 +56,14 @@ class AuthService {
     return false;
   }
   }
+  /// Login con Google desde mobile — envía idToken al backend
+Future<Map<String, dynamic>> loginWithGoogle({
+  required String idToken,
+}) async {
+  final response = await _dio.post(
+    '/auth/google/mobile',
+    data: {'idToken': idToken},
+  );
+  return response.data as Map<String, dynamic>;
+}
 }

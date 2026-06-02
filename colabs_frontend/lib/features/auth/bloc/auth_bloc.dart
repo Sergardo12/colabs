@@ -4,10 +4,10 @@ import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository _authRepository;
+  final AuthRepository authRepository;
 
   AuthBloc({required AuthRepository authRepository})
-      : _authRepository = authRepository,
+      : authRepository = authRepository,
         super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
@@ -20,7 +20,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      await _authRepository.login(
+      await authRepository.login(
         email:    event.email,
         password: event.password,
       );
@@ -37,7 +37,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     try {
-      await _authRepository.register(
+      await authRepository.register(
         email:       event.email,
         name:        event.name,
         lastName:    event.lastName,

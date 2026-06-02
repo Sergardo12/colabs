@@ -42,4 +42,18 @@ class AuthService {
     );
     return response.data as Map<String, dynamic>;
   }
+/// Verifica si el JWT es válido — llama a /auth/me
+  Future<bool> verifyToken(String token) async {
+  try {
+    await _dio.get(
+      '/auth/me',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+    return true;
+  } catch (_) {
+    return false;
+  }
+  }
 }

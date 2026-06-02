@@ -57,6 +57,13 @@ class AuthRepository {
     return UserModel.fromJson(data['user'] as Map<String, dynamic>);
   }
 
+  /// Verifica si el JWT guardado sigue siendo válido
+Future<bool> isSessionValid() async {
+  final token = await getToken();
+  if (token == null) return false;
+  return _authService.verifyToken(token);
+}
+
   /// Lee el JWT guardado — lo usa el Splash para verificar sesión
   Future<String?> getToken() async {
     return _secureStorage.read(key: _tokenKey);

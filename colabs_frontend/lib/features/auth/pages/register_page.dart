@@ -1,4 +1,8 @@
+import 'package:colabs_frontend/features/auth/bloc/auth_bloc.dart';
+import 'package:colabs_frontend/features/auth/bloc/auth_event.dart';
+import 'package:colabs_frontend/features/auth/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -35,13 +39,35 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _onRegister() {
     if (_formKey.currentState!.validate()) {
-      // TODO: conectar con AuthBloc
+      context.read<AuthBloc>().add(
+        RegisterRequested(
+          email: _emailCtrl.text.trim(),
+          name: _nameCtrl.text.trim(),
+          lastName: _lastNameCtrl.text.trim(),
+          password: _passwordCtrl.text,
+          phoneNumber: _phoneCtrl.text.trim()
+        )
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state){
+        if (state is AuthSuccess) {
+          Navigator.pushReplacementNamed(context, AppRouter.home);
+        }
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:         Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -316,6 +342,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
+    )
     );
   }
 }

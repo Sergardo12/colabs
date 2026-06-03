@@ -13,6 +13,9 @@ colabs_frontend/.pub/
 colabs_frontend/coverage/
 colabs_frontend/.env
 
+# Firebase
+colabs_frontend/android/app/google-services.json
+
 # Docker
 *.env
 .env.production

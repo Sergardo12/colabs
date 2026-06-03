@@ -1,7 +1,8 @@
+import 'package:colabs_frontend/features/auth/bloc/auth_event.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user_model.dart';
 import 'auth_service.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
 class AuthRepository {
   final AuthService          _authService;
   final FlutterSecureStorage _secureStorage;
@@ -73,4 +74,25 @@ Future<bool> isSessionValid() async {
   Future<void> deleteToken() async {
     await _secureStorage.delete(key: _tokenKey);
   }
+
+  /// Login con Google — obtiene idToken y llama al backend
+Future<UserModel> loginWithGoogle() async {
+  final googleAuth = GoogleSignIn();
+
+  final account = await googleAuth.signIn();
+  if (account == null) throw Exception('Login cancelado');
+
+  final auth    = await account.authentication;
+  final idToken = auth.idToken;
+  if (idToken == null) throw Exception('No se obtuvo idToken');
+
+  final data = await _authService.loginWithGoogle(idToken: idToken);
+
+  await _secureStorage.write(
+    key:   _tokenKey,
+    value: data['access_token'] as String,
+  );
+
+  return UserModel.fromJson(data['user'] as Map<String, dynamic>);
+}
 }

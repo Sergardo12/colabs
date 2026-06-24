@@ -1,6 +1,6 @@
 import 'package:colabs_frontend/features/auth/pages/login_page.dart';
 import 'package:colabs_frontend/features/auth/pages/register_page.dart';
-import 'package:colabs_frontend/features/home/pages/home_page.dart';
+import 'package:colabs_frontend/features/home/pages/home_shell.dart';
 import 'package:colabs_frontend/features/splash/pages/welcome_page.dart';
 import 'package:flutter/material.dart';
 import '../../features/splash/pages/splash_page.dart';
@@ -25,7 +25,7 @@ class AppRouter {
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterPage());
       case home:
-        return MaterialPageRoute(builder: (_) => const HomePage()); 
+        return MaterialPageRoute(builder: (_) => const HomeShell()); 
       default:
         return MaterialPageRoute(builder: (_) => const SplashPage());
     }

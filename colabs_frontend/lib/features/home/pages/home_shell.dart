@@ -6,6 +6,7 @@ import 'tabs/search_tab.dart';
 import 'tabs/history_tab.dart';
 import 'tabs/favorites_tab.dart';
 import 'widgets/bottom_nav_bar.dart';
+import '../../../features/profile/pages/widgets/app_drawer.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -37,6 +38,7 @@ class _HomeShellState extends State<HomeShell> {
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
+      drawer: const AppDrawer(),
     );
   }
 }

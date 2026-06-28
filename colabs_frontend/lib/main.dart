@@ -9,6 +9,9 @@ import 'features/auth/data/auth_service.dart';
 import 'features/home/bloc/home_bloc.dart';
 import 'features/home/data/home_repository.dart';
 import 'features/home/data/home_service.dart';
+import 'features/profile/bloc/profile_bloc.dart';
+import 'features/profile/data/profile_repository.dart';
+import 'features/profile/data/profile_service.dart';
 
 void main() {
   final dio            = ApiClient.create();
@@ -28,6 +31,13 @@ void main() {
     secureStorage: secureStorage,
   );
 
+  // Profile
+final profileService    = ProfileService(dio);
+final profileRepository = ProfileRepository(
+  profileService: profileService,
+  secureStorage:  secureStorage,
+);
+
   runApp(
     MultiBlocProvider(
       providers: [
@@ -36,6 +46,9 @@ void main() {
         ),
         BlocProvider(
           create: (_) => HomeBloc(homeRepository: homeRepository),
+        ),
+        BlocProvider(
+        create: (_) => ProfileBloc(profileRepository: profileRepository),
         ),
       ],
       child: const ColabsApp(),

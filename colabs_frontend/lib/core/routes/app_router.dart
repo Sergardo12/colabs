@@ -1,6 +1,7 @@
 import 'package:colabs_frontend/features/auth/pages/login_page.dart';
 import 'package:colabs_frontend/features/auth/pages/register_page.dart';
 import 'package:colabs_frontend/features/home/pages/home_shell.dart';
+import 'package:colabs_frontend/features/profile/pages/profile_page.dart';
 import 'package:colabs_frontend/features/splash/pages/welcome_page.dart';
 import 'package:flutter/material.dart';
 import '../../features/splash/pages/splash_page.dart';
@@ -13,6 +14,7 @@ class AppRouter {
   static const String login   = '/login';
   static const String register = '/register';
   static const String home    = '/home';
+  static const String profile = '/profile';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -26,6 +28,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const RegisterPage());
       case home:
         return MaterialPageRoute(builder: (_) => const HomeShell()); 
+      case profile:
+      return MaterialPageRoute(builder: (_) => const ProfilePage());
       default:
         return MaterialPageRoute(builder: (_) => const SplashPage());
     }

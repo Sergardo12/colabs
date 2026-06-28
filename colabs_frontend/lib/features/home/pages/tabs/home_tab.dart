@@ -145,7 +145,9 @@ class _HomeHeader extends StatelessWidget {
       child: Row(
         children: [
           // Avatar del usuario
-          CircleAvatar(
+          GestureDetector(
+          onTap: () => Scaffold.of(context).openDrawer(),
+          child: CircleAvatar(
             radius:          20,
             backgroundColor: AppColors.primary.withOpacity(0.1),
             child: const Icon(
@@ -154,6 +156,7 @@ class _HomeHeader extends StatelessWidget {
               size:  20,
             ),
           ),
+        ),
           const SizedBox(width: AppSizes.paddingM),
 
           // Banner convertirse en colaborador

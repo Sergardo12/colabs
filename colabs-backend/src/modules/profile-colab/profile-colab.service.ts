@@ -64,6 +64,56 @@ export class ProfileColabService {
     return this.profileColabRepository.save(profileColab);
   }
 
+  async search(page: number = 1, limit: number = 10, name?: string, occupation?: string) {
+  const query = this.profileColabRepository
+    .createQueryBuilder('profile')
+    .leftJoinAndSelect('profile.user', 'user')
+    .leftJoinAndSelect('profile.occupations', 'occupation')
+    .where('profile.status = :status', { status: 'active' });
+
+  if (name) {
+    query.andWhere(
+      '(LOWER(user.name) LIKE :name OR LOWER(user.lastName) LIKE :name)',
+      { name: `%${name.toLowerCase()}%` },
+    );
+  }
+
+  if (occupation) {
+    query.andWhere('LOWER(occupation.name) LIKE :occupation', {
+      occupation: `%${occupation.toLowerCase()}%`,
+    });
+  }
+
+  const [data, total] = await query
+    .skip((page - 1) * limit)
+    .take(limit)
+    .getManyAndCount();
+
+  return {
+    data: data.map(profile => ({
+      id: profile.id,
+      userId: profile.userId,
+      description: profile.description,
+      experience: profile.experience,
+      verificationStatus: profile.verificationStatus,
+      occupations: profile.occupations.map(o => ({
+        id: o.id,
+        name: o.name,
+        image: o.image,
+      })),
+      user: {
+        id: profile.user.id,
+        name: profile.user.name,
+        lastName: profile.user.lastName,
+        imageProfile: profile.user.imageProfile,
+      },
+    })),
+    total,
+    page,
+    lastPage: Math.ceil(total / limit),
+  };
+}
+
   async getMyProfile(userId: string) {
     const profile = await this.profileColabRepository.findOne({
       where: { userId },

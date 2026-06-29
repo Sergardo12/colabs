@@ -7,11 +7,13 @@ import {
   UseGuards,
   Put,
   Delete,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ProfileColabService } from './profile-colab.service';
 import { CreateProfileColabDto } from './dto/create-profile-colab.dto';
@@ -64,4 +66,19 @@ export class ProfileColabController {
   deactivateLocation(@CurrentUser() user: JwtPayload) {
     return this.profileColabService.deactivateLocation(user.id);
   }
+
+@Get('search')
+@ApiOperation({ summary: 'Buscar colaboradores con filtros y paginación' })
+@ApiQuery({ name: 'page', required: false, type: Number })
+@ApiQuery({ name: 'limit', required: false, type: Number })
+@ApiQuery({ name: 'name', required: false, type: String })
+@ApiQuery({ name: 'occupation', required: false, type: String })
+search(
+  @Query('page') page: number = 1,
+  @Query('limit') limit: number = 10,
+  @Query('name') name?: string,
+  @Query('occupation') occupation?: string,
+) {
+  return this.profileColabService.search(+page, +limit, name, occupation);
+}
 }

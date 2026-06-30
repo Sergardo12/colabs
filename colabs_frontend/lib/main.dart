@@ -15,6 +15,9 @@ import 'features/profile/data/profile_service.dart';
 import 'features/search/bloc/search_bloc.dart';
 import 'features/search/data/search_repository.dart';
 import 'features/search/data/search_service.dart';
+import 'features/profile/bloc/become_colab_bloc.dart';
+import 'features/profile/data/become_colab_repository.dart';
+import 'features/profile/data/become_colab_service.dart';
 
 void main() {
   final dio            = ApiClient.create();
@@ -48,6 +51,13 @@ final searchRepository = SearchRepository(
   secureStorage: secureStorage,
 );
 
+// Become Colab
+final becomeColabService    = BecomeColabService(dio);
+final becomeColabRepository = BecomeColabRepository(
+  becomeColabService: becomeColabService,
+  secureStorage:      secureStorage,
+);
+
   runApp(
     MultiBlocProvider(
       providers: [
@@ -62,6 +72,9 @@ final searchRepository = SearchRepository(
         ),
         BlocProvider(
         create: (_) => SearchBloc(searchRepository: searchRepository),
+        ),
+        BlocProvider(
+        create: (_) => BecomeColabBloc(repository: becomeColabRepository),
         ),
       ],
       child: const ColabsApp(),

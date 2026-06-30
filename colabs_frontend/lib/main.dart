@@ -12,6 +12,9 @@ import 'features/home/data/home_service.dart';
 import 'features/profile/bloc/profile_bloc.dart';
 import 'features/profile/data/profile_repository.dart';
 import 'features/profile/data/profile_service.dart';
+import 'features/search/bloc/search_bloc.dart';
+import 'features/search/data/search_repository.dart';
+import 'features/search/data/search_service.dart';
 
 void main() {
   final dio            = ApiClient.create();
@@ -38,6 +41,13 @@ final profileRepository = ProfileRepository(
   secureStorage:  secureStorage,
 );
 
+// Search
+final searchService    = SearchService(dio);
+final searchRepository = SearchRepository(
+  searchService: searchService,
+  secureStorage: secureStorage,
+);
+
   runApp(
     MultiBlocProvider(
       providers: [
@@ -49,6 +59,9 @@ final profileRepository = ProfileRepository(
         ),
         BlocProvider(
         create: (_) => ProfileBloc(profileRepository: profileRepository),
+        ),
+        BlocProvider(
+        create: (_) => SearchBloc(searchRepository: searchRepository),
         ),
       ],
       child: const ColabsApp(),

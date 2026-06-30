@@ -156,7 +156,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       ),
                       onTap: () {
                         Navigator.pop(context);
-                        // TODO: navegar a BecomeColabPage
+                        Navigator.pushNamed(context, AppRouter.becomeColab);
                       },
                     ),
 

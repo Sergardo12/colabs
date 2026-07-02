@@ -64,27 +64,41 @@ export class ProfileColabService {
     return this.profileColabRepository.save(profileColab);
   }
 
-  async search(page: number = 1, limit: number = 10, name?: string, occupation?: string) {
-  const query = this.profileColabRepository
+ async search(
+  page: number = 1,
+  limit: number = 10,
+  query?: string,
+  name?: string,
+  occupation?: string,
+) {
+  const qb = this.profileColabRepository
     .createQueryBuilder('profile')
     .leftJoinAndSelect('profile.user', 'user')
     .leftJoinAndSelect('profile.occupations', 'occupation')
     .where('profile.status = :status', { status: 'active' });
 
-  if (name) {
-    query.andWhere(
-      '(LOWER(user.name) LIKE :name OR LOWER(user.lastName) LIKE :name)',
-      { name: `%${name.toLowerCase()}%` },
+  if (query) {
+    // query tiene prioridad — busca en nombre, apellido y ocupación
+    qb.andWhere(
+      '(LOWER(user.name) LIKE :q OR LOWER(user.last_name) LIKE :q OR LOWER(occupation.name) LIKE :q)',
+      { q: `%${query.toLowerCase()}%` },
     );
+  } else {
+    // filtros individuales para compatibilidad
+    if (name) {
+      qb.andWhere(
+        '(LOWER(user.name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
+        { name: `%${name.toLowerCase()}%` },
+      );
+    }
+    if (occupation) {
+      qb.andWhere('LOWER(occupation.name) LIKE :occupation', {
+        occupation: `%${occupation.toLowerCase()}%`,
+      });
+    }
   }
 
-  if (occupation) {
-    query.andWhere('LOWER(occupation.name) LIKE :occupation', {
-      occupation: `%${occupation.toLowerCase()}%`,
-    });
-  }
-
-  const [data, total] = await query
+  const [data, total] = await qb
     .skip((page - 1) * limit)
     .take(limit)
     .getManyAndCount();

@@ -18,6 +18,7 @@ import 'features/search/data/search_service.dart';
 import 'features/profile/bloc/become_colab_bloc.dart';
 import 'features/profile/data/become_colab_repository.dart';
 import 'features/profile/data/become_colab_service.dart';
+import 'features/profile/bloc/edit_colab_profile_bloc.dart';
 
 void main() {
   final dio            = ApiClient.create();
@@ -75,6 +76,9 @@ final becomeColabRepository = BecomeColabRepository(
         ),
         BlocProvider(
         create: (_) => BecomeColabBloc(repository: becomeColabRepository),
+        ),
+        BlocProvider(
+          create: (_) => EditColabProfileBloc(profileRepository: profileRepository),
         ),
       ],
       child: const ColabsApp(),

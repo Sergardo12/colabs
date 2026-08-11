@@ -1,5 +1,3 @@
-import { JwtService } from '@nestjs/jwt';
-import { ConversationService } from '../conversation/conversation.service';
 import {
   WebSocketGateway,
   WebSocketServer,

@@ -6,11 +6,10 @@ class SearchService {
 
   SearchService(this._dio);
 
-  /// Busca colaboradores por nombre u ocupación con paginación
+  /// Busca colaboradores por nombre, apellido u ocupación con paginación
   Future<ColabSearchResponse> searchColabs({
     required String token,
-    String? name,
-    String? occupation,
+    String? query,
     int page  = 1,
     int limit = 10,
   }) async {
@@ -19,11 +18,8 @@ class SearchService {
       'limit': limit,
     };
 
-    if (name != null && name.isNotEmpty) {
-      queryParams['name'] = name;
-    }
-    if (occupation != null && occupation.isNotEmpty) {
-      queryParams['occupation'] = occupation;
+    if (query != null && query.isNotEmpty) {
+      queryParams['query'] = query;
     }
 
     final response = await _dio.get(

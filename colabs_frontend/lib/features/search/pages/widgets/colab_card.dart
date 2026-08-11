@@ -57,13 +57,13 @@ class ColabCard extends StatelessWidget {
                   ),
                 ),
                 if (colab.occupations.isNotEmpty)
-                  Text(
-                    colab.occupations.first.name,
-                    style: const TextStyle(
-                      color:    AppColors.primary,
-                      fontSize: AppSizes.fontM,
-                    ),
+                Text(
+                  colab.occupations.map((o) => o.name).join(' · '),
+                  style: const TextStyle(
+                    color:    AppColors.primary,
+                    fontSize: AppSizes.fontM,
                   ),
+                ),
               ],
             ),
           ),

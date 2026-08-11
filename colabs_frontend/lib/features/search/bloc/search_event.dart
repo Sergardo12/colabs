@@ -8,16 +8,12 @@ abstract class SearchEvent extends Equatable {
 }
 
 class SearchColabRequested extends SearchEvent {
-  final String? name;
-  final String? occupation;
+  final String? query;
 
-  const SearchColabRequested({
-    this.name,
-    this.occupation,
-  });
+  const SearchColabRequested({this.query});
 
   @override
-  List<Object?> get props => [name, occupation];
+  List<Object?> get props => [query];
 }
 
 class SearchLoadMoreRequested extends SearchEvent {

@@ -231,28 +231,28 @@ modules/auth/
 ```
 colabs_frontend/
 ├── lib/
-│   ├── main.dart                → entrada de la app
-│   ├── app.dart                 → MaterialApp, tema y rutas
-│   ├── core/                    → código transversal
-│   │   ├── constants/           → colores, textos, tamaños
-│   │   ├── network/             → cliente Dio e interceptors
-│   │   ├── routes/              → rutas nombradas
-│   │   ├── storage/             → wrapper secure storage
-│   │   └── theme/               → tema global Material
-│   ├── features/                → módulos del negocio
-│   │   ├── splash/
-│   │   ├── auth/
-│   │   ├── home/
-│   │   ├── profile/
-│   │   ├── search/
-│   │   ├── feed/
-│   │   ├── chat/
-│   │   └── service_request/
-│   └── shared/
-│       └── widgets/             → widgets reutilizables globales
+│ ├── main.dart → entrada de la app, inyección de dependencias
+│ ├── app.dart → MaterialApp, tema y rutas
+│ ├── core/ → código transversal
+│ │ ├── constants/ → colores, textos, tamaños
+│ │ ├── network/ → cliente Dio (sin interceptors aún)
+│ │ ├── routes/ → 8 rutas nombradas en app_router.dart
+│ │ ├── storage/ → pendiente: wrapper de secure storage
+│ │ └── theme/ → tema global Material
+│ ├── features/ → módulos del negocio
+│ │ ├── splash/ → verificación JWT con /auth/me
+│ │ ├── auth/ → login, register, Google Sign In
+│ │ ├── home/ → shell, bottom nav, feed, carrusel ocupaciones
+│ │ ├── profile/ → drawer, perfil, become colab, edit colab
+│ │ ├── search/ → búsqueda de colaboradores con paginación
+│ │ ├── feed/ → pendiente
+│ │ ├── chat/ → pendiente
+│ │ └── service_request/ → pendiente
+│ └── shared/
+│ └── widgets/ → widgets reutilizables globales
 ├── assets/
-│   ├── images/
-│   └── icons/
+│ ├── images/ → slides del carrusel welcome
+│ └── icons/ → logos de Google y Apple
 ├── test/
 └── pubspec.yaml
 ```
@@ -266,27 +266,40 @@ features/auth/
 ├── models/                      → JSON → objeto Dart
 └── pages/                       → pantallas y widgets del módulo
 ```
+
+Nota: feed/, chat/ y service_request/ contienen solo stubs vacíos.
+Se implementan en próximas iteraciones.
 ---
  
 ## Autenticación
  
 - Email + contraseña (provider: `local`)
-- Google OAuth 2.0
-- Facebook OAuth 2.0
-- Apple Sign In
+- Google OAuth 2.0 (mobile — implementado)
+- Facebook OAuth 2.0 (pendiente)
+- Apple Sign In (pendiente)
 Todos los providers se almacenan en la tabla `user_providers`. Un usuario puede tener múltiples providers vinculados a la misma cuenta.
- 
-Flujo OAuth 2.0:
+
+Flujo Google OAuth — Mobile (implementado)
+
 ```
-Flutter → abre navegador del proveedor
-       ← recibe authorization_code
-Flutter → envía code al backend NestJS
-NestJS  → valida con el proveedor
+Flutter → google_sign_in SDK → obtiene idToken de Google
+Flutter → POST /api/auth/google/mobile con idToken
+NestJS  → valida idToken con Google OAuth2Client
         → busca o crea usuario en PostgreSQL
         → emite JWT propio de Colabs
-Flutter ← recibe JWT → lo guarda localmente
+Flutter ← recibe JWT → lo guarda en FlutterSecureStorage
         → usa JWT en todas las requests
 ```
+
+Flujo local — Email/Contraseña (implementado)
+
+```
+Flutter → POST /api/auth/login con email y password
+NestJS  → valida credenciales → emite JWT
+Flutter ← recibe JWT → lo guarda en FlutterSecureStorage
+```
+
+Providers pendientes: Facebook, Apple
  
 ---
  
@@ -624,21 +637,20 @@ uuid
 ## Dependencias del frontend (Flutter)
  
 ```yaml
-flutter_bloc: ^8.0.0
-equatable: ^2.0.0
-dio: ^5.0.0
-google_sign_in: ^6.0.0
-flutter_facebook_auth: ^6.0.0
-sign_in_with_apple: ^5.0.0
-flutter_secure_storage: ^9.0.0
-shared_preferences: ^2.0.0
-google_maps_flutter: ^2.0.0
-geolocator: ^10.0.0
-geocoding: ^2.0.0
-image_picker: ^1.0.0
-socket_io_client: ^2.0.0
-intl: ^0.18.0
-uuid: ^4.0.0
+# Instaladas actualmente
+flutter_bloc: ^8.1.6
+equatable: ^2.0.5
+dio: ^5.7.0
+flutter_secure_storage: ^9.2.2
+smooth_page_indicator: ^1.2.0+3
+google_sign_in: ^6.2.2
+
+# Pendientes de instalar cuando se implemente el módulo
+# google_maps_flutter, geolocator, geocoding → mapa y ubicación
+# socket_io_client → chat en tiempo real
+# image_picker → subida de imágenes
+# flutter_facebook_auth, sign_in_with_apple → auth social pendiente
+# shared_preferences, intl, uuid → utilidades generales
 ```
  
 ---
@@ -654,35 +666,50 @@ uuid: ^4.0.0
 ---
  
 ## Estado del proyecto
- 
+
+### Backend (NestJS)
 - [x] Definición del producto y casos de uso
-- [x] Diseño UI en Figma
 - [x] Modelo de datos v2.0
 - [x] Decisiones de stack y arquitectura
 - [x] Repositorio GitHub configurado
 - [x] Docker Compose + Dockerfile + Nginx
 - [x] Estructura de carpetas NestJS
-- [x] Instalar dependencias NestJS
-- [x] Configurar TypeORM y conexión a BD
-- [x] Módulo de autenticación (local + Google OAuth)
-- [x] Módulo occupation (catálogo de oficios)
-- [x] Módulo users (perfil + follows)
-- [x] Módulo profile-colab (perfil colaborador + ubicación Redis)
-- [x] Módulo service-request (Flujo A + PostGIS + WebSocket)
-- [x] Módulo proposal (propuestas + notificaciones)
-- [x] Módulo post (feed + likes + comentarios)
-- [x] Módulo comment-request (calificaciones)
-- [x] Módulo conversation + message (Flujo B + chat + ofertas)
-- [x] Módulo notification (bandeja de notificaciones)
-- [x] Módulo report (reportar usuarios)
-- [x] Módulo suggestion (sugerencias)
-- [x] Módulo support (tickets de soporte)
-- [x] Seeds — 20 ocupaciones iniciales
-- [x] Estructura de carpetas de Flutter
-- [x] Splash screen
-- [x] Welcome screen con carrusel
+- [x] Módulo de autenticación (local + Google OAuth mobile)
+- [x] Módulo de usuarios
+- [x] Módulo de perfil colaborador (CRUD + búsqueda con query)
+- [x] Módulo de ocupaciones
+- [x] Módulo de posts y feed
+- [x] Módulo de conversaciones y mensajes
+- [x] Módulo de service request y propuestas
+- [ ] Módulo de notificaciones
 - [ ] Panel de administración
-- [ ] Despliegue en DigitalOcean
+
+### Frontend (Flutter)
+- [x] Entorno Flutter configurado (Windows + emulador Android)
+- [x] Estructura de carpetas por features
+- [x] Core — colores, tema, rutas, cliente HTTP
+- [x] Splash screen con verificación JWT real (/auth/me)
+- [x] Welcome screen con carrusel auto-scroll (3 slides)
+- [x] Login con email/contraseña conectado al backend
+- [x] Register completo conectado al backend
+- [x] Google Sign In mobile
+- [x] AuthBloc completo con manejo de errores
+- [x] Home shell con bottom nav (5 tabs)
+- [x] Feed de posts con paginación e infinite scroll
+- [x] Carrusel de ocupaciones en home
+- [x] Drawer con info del usuario
+- [x] Página de perfil (básico y colaborador)
+- [x] Flujo "Convertirse en colaborador" con selector de ocupaciones
+- [x] Edición de perfil de colaborador
+- [x] Búsqueda de colaboradores con paginación y filtro query
+- [ ] Chat en tiempo real (WebSocket)
+- [ ] Botón central — solicitud tipo InDriver
+- [ ] Historial de servicios
+- [ ] Favoritos
+- [ ] Notificaciones
+- [ ] Perfil público tipo Instagram
+- [ ] Subida de imágenes (Cloudinary)
+- [ ] Panel de administración
 
 ---
 

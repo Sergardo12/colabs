@@ -40,10 +40,10 @@ class _ColabsTabState extends State<ColabsTab> {
   }
 
   void _onSearch(String value) {
-    context.read<SearchBloc>().add(
-      SearchColabRequested(name: value.isEmpty ? null : value),
-    );
-  }
+  context.read<SearchBloc>().add(
+    SearchColabRequested(query: value.isEmpty ? null : value),
+  );
+}
 
   @override
   Widget build(BuildContext context) {

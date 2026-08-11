@@ -5,8 +5,7 @@ import 'search_state.dart';
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
   final SearchRepository _searchRepository;
-  String? _currentName;
-  String? _currentOccupation;
+  String? _currentQuery;
 
   SearchBloc({required SearchRepository searchRepository})
       : _searchRepository = searchRepository,
@@ -18,35 +17,33 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
 
   /// Búsqueda inicial o nueva búsqueda
   Future<void> _onSearchColabRequested(
-    SearchColabRequested event,
-    Emitter<SearchState> emit,
-  ) async {
-    emit(SearchLoading());
-    _currentName       = event.name;
-    _currentOccupation = event.occupation;
+  SearchColabRequested event,
+  Emitter<SearchState> emit,
+) async {
+  emit(SearchLoading());
+  _currentQuery = event.query;
 
-    try {
-      final response = await _searchRepository.searchColabs(
-        name:       event.name,
-        occupation: event.occupation,
-        page:       1,
-      );
+  try {
+    final response = await _searchRepository.searchColabs(
+      query: event.query,
+      page:  1,
+    );
 
-      if (response.data.isEmpty) {
-        emit(SearchEmpty(query: event.name ?? event.occupation ?? ''));
-        return;
-      }
-
-      emit(SearchSuccess(
-        results:     response.data,
-        hasMore:     response.page < response.lastPage,
-        currentPage: response.page,
-        query:       event.name ?? event.occupation,
-      ));
-    } catch (e) {
-      emit(const SearchError(message: 'Error al buscar colaboradores'));
+    if (response.data.isEmpty) {
+      emit(SearchEmpty(query: event.query ?? ''));
+      return;
     }
+
+    emit(SearchSuccess(
+      results:     response.data,
+      hasMore:     response.page < response.lastPage,
+      currentPage: response.page,
+      query:       event.query,
+    ));
+  } catch (e) {
+    emit(const SearchError(message: 'Error al buscar colaboradores'));
   }
+}
 
   /// Carga más resultados — infinite scroll
   Future<void> _onSearchLoadMoreRequested(
@@ -66,9 +63,8 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     try {
       final nextPage = current.currentPage + 1;
       final response = await _searchRepository.searchColabs(
-        name:       _currentName,
-        occupation: _currentOccupation,
-        page:       nextPage,
+        query: _currentQuery,
+        page:  nextPage,
       );
 
       emit(SearchSuccess(
@@ -92,8 +88,6 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     SearchCleared event,
     Emitter<SearchState> emit,
   ) {
-    _currentName       = null;
-    _currentOccupation = null;
     emit(SearchInitial());
   }
 }

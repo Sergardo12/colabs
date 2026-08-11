@@ -16,20 +16,18 @@ class SearchRepository {
 
   /// Busca colaboradores por nombre u ocupación
   Future<ColabSearchResponse> searchColabs({
-    String? name,
-    String? occupation,
-    int page  = 1,
-    int limit = 10,
-  }) async {
-    final token = await _secureStorage.read(key: _tokenKey);
-    if (token == null) throw Exception('No hay sesión activa');
+  String? query,
+  int page  = 1,
+  int limit = 10,
+}) async {
+  final token = await _secureStorage.read(key: _tokenKey);
+  if (token == null) throw Exception('No hay sesión activa');
 
-    return _searchService.searchColabs(
-      token:      token,
-      name:       name,
-      occupation: occupation,
-      page:       page,
-      limit:      limit,
-    );
-  }
+  return _searchService.searchColabs(
+    token: token,
+    query: query,
+    page:  page,
+    limit: limit,
+  );
+}
 }

@@ -106,8 +106,10 @@ class _AppDrawerState extends State<AppDrawer> {
                             ),
                             child: Text(
                               state.colab!.occupations.isNotEmpty
-                                  ? state.colab!.occupations.first.name
-                                  : 'Colaborador',
+                                ? state.colab!.occupations
+                                    .map((o) => o.name)
+                                    .join(' · ')
+                                : 'Colaborador',
                               style: const TextStyle(
                                 color:    AppColors.white,
                                 fontSize: AppSizes.fontS,

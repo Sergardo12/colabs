@@ -1,3 +1,5 @@
+import { JwtService } from '@nestjs/jwt';
+import { ConversationService } from '../conversation/conversation.service';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -53,6 +55,34 @@ export class CollabsGateway
   ) {
     this.connectedUsers.set(data.userId, client.id);
     console.log(`Usuario ${data.userId} registrado con socket ${client.id}`);
+  }
+
+  // Usuario se une a una sala de conversación
+  @SubscribeMessage('join_conversation')
+  handleJoinConversation(
+    @MessageBody() data: { conversationId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.join(`conversation_${data.conversationId}`);
+    console.log(`Cliente ${client.id} se unió a conversation_${data.conversationId}`);
+  }
+
+  // Usuario abandona una sala de conversación
+  @SubscribeMessage('leave_conversation')
+  handleLeaveConversation(
+    @MessageBody() data: { conversationId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.leave(`conversation_${data.conversationId}`);
+    console.log(`Cliente ${client.id} abandonó conversation_${data.conversationId}`);
+  }
+
+  // Emitir nuevo mensaje a todos en la sala — llamado desde ConversationService
+  emitNewMessage(conversationId: string, message: any) {
+    this.server
+      .to(`conversation_${conversationId}`)
+      .emit('new_message', message);
+    console.log(`Mensaje emitido a conversation_${conversationId}`);
   }
 
   // Colaborador actualiza su ubicación

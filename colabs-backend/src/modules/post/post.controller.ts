@@ -38,12 +38,14 @@ export class PostController {
   @ApiOperation({ summary: 'Feed de posts' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'profileColabId', required: false, type: String })
   findFeed(
     @CurrentUser() user: any,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
+    @Query('profileColabId') profileColabId?: string,
   ) {
-    return this.postService.findFeed(user.id, +page, +limit);
+    return this.postService.findFeed(user.id, +page, +limit, profileColabId);
   }
 
   @Get(':id')

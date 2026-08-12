@@ -55,20 +55,36 @@ class _AppDrawerState extends State<AppDrawer> {
                     color:   AppColors.primary,
                     child: Column(
                       children: [
-                        // Avatar
-                        CircleAvatar(
-                          radius:          40,
-                          backgroundColor: AppColors.white.withOpacity(0.2),
-                          backgroundImage: state.user.imageProfile != null
-                              ? NetworkImage(state.user.imageProfile!)
-                              : null,
-                          child: state.user.imageProfile == null
-                              ? const Icon(
-                                  Icons.person,
-                                  color: AppColors.white,
-                                  size:  40,
-                                )
-                              : null,
+                        // Avatar — navega al perfil público si es colaborador
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () {
+                              final colab = state.colab;
+                              if (colab == null) return;
+                              Navigator.pop(context);
+                              Navigator.pushNamed(
+                                context,
+                                AppRouter.publicProfile,
+                                arguments: state.user.id,
+                              );
+                            },
+                            child: CircleAvatar(
+                              radius:          40,
+                              backgroundColor: AppColors.white.withOpacity(0.2),
+                              backgroundImage: state.user.imageProfile != null
+                                  ? NetworkImage(state.user.imageProfile!)
+                                  : null,
+                              child: state.user.imageProfile == null
+                                  ? const Icon(
+                                      Icons.person,
+                                      color: AppColors.white,
+                                      size:  40,
+                                    )
+                                  : null,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: AppSizes.paddingM),
 

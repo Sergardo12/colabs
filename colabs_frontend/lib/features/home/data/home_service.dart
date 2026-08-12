@@ -6,15 +6,21 @@ class HomeService {
 
   HomeService(this._dio);
 
-  /// Feed de posts con paginación
+  /// Feed de posts con paginación.
+  /// Si `profileColabId` viene, filtra los posts de ese colaborador.
   Future<PostsResponse> getFeed({
     required String token,
     int page  = 1,
     int limit = 10,
+    String? profileColabId,
   }) async {
     final response = await _dio.get(
       '/posts',
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {
+        'page':  page,
+        'limit': limit,
+        if (profileColabId != null) 'profileColabId': profileColabId,
+      },
       options: Options(
         headers: {'Authorization': 'Bearer $token'},
       ),

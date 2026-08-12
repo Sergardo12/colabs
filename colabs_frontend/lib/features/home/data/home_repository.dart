@@ -14,15 +14,21 @@ class HomeRepository {
   })  : _homeService    = homeService,
         _secureStorage  = secureStorage;
 
-  /// Obtiene el feed de posts con paginación
-  Future<PostsResponse> getFeed({int page = 1, int limit = 10}) async {
+  /// Obtiene el feed de posts con paginación.
+  /// Si `profileColabId` viene, filtra los posts de ese colaborador.
+  Future<PostsResponse> getFeed({
+    int page = 1,
+    int limit = 10,
+    String? profileColabId,
+  }) async {
     final token = await _secureStorage.read(key: _tokenKey);
     if (token == null) throw Exception('No hay sesión activa');
 
     return _homeService.getFeed(
-      token: token,
-      page:  page,
-      limit: limit,
+      token:           token,
+      page:            page,
+      limit:           limit,
+      profileColabId:  profileColabId,
     );
   }
 }

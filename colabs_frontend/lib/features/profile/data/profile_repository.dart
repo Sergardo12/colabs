@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../public_profile/models/public_colab_model.dart';
 import '../models/profile_model.dart';
 import '../models/occupation_model.dart';
 import 'profile_service.dart';
@@ -38,7 +39,8 @@ class ProfileRepository {
 }
 
   /// Obtiene el perfil público de un usuario por ID
-  Future<UserProfileModel> getPublicProfile({required String userId}) async {
+  /// Incluye datos del colaborador si existe (o null si es demandante)
+  Future<PublicColabModel> getPublicProfile({required String userId}) async {
     final token = await _secureStorage.read(key: _tokenKey);
     if (token == null) throw Exception('No hay sesión activa');
 
@@ -46,7 +48,7 @@ class ProfileRepository {
       token:  token,
       userId: userId,
     );
-    return UserProfileModel.fromJson(json);
+    return PublicColabModel.fromJson(json);
   }
 
   /// Lista todas las ocupaciones disponibles

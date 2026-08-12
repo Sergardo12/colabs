@@ -12,6 +12,8 @@ import 'features/home/data/home_service.dart';
 import 'features/profile/bloc/profile_bloc.dart';
 import 'features/profile/data/profile_repository.dart';
 import 'features/profile/data/profile_service.dart';
+import 'features/public_profile/bloc/public_profile_bloc.dart';
+import 'features/public_profile/data/public_profile_repository.dart';
 import 'features/search/bloc/search_bloc.dart';
 import 'features/search/data/search_repository.dart';
 import 'features/search/data/search_service.dart';
@@ -59,6 +61,13 @@ final becomeColabRepository = BecomeColabRepository(
   secureStorage:      secureStorage,
 );
 
+// Public Profile
+final publicProfileRepository = PublicProfileRepository(
+  profileService: profileService,
+  homeService:    homeService,
+  secureStorage:  secureStorage,
+);
+
   runApp(
     MultiBlocProvider(
       providers: [
@@ -79,6 +88,9 @@ final becomeColabRepository = BecomeColabRepository(
         ),
         BlocProvider(
           create: (_) => EditColabProfileBloc(profileRepository: profileRepository),
+        ),
+        BlocProvider(
+          create: (_) => PublicProfileBloc(repository: publicProfileRepository),
         ),
       ],
       child: const ColabsApp(),

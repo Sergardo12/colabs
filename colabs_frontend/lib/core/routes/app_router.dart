@@ -2,6 +2,7 @@ import 'package:colabs_frontend/features/auth/pages/login_page.dart';
 import 'package:colabs_frontend/features/auth/pages/register_page.dart';
 import 'package:colabs_frontend/features/home/pages/home_shell.dart';
 import 'package:colabs_frontend/features/profile/pages/profile_page.dart';
+import 'package:colabs_frontend/features/public_profile/pages/public_profile_page.dart';
 import 'package:colabs_frontend/features/splash/pages/welcome_page.dart';
 import 'package:flutter/material.dart';
 import '../../features/splash/pages/splash_page.dart';
@@ -19,6 +20,7 @@ class AppRouter {
   static const String profile = '/profile';
   static const String becomeColab = '/become-colab';
   static const String editColabProfile = '/edit-colab-profile';
+  static const String publicProfile = '/public-profile';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -38,6 +40,12 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const BecomeColabPage());
       case editColabProfile:
         return MaterialPageRoute(builder: (_) => const EditColabProfilePage());
+      case publicProfile:
+        return MaterialPageRoute(
+          builder: (_) => PublicProfilePage(
+            userId: settings.arguments as String,
+          ),
+        );
       default:
         return MaterialPageRoute(builder: (_) => const SplashPage());
     }

@@ -48,9 +48,17 @@ export class PostService {
     return this.postRepository.save(post);
   }
 
-  async findFeed(userId: string, page: number = 1, limit: number = 10) {
+  async findFeed(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    profileColabId?: string,
+  ) {
     const [posts, total] = await this.postRepository.findAndCount({
-      where: { status: 'active' },
+      where: {
+        status: 'active',
+        ...(profileColabId ? { profileColabId } : {}),
+      },
       relations: [
         'profileColab',
         'profileColab.user',

@@ -7,6 +7,7 @@ import { Message } from '../message/entities/message.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { ServiceRequest } from '../service-request/entities/service-request.entity';
 import { Occupation } from '../occupation/entities/occupation.entity';
+import { GatewayModule } from '../gateway/gateway.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { Occupation } from '../occupation/entities/occupation.entity';
       ServiceRequest,
       Occupation,
     ]),
+    GatewayModule,
   ],
   controllers: [ConversationController],
   providers: [ConversationService],

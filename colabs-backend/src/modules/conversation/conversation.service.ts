@@ -15,6 +15,7 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto, MessageType } from './dto/send-message.dto';
 import { AcceptOfferDto } from './dto/accept-offer.dto';
 import { ServiceRequestStatus } from '../../common/enums/service-request-status.enum';
+import { CollabsGateway } from '../gateway/colabs.gateway';
 
 @Injectable()
 export class ConversationService {
@@ -33,6 +34,8 @@ export class ConversationService {
 
     @InjectRepository(Occupation)
     private occupationRepository: Repository<Occupation>,
+
+    private collabsGateway: CollabsGateway,
   ) {}
 
   async create(userId: string, dto: CreateConversationDto) {
@@ -139,7 +142,9 @@ export class ConversationService {
       isRead: false,
     });
 
-    return this.messageRepository.save(message);
+    const saved = await this.messageRepository.save(message);
+    this.collabsGateway.emitNewMessage(conversationId, saved);
+    return saved;
   }
 
   async findMessages(conversationId: string, userId: string) {

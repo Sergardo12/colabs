@@ -21,45 +21,58 @@ import 'features/profile/bloc/become_colab_bloc.dart';
 import 'features/profile/data/become_colab_repository.dart';
 import 'features/profile/data/become_colab_service.dart';
 import 'features/profile/bloc/edit_colab_profile_bloc.dart';
+import 'features/chat/bloc/chat_bloc.dart';
+import 'features/chat/data/chat_repository.dart';
+import 'features/chat/data/chat_service.dart';
+import 'features/chat/data/chat_socket_service.dart';
 
 void main() {
-  final dio            = ApiClient.create();
-  final secureStorage  = const FlutterSecureStorage();
+  final dio = ApiClient.create();
+  final secureStorage = const FlutterSecureStorage();
 
   // Auth
-  final authService    = AuthService(dio);
+  final authService = AuthService(dio);
   final authRepository = AuthRepository(
-    authService:   authService,
+    authService: authService,
     secureStorage: secureStorage,
   );
 
   // Home
-  final homeService    = HomeService(dio);
+  final homeService = HomeService(dio);
   final homeRepository = HomeRepository(
-    homeService:   homeService,
+    homeService: homeService,
     secureStorage: secureStorage,
   );
 
   // Profile
-final profileService    = ProfileService(dio);
-final profileRepository = ProfileRepository(
-  profileService: profileService,
-  secureStorage:  secureStorage,
-);
+  final profileService = ProfileService(dio);
+  final profileRepository = ProfileRepository(
+    profileService: profileService,
+    secureStorage: secureStorage,
+  );
 
-// Search
-final searchService    = SearchService(dio);
-final searchRepository = SearchRepository(
-  searchService: searchService,
-  secureStorage: secureStorage,
-);
+  // Search
+  final searchService = SearchService(dio);
+  final searchRepository = SearchRepository(
+    searchService: searchService,
+    secureStorage: secureStorage,
+  );
 
-// Become Colab
-final becomeColabService    = BecomeColabService(dio);
-final becomeColabRepository = BecomeColabRepository(
-  becomeColabService: becomeColabService,
-  secureStorage:      secureStorage,
-);
+  // Become Colab
+  final becomeColabService = BecomeColabService(dio);
+  final becomeColabRepository = BecomeColabRepository(
+    becomeColabService: becomeColabService,
+    secureStorage: secureStorage,
+  );
+
+  // Chat
+  final chatService = ChatService(dio);
+  final chatSocketService = ChatSocketService();
+  final chatRepository = ChatRepository(
+    chatService: chatService,
+    socketService: chatSocketService,
+    secureStorage: secureStorage,
+  );
 
 // Public Profile
 final publicProfileRepository = PublicProfileRepository(
@@ -71,27 +84,25 @@ final publicProfileRepository = PublicProfileRepository(
   runApp(
     MultiBlocProvider(
       providers: [
+        BlocProvider(create: (_) => AuthBloc(authRepository: authRepository)),
+        BlocProvider(create: (_) => HomeBloc(homeRepository: homeRepository)),
         BlocProvider(
-          create: (_) => AuthBloc(authRepository: authRepository),
+          create: (_) => ProfileBloc(profileRepository: profileRepository),
         ),
         BlocProvider(
-          create: (_) => HomeBloc(homeRepository: homeRepository),
+          create: (_) => SearchBloc(searchRepository: searchRepository),
         ),
         BlocProvider(
-        create: (_) => ProfileBloc(profileRepository: profileRepository),
+          create: (_) => BecomeColabBloc(repository: becomeColabRepository),
         ),
         BlocProvider(
-        create: (_) => SearchBloc(searchRepository: searchRepository),
-        ),
-        BlocProvider(
-        create: (_) => BecomeColabBloc(repository: becomeColabRepository),
-        ),
-        BlocProvider(
-          create: (_) => EditColabProfileBloc(profileRepository: profileRepository),
+          create: (_) =>
+              EditColabProfileBloc(profileRepository: profileRepository),
         ),
         BlocProvider(
           create: (_) => PublicProfileBloc(repository: publicProfileRepository),
         ),
+        BlocProvider(create: (_) => ChatBloc(chatRepository: chatRepository)),
       ],
       child: const ColabsApp(),
     ),

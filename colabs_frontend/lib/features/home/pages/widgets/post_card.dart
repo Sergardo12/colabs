@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../models/post_model.dart';
+import '../../../chat/bloc/chat_bloc.dart';
+import '../../../chat/bloc/chat_event.dart';
 
 class PostCard extends StatelessWidget {
   final PostModel post;
@@ -78,7 +81,14 @@ class PostCard extends StatelessWidget {
 
                 // Botón consultar
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    context.read<ChatBloc>().add(
+                      StartConversationRequested(
+                        profileColabId: post.profileColabId,
+                        postId:         post.id,
+                      ),
+                    );
+                  },
                   style: OutlinedButton.styleFrom(
                     side:    const BorderSide(color: AppColors.primary),
                     padding: const EdgeInsets.symmetric(

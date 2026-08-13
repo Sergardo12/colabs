@@ -6,9 +6,9 @@ class FavoritesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(child: Text('Favoritos')),
+    return Scaffold(
+      backgroundColor: context.colors.background,
+      body: const Center(child: Text('Favoritos')),
     );
   }
 }

@@ -37,12 +37,12 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       body: BlocBuilder<PublicProfileBloc, PublicProfileState>(
         builder: (context, state) {
           if (state is PublicProfileLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+            return Center(
+              child: CircularProgressIndicator(color: context.colors.primary),
             );
           }
 
@@ -51,16 +51,16 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline,
-                    color: AppColors.error,
+                    color: context.colors.error,
                     size:  48,
                   ),
                   const SizedBox(height: AppSizes.paddingM),
                   Text(
                     state.message,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: AppSizes.paddingM),

@@ -29,7 +29,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       body: IndexedStack(
         index:    _currentIndex,
         children: _tabs,

@@ -5,7 +5,7 @@ class DiagonalDecoration extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.08)
+      ..color = AppPalette.light.primary.withOpacity(0.08)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 

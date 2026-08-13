@@ -26,13 +26,13 @@ class EmptyState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, color: AppColors.textSecondary, size: 48),
+          Icon(icon, color: context.colors.textSecondary, size: 48),
           const SizedBox(height: AppSizes.paddingM),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color:      AppColors.textPrimary,
+            style: TextStyle(
+              color:      context.colors.textPrimary,
               fontSize:   AppSizes.fontL,
               fontWeight: FontWeight.w600,
             ),
@@ -42,8 +42,8 @@ class EmptyState extends StatelessWidget {
             Text(
               subtitle!,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color:    AppColors.textSecondary,
+              style: TextStyle(
+                color:    context.colors.textSecondary,
                 fontSize: AppSizes.fontM,
               ),
             ),

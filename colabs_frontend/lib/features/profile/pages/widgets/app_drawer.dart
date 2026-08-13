@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/routes/app_router.dart';
+import '../../../../core/bloc/theme/theme_bloc.dart';
+import '../../../../core/bloc/theme/theme_event.dart';
+import '../../../../core/bloc/theme/theme_state.dart';
 import '../../../auth/bloc/auth_bloc.dart';
 import '../../../auth/bloc/auth_state.dart';
 import '../../bloc/profile_bloc.dart';
@@ -26,13 +29,13 @@ class _AppDrawerState extends State<AppDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: AppColors.white,
+      backgroundColor: context.colors.surface,
       child: SafeArea(
         child: BlocBuilder<ProfileBloc, ProfileState>(
           builder: (context, state) {
             if (state is ProfileLoading) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+              return Center(
+                child: CircularProgressIndicator(color: context.colors.primary),
               );
             }
 
@@ -40,7 +43,7 @@ class _AppDrawerState extends State<AppDrawer> {
               return Center(
                 child: Text(
                   state.message,
-                  style: const TextStyle(color: AppColors.error),
+                  style: TextStyle(color: context.colors.error),
                 ),
               );
             }
@@ -52,7 +55,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   Container(
                     width:   double.infinity,
                     padding: const EdgeInsets.all(AppSizes.paddingXL),
-                    color:   AppColors.primary,
+                    color:   context.colors.primary,
                     child: Column(
                       children: [
                         // Avatar — navega al perfil público si es colaborador
@@ -72,14 +75,14 @@ class _AppDrawerState extends State<AppDrawer> {
                             },
                             child: CircleAvatar(
                               radius:          40,
-                              backgroundColor: AppColors.white.withOpacity(0.2),
+                              backgroundColor: context.colors.white.withOpacity(0.2),
                               backgroundImage: state.user.imageProfile != null
                                   ? NetworkImage(state.user.imageProfile!)
                                   : null,
                               child: state.user.imageProfile == null
-                                  ? const Icon(
+                                  ? Icon(
                                       Icons.person,
-                                      color: AppColors.white,
+                                      color: context.colors.white,
                                       size:  40,
                                     )
                                   : null,
@@ -91,8 +94,8 @@ class _AppDrawerState extends State<AppDrawer> {
                         // Nombre
                         Text(
                           '${state.user.name} ${state.user.lastName}',
-                          style: const TextStyle(
-                            color:      AppColors.white,
+                          style: TextStyle(
+                            color:      context.colors.white,
                             fontSize:   AppSizes.fontXL,
                             fontWeight: FontWeight.bold,
                           ),
@@ -103,7 +106,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         Text(
                           state.user.email,
                           style: TextStyle(
-                            color:    AppColors.white.withOpacity(0.8),
+                            color:    context.colors.white.withOpacity(0.8),
                             fontSize: AppSizes.fontM,
                           ),
                         ),
@@ -117,7 +120,7 @@ class _AppDrawerState extends State<AppDrawer> {
                               vertical:   AppSizes.paddingXS,
                             ),
                             decoration: BoxDecoration(
-                              color:        AppColors.white.withOpacity(0.2),
+                              color:        context.colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(AppSizes.radiusXL),
                             ),
                             child: Text(
@@ -126,8 +129,8 @@ class _AppDrawerState extends State<AppDrawer> {
                                     .map((o) => o.name)
                                     .join(' · ')
                                 : 'Colaborador',
-                              style: const TextStyle(
-                                color:    AppColors.white,
+                              style: TextStyle(
+                                color:    context.colors.white,
                                 fontSize: AppSizes.fontS,
                               ),
                             ),
@@ -141,14 +144,14 @@ class _AppDrawerState extends State<AppDrawer> {
 
                   // Ver mi perfil
                   ListTile(
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.person_outline,
-                      color: AppColors.primary,
+                      color: context.colors.primary,
                     ),
-                    title: const Text(
+                    title: Text(
                       'Ver mi perfil',
                       style: TextStyle(
-                        color:    AppColors.textPrimary,
+                        color:    context.colors.textPrimary,
                         fontSize: AppSizes.fontL,
                       ),
                     ),
@@ -161,14 +164,14 @@ class _AppDrawerState extends State<AppDrawer> {
                   // Convertirse en colaborador (si no es colaborador)
                   if (state.colab == null)
                     ListTile(
-                      leading: const Icon(
+                      leading: Icon(
                         Icons.handshake_outlined,
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                       ),
-                      title: const Text(
+                      title: Text(
                         'Convertirse en colaborador',
                         style: TextStyle(
-                          color:    AppColors.textPrimary,
+                          color:    context.colors.textPrimary,
                           fontSize: AppSizes.fontL,
                         ),
                       ),
@@ -179,6 +182,32 @@ class _AppDrawerState extends State<AppDrawer> {
                     ),
 
                   const Spacer(),
+
+                  // Cambiar tema
+                  BlocBuilder<ThemeBloc, ThemeState>(
+                    builder: (context, state) {
+                      return ListTile(
+                        leading: Icon(
+                          state.isDark
+                              ? Icons.bedtime_outlined
+                              : Icons.wb_sunny_outlined,
+                          color: context.colors.primary,
+                        ),
+                        title: Text(
+                          'Cambiar tema',
+                          style: TextStyle(
+                            color:    context.colors.textPrimary,
+                            fontSize: AppSizes.fontL,
+                          ),
+                        ),
+                        trailing: Switch(
+                          value: state.isDark,
+                          onChanged: (_) =>
+                              context.read<ThemeBloc>().add(const ToggleTheme()),
+                        ),
+                      );
+                    },
+                  ),
 
                   // Cerrar sesión
                   Padding(
@@ -195,11 +224,11 @@ class _AppDrawerState extends State<AppDrawer> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
+                        backgroundColor: context.colors.error,
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cerrar sesión',
-                        style: TextStyle(color: AppColors.white),
+                        style: TextStyle(color: context.colors.white),
                       ),
                     ),
                   ),

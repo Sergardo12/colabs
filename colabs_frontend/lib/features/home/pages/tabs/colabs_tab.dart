@@ -58,19 +58,19 @@ class _ColabsTabState extends State<ColabsTab> {
               onSubmitted: _onSearch,
               decoration: InputDecoration(
                 hintText:   'Busca a un colaborador...',
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.search,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
                 filled:       true,
-                fillColor:    AppColors.white,
+                fillColor:    context.colors.surface,
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: AppSizes.paddingM,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusM),
                   borderSide:   BorderSide(
-                    color: AppColors.textSecondary.withOpacity(0.2),
+                    color: context.colors.textSecondary.withOpacity(0.2),
                   ),
                 ),
               ),
@@ -82,8 +82,10 @@ class _ColabsTabState extends State<ColabsTab> {
             child: BlocBuilder<SearchBloc, SearchState>(
               builder: (context, state) {
                 if (state is SearchLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: context.colors.primary,
+                    ),
                   );
                 }
 
@@ -92,17 +94,17 @@ class _ColabsTabState extends State<ColabsTab> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.search_off,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                           size:  48,
                         ),
                         const SizedBox(height: AppSizes.paddingM),
                         Text(
                           'No se encontraron colaboradores para "${state.query}"',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: context.colors.textSecondary,
                           ),
                         ),
                       ],
@@ -114,7 +116,7 @@ class _ColabsTabState extends State<ColabsTab> {
                   return Center(
                     child: Text(
                       state.message,
-                      style: const TextStyle(color: AppColors.error),
+                      style: TextStyle(color: context.colors.error),
                     ),
                   );
                 }
@@ -132,11 +134,11 @@ class _ColabsTabState extends State<ColabsTab> {
                       }
 
                       if (state is SearchLoadingMore) {
-                        return const Padding(
-                          padding: EdgeInsets.all(AppSizes.paddingL),
+                        return Padding(
+                          padding: const EdgeInsets.all(AppSizes.paddingL),
                           child:   Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.primary,
+                              color: context.colors.primary,
                             ),
                           ),
                         );

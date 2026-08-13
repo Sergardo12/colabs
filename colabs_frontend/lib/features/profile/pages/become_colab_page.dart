@@ -41,9 +41,9 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
   void _onSubmit() {
     if (_selectedOccupationIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona al menos una ocupación'),
-          backgroundColor: AppColors.error,
+        SnackBar(
+          content: const Text('Selecciona al menos una ocupación'),
+          backgroundColor: context.colors.error,
         ),
       );
       return;
@@ -81,9 +81,9 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
         if (state is BecomeColabSuccess) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('¡Ahora eres colaborador! 🎉'),
-              backgroundColor: AppColors.primary,
+            SnackBar(
+              content: const Text('¡Ahora eres colaborador! 🎉'),
+              backgroundColor: context.colors.primary,
             ),
           );
         }
@@ -91,24 +91,24 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:         Text(state.message),
-              backgroundColor: AppColors.error,
+              backgroundColor: context.colors.error,
             ),
           );
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.white,
+          backgroundColor: context.colors.surface,
           elevation:       0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
+          title: Text(
             'Convertirse en colaborador',
             style: TextStyle(
-              color:      AppColors.textPrimary,
+              color:      context.colors.textPrimary,
               fontSize:   AppSizes.fontL,
               fontWeight: FontWeight.bold,
             ),
@@ -128,22 +128,22 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                     width:   double.infinity,
                     padding: const EdgeInsets.all(AppSizes.paddingL),
                     decoration: BoxDecoration(
-                      color:        AppColors.primary.withOpacity(0.08),
+                      color:        context.colors.primary.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(AppSizes.radiusM),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Icon(
                           Icons.handshake_outlined,
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                           size:  32,
                         ),
-                        SizedBox(width: AppSizes.paddingM),
+                        const SizedBox(width: AppSizes.paddingM),
                         Expanded(
                           child: Text(
                             'Comparte tus habilidades y empieza a recibir solicitudes de servicio',
                             style: TextStyle(
-                              color:    AppColors.textPrimary,
+                              color:    context.colors.textPrimary,
                               fontSize: AppSizes.fontM,
                             ),
                           ),
@@ -154,19 +154,19 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                   const SizedBox(height: AppSizes.paddingXL),
 
                   // Ocupaciones
-                  const Text(
+                  Text(
                     'Ocupaciones',
                     style: TextStyle(
-                      color:      AppColors.textPrimary,
+                      color:      context.colors.textPrimary,
                       fontSize:   AppSizes.fontL,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: AppSizes.paddingXS),
-                  const Text(
+                  Text(
                     'Selecciona al menos una',
                     style: TextStyle(
-                      color:    AppColors.textSecondary,
+                      color:    context.colors.textSecondary,
                       fontSize: AppSizes.fontS,
                     ),
                   ),
@@ -175,9 +175,9 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                   BlocBuilder<BecomeColabBloc, BecomeColabState>(
                     builder: (context, state) {
                       if (state is OccupationsLoading) {
-                        return const Center(
+                        return Center(
                           child: CircularProgressIndicator(
-                            color: AppColors.primary,
+                            color: context.colors.primary,
                           ),
                         );
                       }
@@ -185,7 +185,7 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                       if (state is OccupationsError) {
                         return Text(
                           state.message,
-                          style: const TextStyle(color: AppColors.error),
+                          style: TextStyle(color: context.colors.error),
                         );
                       }
 
@@ -211,10 +211,10 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                   const SizedBox(height: AppSizes.paddingXL),
 
                   // Descripción
-                  const Text(
+                  Text(
                     'Cuéntanos sobre ti',
                     style: TextStyle(
-                      color:      AppColors.textPrimary,
+                      color:      context.colors.textPrimary,
                       fontSize:   AppSizes.fontL,
                       fontWeight: FontWeight.bold,
                     ),
@@ -238,11 +238,11 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                   // Experiencia
                   TextFormField(
                     controller: _experienceCtrl,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText:   'Años de experiencia (ej. 5 años)',
                       prefixIcon: Icon(
                         Icons.work_outline,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                     ),
                     validator: (value) {
@@ -258,11 +258,11 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                   TextFormField(
                     controller:   _dniCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText:   'Número de DNI',
                       prefixIcon: Icon(
                         Icons.badge_outlined,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                     ),
                     validator: (value) {
@@ -280,11 +280,11 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                   // Certificaciones (opcional)
                   TextFormField(
                     controller: _certificationsCtrl,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText:   'Certificaciones (opcional)',
                       prefixIcon: Icon(
                         Icons.school_outlined,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                     ),
                   ),
@@ -301,14 +301,14 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
                                 width:  20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                  color:      AppColors.white,
+                                  color:      Colors.white,
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'Convertirme en colaborador',
                                 style: TextStyle(
-                                  color:      AppColors.white,
+                                  color:      context.colors.white,
                                   fontSize:   AppSizes.fontL,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -350,13 +350,13 @@ class _OccupationChip extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary
-              : AppColors.white,
+              ? context.colors.primary
+              : context.colors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusXL),
           border: Border.all(
             color: isSelected
-                ? AppColors.primary
-                : AppColors.textSecondary.withOpacity(0.3),
+                ? context.colors.primary
+                : context.colors.textSecondary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -365,7 +365,7 @@ class _OccupationChip extends StatelessWidget {
             if (isSelected) ...[
               const Icon(
                 Icons.check,
-                color: AppColors.white,
+                color: Colors.white,
                 size:  16,
               ),
               const SizedBox(width: 4),
@@ -374,8 +374,8 @@ class _OccupationChip extends StatelessWidget {
               occupation.name,
               style: TextStyle(
                 color: isSelected
-                    ? AppColors.white
-                    : AppColors.textPrimary,
+                    ? context.colors.white
+                    : context.colors.textPrimary,
                 fontSize:   AppSizes.fontM,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),

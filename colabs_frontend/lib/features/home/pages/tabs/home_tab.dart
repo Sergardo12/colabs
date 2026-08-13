@@ -66,9 +66,9 @@ class _HomeTabState extends State<HomeTab> {
               child: BlocBuilder<HomeBloc, HomeState>(
                 builder: (context, state) {
                   if (state is HomeLoading) {
-                    return const Center(
+                    return Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                       ),
                     );
                   }
@@ -78,16 +78,16 @@ class _HomeTabState extends State<HomeTab> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.error_outline,
-                            color: AppColors.error,
+                            color: context.colors.error,
                             size: 48,
                           ),
                           const SizedBox(height: AppSizes.paddingM),
                           Text(
                             state.message,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
                             ),
                           ),
                           const SizedBox(height: AppSizes.paddingM),
@@ -122,11 +122,11 @@ class _HomeTabState extends State<HomeTab> {
 
                         // Loader de infinite scroll
                         if (state is HomeLoadingMore) {
-                          return const Padding(
-                            padding: EdgeInsets.all(AppSizes.paddingL),
+                          return Padding(
+                            padding: const EdgeInsets.all(AppSizes.paddingL),
                             child: Center(
                               child: CircularProgressIndicator(
-                                color: AppColors.primary,
+                                color: context.colors.primary,
                               ),
                             ),
                           );
@@ -156,7 +156,7 @@ class _HomeHeader extends StatelessWidget {
         horizontal: AppSizes.paddingL,
         vertical: AppSizes.paddingM,
       ),
-      color: AppColors.white,
+      color: context.colors.surface,
       child: Row(
         children: [
           // Avatar del usuario
@@ -164,10 +164,10 @@ class _HomeHeader extends StatelessWidget {
             onTap: () => Scaffold.of(context).openDrawer(),
             child: CircleAvatar(
               radius: 20,
-              backgroundColor: AppColors.primary.withOpacity(0.1),
-              child: const Icon(
+              backgroundColor: context.colors.primary.withOpacity(0.1),
+              child: Icon(
                 Icons.person,
-                color: AppColors.primary,
+                color: context.colors.primary,
                 size: 20,
               ),
             ),
@@ -182,13 +182,13 @@ class _HomeHeader extends StatelessWidget {
                 vertical: AppSizes.paddingS,
               ),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.08),
+                color: context.colors.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(AppSizes.radiusXL),
               ),
-              child: const Text(
+              child: Text(
                 '¿Deseas convertirte en colaborador?',
                 style: TextStyle(
-                  color: AppColors.primary,
+                  color: context.colors.primary,
                   fontSize: AppSizes.fontM,
                 ),
               ),
@@ -200,9 +200,9 @@ class _HomeHeader extends StatelessWidget {
           IconButton(
             onPressed: () =>
                 Navigator.pushNamed(context, AppRouter.conversations),
-            icon: const Icon(
+            icon: Icon(
               Icons.chat_bubble_outline,
-              color: AppColors.primary,
+              color: context.colors.primary,
             ),
           ),
         ],

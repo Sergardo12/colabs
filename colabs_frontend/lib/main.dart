@@ -25,8 +25,16 @@ import 'features/chat/bloc/chat_bloc.dart';
 import 'features/chat/data/chat_repository.dart';
 import 'features/chat/data/chat_service.dart';
 import 'features/chat/data/chat_socket_service.dart';
+import 'core/bloc/theme/theme_bloc.dart';
+import 'core/storage/theme_repository.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Tema — se carga antes de runApp para evitar flash de tema al arrancar
+  final themeRepository = const ThemeRepository();
+  final initialIsDark = await themeRepository.isDark();
+
   final dio = ApiClient.create();
   final secureStorage = const FlutterSecureStorage();
 
@@ -84,6 +92,12 @@ final publicProfileRepository = PublicProfileRepository(
   runApp(
     MultiBlocProvider(
       providers: [
+        BlocProvider(
+          create: (_) => ThemeBloc(
+            themeRepository: themeRepository,
+            initialIsDark:  initialIsDark,
+          ),
+        ),
         BlocProvider(create: (_) => AuthBloc(authRepository: authRepository)),
         BlocProvider(create: (_) => HomeBloc(homeRepository: homeRepository)),
         BlocProvider(

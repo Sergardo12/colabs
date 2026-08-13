@@ -25,14 +25,14 @@ class _ConversationsPageState extends State<ConversationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: context.colors.surface,
         elevation:       0,
-        title: const Text(
+        title: Text(
           'Mensajes',
           style: TextStyle(
-            color:      AppColors.textPrimary,
+            color:      context.colors.textPrimary,
             fontSize:   AppSizes.fontXL,
             fontWeight: FontWeight.bold,
           ),
@@ -41,8 +41,8 @@ class _ConversationsPageState extends State<ConversationsPage> {
       body: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
           if (state is ConversationsLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+            return Center(
+              child: CircularProgressIndicator(color: context.colors.primary),
             );
           }
 
@@ -50,26 +50,26 @@ class _ConversationsPageState extends State<ConversationsPage> {
             return Center(
               child: Text(
                 state.message,
-                style: const TextStyle(color: AppColors.error),
+                style: TextStyle(color: context.colors.error),
               ),
             );
           }
 
           if (state is ConversationsLoaded) {
             if (state.conversations.isEmpty) {
-              return const Center(
+              return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.chat_bubble_outline,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                       size:  48,
                     ),
-                    SizedBox(height: AppSizes.paddingM),
+                    const SizedBox(height: AppSizes.paddingM),
                     Text(
                       'No tienes conversaciones aún',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(color: context.colors.textSecondary),
                     ),
                   ],
                 ),

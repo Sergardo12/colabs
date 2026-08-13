@@ -36,13 +36,13 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.primary,
+    return Scaffold(
+      backgroundColor: context.colors.primary,
       body: Center(
         child: Text(
           'Colabs',
           style: TextStyle(
-            color:         AppColors.white,
+            color:         context.colors.white,
             fontSize:      40,
             fontWeight:    FontWeight.bold,
             letterSpacing: 2,

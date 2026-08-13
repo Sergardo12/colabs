@@ -113,8 +113,8 @@ class _WelcomePageState extends State<WelcomePage> {
                       Text(
                         _slides[_currentPage]['title']!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color:      AppColors.white,
+                        style: TextStyle(
+                          color:      context.colors.white,
                           fontSize:   AppSizes.fontXXL,
                           fontWeight: FontWeight.bold,
                           height:     1.2,
@@ -125,7 +125,7 @@ class _WelcomePageState extends State<WelcomePage> {
                         _slides[_currentPage]['description']!,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color:    AppColors.white.withOpacity(0.85),
+                          color:    context.colors.white.withOpacity(0.85),
                           fontSize: AppSizes.fontM,
                           height:   1.5,
                         ),
@@ -140,8 +140,8 @@ class _WelcomePageState extends State<WelcomePage> {
                   controller: _pageController,
                   count:      _slides.length,
                   effect: ExpandingDotsEffect(
-                    activeDotColor: AppColors.white,
-                    dotColor:       AppColors.white.withOpacity(0.4),
+                    activeDotColor: context.colors.white,
+                    dotColor:       context.colors.white.withOpacity(0.4),
                     dotHeight:      8,
                     dotWidth:       8,
                     expansionFactor: 3,
@@ -172,7 +172,7 @@ class _WelcomePageState extends State<WelcomePage> {
                         child: Text(
                           AppStrings.welcomeLogin,
                           style: TextStyle(
-                            color:      AppColors.white.withOpacity(0.9),
+                            color:      context.colors.white.withOpacity(0.9),
                             fontSize:   AppSizes.fontL,
                             fontWeight: FontWeight.w600,
                           ),

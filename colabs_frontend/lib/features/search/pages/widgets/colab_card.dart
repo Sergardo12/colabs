@@ -14,11 +14,11 @@ class ColabCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSizes.paddingM),
       padding: const EdgeInsets.all(AppSizes.paddingM),
       decoration: BoxDecoration(
-        color:        AppColors.white,
+        color:        context.colors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
         boxShadow: [
           BoxShadow(
-            color:      AppColors.textSecondary.withOpacity(0.08),
+            color:      context.colors.textSecondary.withOpacity(0.08),
             blurRadius: 8,
             offset:     const Offset(0, 2),
           ),
@@ -29,14 +29,14 @@ class ColabCard extends StatelessWidget {
           // Avatar
           CircleAvatar(
             radius:          28,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            backgroundColor: context.colors.primary.withOpacity(0.1),
             backgroundImage: colab.user.imageProfile != null
                 ? NetworkImage(colab.user.imageProfile!)
                 : null,
             child: colab.user.imageProfile == null
-                ? const Icon(
+                ? Icon(
                     Icons.person,
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                     size:  28,
                   )
                 : null,
@@ -50,8 +50,8 @@ class ColabCard extends StatelessWidget {
               children: [
                 Text(
                   '${colab.user.name} ${colab.user.lastName}',
-                  style: const TextStyle(
-                    color:      AppColors.textPrimary,
+                  style: TextStyle(
+                    color:      context.colors.textPrimary,
                     fontSize:   AppSizes.fontL,
                     fontWeight: FontWeight.w600,
                   ),
@@ -59,8 +59,8 @@ class ColabCard extends StatelessWidget {
                 if (colab.occupations.isNotEmpty)
                 Text(
                   colab.occupations.map((o) => o.name).join(' · '),
-                  style: const TextStyle(
-                    color:    AppColors.primary,
+                  style: TextStyle(
+                    color:    context.colors.primary,
                     fontSize: AppSizes.fontM,
                   ),
                 ),
@@ -70,9 +70,9 @@ class ColabCard extends StatelessWidget {
 
           // Verificado
           if (colab.verificationStatus == 'verified')
-            const Icon(
+            Icon(
               Icons.verified,
-              color: AppColors.primary,
+              color: context.colors.primary,
               size:  20,
             ),
         ],

@@ -80,8 +80,8 @@ class _OccupationItem extends StatelessWidget {
               alignment: Alignment.bottomLeft,
               child: Text(
                 name,
-                style: const TextStyle(
-                  color:      AppColors.white,
+                style: TextStyle(
+                  color:      context.colors.white,
                   fontSize:   AppSizes.fontM,
                   fontWeight: FontWeight.bold,
                 ),

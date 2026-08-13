@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/routes/app_router.dart';
 import '../../bloc/home_bloc.dart';
 import '../../bloc/home_event.dart';
 import '../../bloc/home_state.dart';
-import '../../models/post_model.dart';
+import '../../../chat/bloc/chat_bloc.dart';
+import '../../../chat/bloc/chat_state.dart';
 import '../widgets/post_card.dart';
 import '../widgets/occupation_carousel.dart';
 
@@ -46,85 +48,98 @@ class _HomeTabState extends State<HomeTab> {
         children: [
           // Header
           _HomeHeader(),
-          
+
           // Contenido scrolleable
           Expanded(
-            child: BlocBuilder<HomeBloc, HomeState>(
-              builder: (context, state) {
-                if (state is HomeLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
+            child: BlocListener<ChatBloc, ChatState>(
+              listenWhen: (previous, current) =>
+                  current is ConversationCreated && previous is! ConversationCreated,
+              listener: (context, state) {
+                if (state is ConversationCreated && context.mounted) {
+                  Navigator.pushNamed(
+                    context,
+                    AppRouter.chat,
+                    arguments: state.conversation,
                   );
                 }
+              },
+              child: BlocBuilder<HomeBloc, HomeState>(
+                builder: (context, state) {
+                  if (state is HomeLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    );
+                  }
 
-                if (state is HomeError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: AppColors.error,
-                          size:  48,
-                        ),
-                        const SizedBox(height: AppSizes.paddingM),
-                        Text(
-                          state.message,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                  if (state is HomeError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 48,
                           ),
-                        ),
-                        const SizedBox(height: AppSizes.paddingM),
-                        ElevatedButton(
-                          onPressed: () => context
-                              .read<HomeBloc>()
-                              .add(const FeedLoadRequested()),
-                          child: const Text('Reintentar'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (state is HomeSuccess) {
-                  return ListView.builder(
-                    controller:  _scrollController,
-                    padding:     const EdgeInsets.only(
-                      bottom: AppSizes.paddingXL,
-                    ),
-                    itemCount:   state.posts.length + 2,
-                    itemBuilder: (context, index) {
-                      // Carrusel de ocupaciones
-                      if (index == 0) {
-                        return const OccupationCarousel();
-                      }
-
-                      // Posts
-                      if (index <= state.posts.length) {
-                        return PostCard(post: state.posts[index - 1]);
-                      }
-
-                      // Loader de infinite scroll
-                      if (state is HomeLoadingMore) {
-                        return const Padding(
-                          padding: EdgeInsets.all(AppSizes.paddingL),
-                          child:   Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.primary,
+                          const SizedBox(height: AppSizes.paddingM),
+                          Text(
+                            state.message,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                        );
-                      }
+                          const SizedBox(height: AppSizes.paddingM),
+                          ElevatedButton(
+                            onPressed: () => context.read<HomeBloc>().add(
+                              const FeedLoadRequested(),
+                            ),
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
-                      return const SizedBox.shrink();
-                    },
-                  );
-                }
+                  if (state is HomeSuccess) {
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.only(
+                        bottom: AppSizes.paddingXL,
+                      ),
+                      itemCount: state.posts.length + 2,
+                      itemBuilder: (context, index) {
+                        // Carrusel de ocupaciones
+                        if (index == 0) {
+                          return const OccupationCarousel();
+                        }
 
-                return const SizedBox.shrink();
-              },
+                        // Posts
+                        if (index <= state.posts.length) {
+                          return PostCard(post: state.posts[index - 1]);
+                        }
+
+                        // Loader de infinite scroll
+                        if (state is HomeLoadingMore) {
+                          return const Padding(
+                            padding: EdgeInsets.all(AppSizes.paddingL),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return const SizedBox.shrink();
+                      },
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
           ),
         ],
@@ -139,24 +154,24 @@ class _HomeHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingL,
-        vertical:   AppSizes.paddingM,
+        vertical: AppSizes.paddingM,
       ),
       color: AppColors.white,
       child: Row(
         children: [
           // Avatar del usuario
           GestureDetector(
-          onTap: () => Scaffold.of(context).openDrawer(),
-          child: CircleAvatar(
-            radius:          20,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
-            child: const Icon(
-              Icons.person,
-              color: AppColors.primary,
-              size:  20,
+            onTap: () => Scaffold.of(context).openDrawer(),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.primary.withOpacity(0.1),
+              child: const Icon(
+                Icons.person,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
           ),
-        ),
           const SizedBox(width: AppSizes.paddingM),
 
           // Banner convertirse en colaborador
@@ -164,16 +179,16 @@ class _HomeHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.paddingM,
-                vertical:   AppSizes.paddingS,
+                vertical: AppSizes.paddingS,
               ),
               decoration: BoxDecoration(
-                color:        AppColors.primary.withOpacity(0.08),
+                color: AppColors.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(AppSizes.radiusXL),
               ),
               child: const Text(
                 '¿Deseas convertirte en colaborador?',
                 style: TextStyle(
-                  color:    AppColors.primary,
+                  color: AppColors.primary,
                   fontSize: AppSizes.fontM,
                 ),
               ),
@@ -183,7 +198,8 @@ class _HomeHeader extends StatelessWidget {
 
           // Ícono de mensajes
           IconButton(
-            onPressed: () {},
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRouter.conversations),
             icon: const Icon(
               Icons.chat_bubble_outline,
               color: AppColors.primary,

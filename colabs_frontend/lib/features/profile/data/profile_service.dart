@@ -59,6 +59,20 @@ class ProfileService {
     return response.data as Map<String, dynamic>;
   }
 
+  /// Obtiene las calificaciones de un colaborador
+  Future<Map<String, dynamic>> getProfileReviews({
+    required String token,
+    required String profileColabId,
+  }) async {
+    final response = await _dio.get(
+      '/comment-requests/colab/$profileColabId',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
   /// Actualiza los datos del usuario
   Future<Map<String, dynamic>> updateUserProfile({
     required String token,

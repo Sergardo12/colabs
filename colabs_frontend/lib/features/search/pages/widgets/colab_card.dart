@@ -36,7 +36,7 @@ class ColabCard extends StatelessWidget {
             child: colab.user.imageProfile == null
                 ? Icon(
                     Icons.person,
-                    color: context.colors.primary,
+                    color: Theme.of(context).iconTheme.color,
                     size:  28,
                   )
                 : null,
@@ -72,7 +72,7 @@ class ColabCard extends StatelessWidget {
           if (colab.verificationStatus == 'verified')
             Icon(
               Icons.verified,
-              color: context.colors.primary,
+              color: Theme.of(context).iconTheme.color,
               size:  20,
             ),
         ],

@@ -146,7 +146,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   ListTile(
                     leading: Icon(
                       Icons.person_outline,
-                      color: context.colors.primary,
+                      color: Theme.of(context).iconTheme.color,
                     ),
                     title: Text(
                       'Ver mi perfil',
@@ -166,7 +166,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     ListTile(
                       leading: Icon(
                         Icons.handshake_outlined,
-                        color: context.colors.primary,
+                        color: Theme.of(context).iconTheme.color,
                       ),
                       title: Text(
                         'Convertirse en colaborador',
@@ -191,7 +191,7 @@ class _AppDrawerState extends State<AppDrawer> {
                           state.isDark
                               ? Icons.bedtime_outlined
                               : Icons.wb_sunny_outlined,
-                          color: context.colors.primary,
+                          color: Theme.of(context).iconTheme.color,
                         ),
                         title: Text(
                           'Cambiar tema',

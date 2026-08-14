@@ -84,7 +84,7 @@ class ProfileHeader extends StatelessWidget {
                 child: profile.imageProfile == null
                     ? Icon(
                         Icons.person,
-                        color: context.colors.primary,
+                        color: Theme.of(context).iconTheme.color,
                         size:  40,
                       )
                     : null,
@@ -121,7 +121,7 @@ class ProfileHeader extends StatelessWidget {
                 onPressed: () {},
                 icon: Icon(
                   Icons.share_outlined,
-                  color: context.colors.primary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ),
             ],

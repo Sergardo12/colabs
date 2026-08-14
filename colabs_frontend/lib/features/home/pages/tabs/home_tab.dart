@@ -167,7 +167,7 @@ class _HomeHeader extends StatelessWidget {
               backgroundColor: context.colors.primary.withOpacity(0.1),
               child: Icon(
                 Icons.person,
-                color: context.colors.primary,
+                color: Theme.of(context).iconTheme.color,
                 size: 20,
               ),
             ),
@@ -202,7 +202,7 @@ class _HomeHeader extends StatelessWidget {
                 Navigator.pushNamed(context, AppRouter.conversations),
             icon: Icon(
               Icons.chat_bubble_outline,
-              color: context.colors.primary,
+              color: Theme.of(context).iconTheme.color,
             ),
           ),
         ],

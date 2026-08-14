@@ -25,7 +25,7 @@ class ConversationTile extends StatelessWidget {
             ? NetworkImage(colab.imageProfile!)
             : null,
         child: colab.imageProfile == null
-            ? Icon(Icons.person, color: context.colors.primary, size: 24)
+            ? Icon(Icons.person, color: Theme.of(context).iconTheme.color, size: 24)
             : null,
       ),
       title: Text(

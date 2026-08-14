@@ -30,7 +30,10 @@ class ProfilePage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.edit_outlined, color: context.colors.primary),
+            icon: Icon(
+              Icons.edit_outlined,
+              color: Theme.of(context).iconTheme.color,
+            ),
             onPressed: () {
               Navigator.pushNamed(context, AppRouter.editColabProfile);
             },
@@ -75,7 +78,7 @@ class ProfilePage extends StatelessWidget {
                           child: state.user.imageProfile == null
                               ? Icon(
                                   Icons.person,
-                                  color: context.colors.primary,
+                                  color: Theme.of(context).iconTheme.color,
                                   size:  50,
                                 )
                               : null,
@@ -227,7 +230,7 @@ class _InfoItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSizes.paddingM),
       child: Row(
         children: [
-          Icon(icon, color: context.colors.primary, size: 20),
+          Icon(icon, color: Theme.of(context).iconTheme.color, size: 20),
           const SizedBox(width: AppSizes.paddingM),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

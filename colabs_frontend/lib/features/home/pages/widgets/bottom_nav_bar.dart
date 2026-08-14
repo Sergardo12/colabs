@@ -94,7 +94,9 @@ class _NavItem extends StatelessWidget {
         padding:  const EdgeInsets.all(8),
         child: Icon(
           isActive ? iconActive : icon,
-          color: isActive ? context.colors.primary : context.colors.textSecondary,
+          color: isActive
+              ? Theme.of(context).iconTheme.color
+              : context.colors.textSecondary,
           size:  26,
         ),
       ),

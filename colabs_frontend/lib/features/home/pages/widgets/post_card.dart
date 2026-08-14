@@ -48,7 +48,7 @@ class PostCard extends StatelessWidget {
                   child: post.author.imageProfile == null
                       ? Icon(
                           Icons.person,
-                          color: context.colors.primary,
+                          color: Theme.of(context).iconTheme.color,
                           size:  20,
                         )
                       : null,

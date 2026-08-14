@@ -14,6 +14,7 @@ class AppTheme {
       error:     AppPalette.light.error,
     ),
     fontFamily: 'Roboto',
+    iconTheme: IconThemeData(color: AppPalette.light.primary),
     appBarTheme: AppBarTheme(
       backgroundColor: AppPalette.light.surface,
       foregroundColor: AppPalette.light.textPrimary,
@@ -49,6 +50,7 @@ class AppTheme {
       error:     AppPalette.dark.error,
     ),
     fontFamily: 'Roboto',
+    iconTheme: IconThemeData(color: AppPalette.dark.textPrimary),
     appBarTheme: AppBarTheme(
       backgroundColor: AppPalette.dark.surface,
       foregroundColor: AppPalette.dark.textPrimary,
@@ -59,7 +61,7 @@ class AppTheme {
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       backgroundColor:    AppPalette.dark.surface,
-      selectedItemColor:  AppPalette.dark.primary,
+      selectedItemColor:  AppPalette.dark.textPrimary,
       unselectedItemColor: AppPalette.dark.textSecondary,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(

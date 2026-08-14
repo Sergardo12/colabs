@@ -45,7 +45,7 @@ class ReviewCard extends StatelessWidget {
                 child: author?.imageProfile == null
                     ? Icon(
                         Icons.person,
-                        color: context.colors.primary,
+                        color: Theme.of(context).iconTheme.color,
                         size:  20,
                       )
                     : null,

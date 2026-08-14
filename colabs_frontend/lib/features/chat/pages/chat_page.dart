@@ -89,7 +89,7 @@ class _ChatPageState extends State<ChatPage> {
                   ? NetworkImage(colab.imageProfile!)
                   : null,
               child: colab.imageProfile == null
-                  ? Icon(Icons.person, color: context.colors.primary, size: 18)
+                  ? Icon(Icons.person, color: Theme.of(context).iconTheme.color, size: 18)
                   : null,
             ),
             const SizedBox(width: AppSizes.paddingM),

@@ -83,6 +83,7 @@ export class ConversationService {
         'profileColab.user',
         'profileColab.occupations',
         'post',
+        'user',
       ],
       order: { createdAt: 'DESC' },
     });

@@ -73,7 +73,7 @@ export class ConversationService {
   }
 
   async findMyConversations(userId: string) {
-    return this.conversationRepository
+    const conversations = await this.conversationRepository
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.profileColab', 'profileColab')
       .leftJoinAndSelect('profileColab.user', 'colabUser')
@@ -92,7 +92,32 @@ export class ConversationService {
       .addGroupBy('user.id')
       .orderBy('last_message_at', 'DESC', 'NULLS LAST')
       .addOrderBy('conversation.created_at', 'DESC')
-      .getMany();
+      .getRawAndEntities();
+
+    const { entities, raw } = conversations;
+
+    // Agregar unreadCount y lastMessageAt a cada conversación
+    const result = await Promise.all(
+      entities.map(async (conversation, index) => {
+        const unreadCount = await this.messageRepository.count({
+          where: {
+            conversationId: conversation.id,
+            isRead: false,
+            senderId: conversation.userId === userId
+              ? conversation.profileColab.userId
+              : conversation.userId,
+          },
+        });
+
+        return {
+          ...conversation,
+          lastMessageAt: raw[index]?.last_message_at ?? conversation.createdAt,
+          unreadCount,
+        };
+      }),
+    );
+
+    return result;
   }
 
   async findOne(id: string, userId: string) {

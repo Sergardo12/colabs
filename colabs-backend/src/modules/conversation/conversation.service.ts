@@ -73,20 +73,26 @@ export class ConversationService {
   }
 
   async findMyConversations(userId: string) {
-    return this.conversationRepository.find({
-      where: [
-        { userId },
-        { profileColab: { userId } },
-      ],
-      relations: [
-        'profileColab',
-        'profileColab.user',
-        'profileColab.occupations',
-        'post',
-        'user',
-      ],
-      order: { createdAt: 'DESC' },
-    });
+    return this.conversationRepository
+      .createQueryBuilder('conversation')
+      .leftJoinAndSelect('conversation.profileColab', 'profileColab')
+      .leftJoinAndSelect('profileColab.user', 'colabUser')
+      .leftJoinAndSelect('profileColab.occupations', 'occupations')
+      .leftJoinAndSelect('conversation.post', 'post')
+      .leftJoinAndSelect('conversation.user', 'user')
+      .leftJoin('conversation.messages', 'lastMessage')
+      .addSelect('MAX(lastMessage.created_at)', 'last_message_at')
+      .where('conversation.user_id = :userId', { userId })
+      .orWhere('profileColab.user_id = :userId', { userId })
+      .groupBy('conversation.id')
+      .addGroupBy('profileColab.id')
+      .addGroupBy('colabUser.id')
+      .addGroupBy('occupations.id')
+      .addGroupBy('post.id')
+      .addGroupBy('user.id')
+      .orderBy('last_message_at', 'DESC', 'NULLS LAST')
+      .addOrderBy('conversation.created_at', 'DESC')
+      .getMany();
   }
 
   async findOne(id: string, userId: string) {

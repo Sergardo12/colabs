@@ -20,11 +20,11 @@ class ReviewCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(AppSizes.paddingM),
       decoration: BoxDecoration(
-        color:        AppColors.white,
+        color:        context.colors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
         boxShadow: [
           BoxShadow(
-            color:      AppColors.textSecondary.withValues(alpha: 0.08),
+            color:      context.colors.textSecondary.withValues(alpha: 0.08),
             blurRadius: 8,
             offset:     const Offset(0, 2),
           ),
@@ -38,14 +38,14 @@ class ReviewCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius:          20,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                backgroundColor: context.colors.primary.withValues(alpha: 0.1),
                 backgroundImage: author?.imageProfile != null
                     ? NetworkImage(author!.imageProfile!)
                     : null,
                 child: author?.imageProfile == null
-                    ? const Icon(
+                    ? Icon(
                         Icons.person,
-                        color: AppColors.primary,
+                        color: Theme.of(context).iconTheme.color,
                         size:  20,
                       )
                     : null,
@@ -59,8 +59,8 @@ class ReviewCard extends StatelessWidget {
                       author != null
                           ? '${author.name} ${author.lastName}'
                           : 'Cliente',
-                      style: const TextStyle(
-                        color:      AppColors.textPrimary,
+                      style: TextStyle(
+                        color:      context.colors.textPrimary,
                         fontSize:   AppSizes.fontM,
                         fontWeight: FontWeight.w600,
                       ),
@@ -68,8 +68,8 @@ class ReviewCard extends StatelessWidget {
                     if (review.occupationName.isNotEmpty)
                       Text(
                         review.occupationName,
-                        style: const TextStyle(
-                          color:    AppColors.primary,
+                        style: TextStyle(
+                          color:    context.colors.primary,
                           fontSize: AppSizes.fontS,
                         ),
                       ),
@@ -79,8 +79,8 @@ class ReviewCard extends StatelessWidget {
               if (review.creationDate.isNotEmpty)
                 Text(
                   _formatDate(review.creationDate),
-                  style: const TextStyle(
-                    color:    AppColors.textSecondary,
+                  style: TextStyle(
+                    color:    context.colors.textSecondary,
                     fontSize: AppSizes.fontS,
                   ),
                 ),
@@ -98,15 +98,15 @@ class ReviewCard extends StatelessWidget {
                   filled ? Icons.star : Icons.star_border,
                   color: filled
                       ? const Color(0xFFF9A825)
-                      : AppColors.textSecondary,
+                      : context.colors.textSecondary,
                   size: 18,
                 );
               }),
               const SizedBox(width: AppSizes.paddingS),
               Text(
                 review.rating.toString(),
-                style: const TextStyle(
-                  color:    AppColors.textSecondary,
+                style: TextStyle(
+                  color:    context.colors.textSecondary,
                   fontSize: AppSizes.fontM,
                 ),
               ),
@@ -118,8 +118,8 @@ class ReviewCard extends StatelessWidget {
             const SizedBox(height: AppSizes.paddingS),
             Text(
               review.comment!,
-              style: const TextStyle(
-                color:    AppColors.textPrimary,
+              style: TextStyle(
+                color:    context.colors.textPrimary,
                 fontSize: AppSizes.fontM,
               ),
             ),

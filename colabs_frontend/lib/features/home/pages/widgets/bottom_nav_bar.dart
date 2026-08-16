@@ -16,10 +16,10 @@ class ColabsBottomNav extends StatelessWidget {
     return Container(
       height:     70,
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.colors.surface,
         boxShadow: [
           BoxShadow(
-            color:      AppColors.textSecondary.withOpacity(0.1),
+            color:      context.colors.textSecondary.withOpacity(0.1),
             blurRadius: 10,
             offset:     const Offset(0, -2),
           ),
@@ -94,7 +94,9 @@ class _NavItem extends StatelessWidget {
         padding:  const EdgeInsets.all(8),
         child: Icon(
           isActive ? iconActive : icon,
-          color: isActive ? AppColors.primary : AppColors.textSecondary,
+          color: isActive
+              ? Theme.of(context).iconTheme.color
+              : context.colors.textSecondary,
           size:  26,
         ),
       ),
@@ -113,7 +115,7 @@ class _WaterDropButton extends StatelessWidget {
       width:  58,
       height: 58,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: context.colors.primary,
         borderRadius: const BorderRadius.only(
           topLeft:     Radius.circular(50),
           topRight:    Radius.circular(50),
@@ -122,7 +124,7 @@ class _WaterDropButton extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color:      AppColors.primary.withOpacity(0.4),
+            color:      context.colors.primary.withOpacity(0.4),
             blurRadius: 12,
             offset:     const Offset(0, 4),
           ),
@@ -130,7 +132,7 @@ class _WaterDropButton extends StatelessWidget {
       ),
       child: const Icon(
         Icons.search,
-        color: AppColors.white,
+        color: Colors.white,
         size:  26,
       ),
     );

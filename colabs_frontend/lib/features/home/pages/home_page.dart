@@ -11,15 +11,15 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
+            Text(
               '🎉 Bienvenido a Colabs',
               style: TextStyle(
-                color:      AppColors.primary,
+                color:      context.colors.primary,
                 fontSize:   24,
                 fontWeight: FontWeight.bold,
               ),

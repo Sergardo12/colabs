@@ -72,31 +72,31 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     final colab = widget.conversation.profileColab.user;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: context.colors.surface,
         elevation:       0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
           children: [
             CircleAvatar(
               radius:          18,
-              backgroundColor: AppColors.primary.withOpacity(0.1),
+              backgroundColor: context.colors.primary.withOpacity(0.1),
               backgroundImage: colab.imageProfile != null
                   ? NetworkImage(colab.imageProfile!)
                   : null,
               child: colab.imageProfile == null
-                  ? const Icon(Icons.person, color: AppColors.primary, size: 18)
+                  ? Icon(Icons.person, color: Theme.of(context).iconTheme.color, size: 18)
                   : null,
             ),
             const SizedBox(width: AppSizes.paddingM),
             Text(
               '${colab.name} ${colab.lastName}',
-              style: const TextStyle(
-                color:      AppColors.textPrimary,
+              style: TextStyle(
+                color:      context.colors.textPrimary,
                 fontSize:   AppSizes.fontL,
                 fontWeight: FontWeight.bold,
               ),
@@ -113,8 +113,8 @@ class _ChatPageState extends State<ChatPage> {
               },
               builder: (context, state) {
                 if (state is MessagesLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                  return Center(
+                    child: CircularProgressIndicator(color: context.colors.primary),
                   );
                 }
 
@@ -122,17 +122,17 @@ class _ChatPageState extends State<ChatPage> {
                   return Center(
                     child: Text(
                       state.message,
-                      style: const TextStyle(color: AppColors.error),
+                      style: TextStyle(color: context.colors.error),
                     ),
                   );
                 }
 
                 if (state is MessagesLoaded) {
                   if (state.messages.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
                         'Inicia la conversación',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: context.colors.textSecondary),
                       ),
                     );
                   }
@@ -159,7 +159,7 @@ class _ChatPageState extends State<ChatPage> {
           // Input de mensaje
           Container(
             padding: const EdgeInsets.all(AppSizes.paddingM),
-            color:   AppColors.white,
+            color:   context.colors.surface,
             child: SafeArea(
               child: Row(
                 children: [
@@ -169,7 +169,7 @@ class _ChatPageState extends State<ChatPage> {
                       decoration: InputDecoration(
                         hintText:    'Escribe un mensaje...',
                         filled:      true,
-                        fillColor:   AppColors.background,
+                        fillColor:   context.colors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppSizes.radiusXL),
                           borderSide:   BorderSide.none,
@@ -190,12 +190,12 @@ class _ChatPageState extends State<ChatPage> {
                       width:  44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color:  AppColors.primary,
+                        color:  context.colors.primary,
                         shape:  BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.send,
-                        color: AppColors.white,
+                        color: context.colors.white,
                         size:  20,
                       ),
                     ),

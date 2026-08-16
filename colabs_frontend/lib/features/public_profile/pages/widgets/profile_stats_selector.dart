@@ -29,7 +29,7 @@ class ProfileStatsSelector extends StatelessWidget {
     const labels = ['POST', 'CALIFICACIÓN', 'LIKES'];
 
     return Container(
-      color: AppColors.white,
+      color: context.colors.surface,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingM,
         vertical:   AppSizes.paddingL,
@@ -46,8 +46,8 @@ class ProfileStatsSelector extends StatelessWidget {
                   values[index],
                   style: TextStyle(
                     color: active
-                        ? AppColors.primary
-                        : AppColors.textPrimary,
+                        ? context.colors.primary
+                        : context.colors.textPrimary,
                     fontSize:   _valueSize,
                     fontWeight: FontWeight.w600,
                   ),
@@ -57,8 +57,8 @@ class ProfileStatsSelector extends StatelessWidget {
                   labels[index],
                   style: TextStyle(
                     color: active
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
+                        ? context.colors.primary
+                        : context.colors.textSecondary,
                     fontSize:   AppSizes.fontM,
                     fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                   ),

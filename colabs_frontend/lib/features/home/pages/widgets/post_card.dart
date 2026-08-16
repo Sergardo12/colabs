@@ -19,11 +19,11 @@ class PostCard extends StatelessWidget {
         vertical:   AppSizes.paddingS,
       ),
       decoration: BoxDecoration(
-        color:        AppColors.white,
+        color:        context.colors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
         boxShadow: [
           BoxShadow(
-            color:      AppColors.textSecondary.withOpacity(0.08),
+            color:      context.colors.textSecondary.withOpacity(0.08),
             blurRadius: 8,
             offset:     const Offset(0, 2),
           ),
@@ -41,14 +41,14 @@ class PostCard extends StatelessWidget {
                 // Avatar
                 CircleAvatar(
                   radius:          20,
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: context.colors.primary.withOpacity(0.1),
                   backgroundImage: post.author.imageProfile != null
                       ? NetworkImage(post.author.imageProfile!)
                       : null,
                   child: post.author.imageProfile == null
-                      ? const Icon(
+                      ? Icon(
                           Icons.person,
-                          color: AppColors.primary,
+                          color: Theme.of(context).iconTheme.color,
                           size:  20,
                         )
                       : null,
@@ -62,16 +62,16 @@ class PostCard extends StatelessWidget {
                     children: [
                       Text(
                         '${post.author.name} ${post.author.lastName}',
-                        style: const TextStyle(
-                          color:      AppColors.textPrimary,
+                        style: TextStyle(
+                          color:      context.colors.textPrimary,
                           fontSize:   AppSizes.fontM,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
                         post.occupation.name,
-                        style: const TextStyle(
-                          color:    AppColors.primary,
+                        style: TextStyle(
+                          color:    context.colors.primary,
                           fontSize: AppSizes.fontS,
                         ),
                       ),
@@ -90,7 +90,7 @@ class PostCard extends StatelessWidget {
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    side:    const BorderSide(color: AppColors.primary),
+                    side:    BorderSide(color: context.colors.primary),
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSizes.paddingM,
                       vertical:   AppSizes.paddingXS,
@@ -99,10 +99,10 @@ class PostCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppSizes.radiusS),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Consultar',
                     style: TextStyle(
-                      color:    AppColors.primary,
+                      color:    context.colors.primary,
                       fontSize: AppSizes.fontS,
                     ),
                   ),
@@ -122,10 +122,10 @@ class PostCard extends StatelessWidget {
                 fit:       BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
                   height: 220,
-                  color:  AppColors.background,
-                  child:  const Icon(
+                  color:  context.colors.background,
+                  child:  Icon(
                     Icons.image_not_supported_outlined,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                     size:  48,
                   ),
                 ),
@@ -152,15 +152,15 @@ class PostCard extends StatelessWidget {
                                 ? Icons.favorite
                                 : Icons.favorite_outline,
                             color: post.isLiked
-                                ? AppColors.error
-                                : AppColors.textSecondary,
+                                ? context.colors.error
+                                : context.colors.textSecondary,
                             size: 20,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '${post.likesCount}',
-                            style: const TextStyle(
-                              color:    AppColors.textSecondary,
+                            style: TextStyle(
+                              color:    context.colors.textSecondary,
                               fontSize: AppSizes.fontS,
                             ),
                           ),
@@ -172,16 +172,16 @@ class PostCard extends StatelessWidget {
                     // Comentarios
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.chat_bubble_outline,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                           size:  20,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${post.commentsCount}',
-                          style: const TextStyle(
-                            color:    AppColors.textSecondary,
+                          style: TextStyle(
+                            color:    context.colors.textSecondary,
                             fontSize: AppSizes.fontS,
                           ),
                         ),
@@ -192,8 +192,8 @@ class PostCard extends StatelessWidget {
                     // Precio
                     Text(
                       'S/ ${post.price}',
-                      style: const TextStyle(
-                        color:      AppColors.primary,
+                      style: TextStyle(
+                        color:      context.colors.primary,
                         fontSize:   AppSizes.fontL,
                         fontWeight: FontWeight.bold,
                       ),
@@ -205,8 +205,8 @@ class PostCard extends StatelessWidget {
                 // Descripción
                 Text(
                   post.description,
-                  style: const TextStyle(
-                    color:    AppColors.textPrimary,
+                  style: TextStyle(
+                    color:    context.colors.textPrimary,
                     fontSize: AppSizes.fontM,
                   ),
                   maxLines:  3,
@@ -217,8 +217,8 @@ class PostCard extends StatelessWidget {
                 // Tiempo
                 Text(
                   _formatTime(post.createdAt),
-                  style: const TextStyle(
-                    color:    AppColors.textSecondary,
+                  style: TextStyle(
+                    color:    context.colors.textSecondary,
                     fontSize: AppSizes.fontS,
                   ),
                 ),

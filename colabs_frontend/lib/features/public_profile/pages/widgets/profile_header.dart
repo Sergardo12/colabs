@@ -45,18 +45,18 @@ class ProfileHeader extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back,
-                      color: AppColors.white,
+                      color: context.colors.white,
                     ),
                   ),
                   const SizedBox(width: AppSizes.paddingS),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Perfil',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color:      AppColors.white,
+                        color:      context.colors.white,
                         fontSize:   AppSizes.fontXL,
                         fontWeight: FontWeight.w600,
                       ),
@@ -77,14 +77,14 @@ class ProfileHeader extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius:          40,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                backgroundColor: context.colors.primary.withValues(alpha: 0.1),
                 backgroundImage: profile.imageProfile != null
                     ? NetworkImage(profile.imageProfile!)
                     : null,
                 child: profile.imageProfile == null
-                    ? const Icon(
+                    ? Icon(
                         Icons.person,
-                        color: AppColors.primary,
+                        color: Theme.of(context).iconTheme.color,
                         size:  40,
                       )
                     : null,
@@ -96,8 +96,8 @@ class ProfileHeader extends StatelessWidget {
                   children: [
                     Text(
                       '${profile.name} ${profile.lastName}',
-                      style: const TextStyle(
-                        color:      AppColors.textPrimary,
+                      style: TextStyle(
+                        color:      context.colors.textPrimary,
                         fontSize:   AppSizes.fontL,
                         fontWeight: FontWeight.w600,
                       ),
@@ -106,8 +106,8 @@ class ProfileHeader extends StatelessWidget {
                       const SizedBox(height: AppSizes.paddingXS),
                       Text(
                         profile.occupations.map((o) => o.name).join(' · '),
-                        style: const TextStyle(
-                          color:    AppColors.primary,
+                        style: TextStyle(
+                          color:    context.colors.primary,
                           fontSize: AppSizes.fontM,
                         ),
                       ),
@@ -119,9 +119,9 @@ class ProfileHeader extends StatelessWidget {
               // en una futura actualización.
               IconButton(
                 onPressed: () {},
-                icon: const Icon(
+                icon: Icon(
                   Icons.share_outlined,
-                  color: AppColors.primary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ),
             ],

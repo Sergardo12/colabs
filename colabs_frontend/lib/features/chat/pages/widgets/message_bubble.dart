@@ -28,7 +28,7 @@ class MessageBubble extends StatelessWidget {
           vertical:   AppSizes.paddingS,
         ),
         decoration: BoxDecoration(
-          color: isMe ? AppColors.primary : AppColors.white,
+          color: isMe ? context.colors.primary : context.colors.surface,
           borderRadius: BorderRadius.only(
             topLeft:     const Radius.circular(AppSizes.radiusM),
             topRight:    const Radius.circular(AppSizes.radiusM),
@@ -37,7 +37,7 @@ class MessageBubble extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color:      AppColors.textSecondary.withOpacity(0.08),
+              color:      context.colors.textSecondary.withOpacity(0.08),
               blurRadius: 4,
               offset:     const Offset(0, 2),
             ),
@@ -55,13 +55,13 @@ class MessageBubble extends StatelessWidget {
                 ),
                 margin: const EdgeInsets.only(bottom: AppSizes.paddingXS),
                 decoration: BoxDecoration(
-                  color:        AppColors.white.withOpacity(0.2),
+                  color:        context.colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(AppSizes.radiusS),
                 ),
                 child: Text(
                   'Oferta: S/ ${message.amount!.toStringAsFixed(2)}',
                   style: TextStyle(
-                    color:      isMe ? AppColors.white : AppColors.primary,
+                    color:      isMe ? context.colors.white : context.colors.primary,
                     fontSize:   AppSizes.fontS,
                     fontWeight: FontWeight.bold,
                   ),
@@ -70,7 +70,7 @@ class MessageBubble extends StatelessWidget {
             Text(
               message.content,
               style: TextStyle(
-                color:    isMe ? AppColors.white : AppColors.textPrimary,
+                color:    isMe ? context.colors.white : context.colors.textPrimary,
                 fontSize: AppSizes.fontM,
               ),
             ),
@@ -79,8 +79,8 @@ class MessageBubble extends StatelessWidget {
               _formatTime(message.createdAt),
               style: TextStyle(
                 color:    isMe
-                    ? AppColors.white.withOpacity(0.7)
-                    : AppColors.textSecondary,
+                    ? context.colors.white.withOpacity(0.7)
+                    : context.colors.textSecondary,
                 fontSize: 10,
               ),
             ),

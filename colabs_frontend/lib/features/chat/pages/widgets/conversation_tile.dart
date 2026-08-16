@@ -20,18 +20,18 @@ class ConversationTile extends StatelessWidget {
       onTap: onTap,
       leading: CircleAvatar(
         radius:          24,
-        backgroundColor: AppColors.primary.withOpacity(0.1),
+        backgroundColor: context.colors.primary.withOpacity(0.1),
         backgroundImage: colab.imageProfile != null
             ? NetworkImage(colab.imageProfile!)
             : null,
         child: colab.imageProfile == null
-            ? const Icon(Icons.person, color: AppColors.primary, size: 24)
+            ? Icon(Icons.person, color: Theme.of(context).iconTheme.color, size: 24)
             : null,
       ),
       title: Text(
         '${colab.name} ${colab.lastName}',
-        style: const TextStyle(
-          color:      AppColors.textPrimary,
+        style: TextStyle(
+          color:      context.colors.textPrimary,
           fontWeight: FontWeight.w600,
           fontSize:   AppSizes.fontL,
         ),
@@ -39,13 +39,13 @@ class ConversationTile extends StatelessWidget {
       subtitle: Text(
         _statusLabel(conversation.status),
         style: TextStyle(
-          color:    _statusColor(conversation.status),
+          color:    _statusColor(conversation.status, context),
           fontSize: AppSizes.fontS,
         ),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_right,
-        color: AppColors.textSecondary,
+        color: context.colors.textSecondary,
       ),
     );
   }
@@ -61,14 +61,14 @@ class ConversationTile extends StatelessWidget {
     }
   }
 
-  Color _statusColor(String status) {
+  Color _statusColor(String status, BuildContext context) {
     switch (status) {
-      case 'open':       return AppColors.primary;
+      case 'open':       return context.colors.primary;
       case 'offer_sent': return Colors.orange;
       case 'accepted':   return Colors.green;
       case 'closed':
-      case 'expired':    return AppColors.textSecondary;
-      default:           return AppColors.textSecondary;
+      case 'expired':    return context.colors.textSecondary;
+      default:           return context.colors.textSecondary;
     }
   }
 }

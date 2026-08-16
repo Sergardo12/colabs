@@ -50,13 +50,13 @@ Widget build(BuildContext context) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content:         Text(state.message),
-            backgroundColor: AppColors.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
     },
     child: Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
@@ -74,12 +74,12 @@ Widget build(BuildContext context) {
                   width:  80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color:        AppColors.primary.withOpacity(0.1),
+                    color:        context.colors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(AppSizes.radiusXL),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.handshake_outlined,
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                     size:  40,
                   ),
                 ),
@@ -88,8 +88,8 @@ Widget build(BuildContext context) {
                 // Título y subtítulo
                 Text(
                   AppStrings.loginTitle,
-                  style: const TextStyle(
-                    color:      AppColors.primary,
+                  style: TextStyle(
+                    color:      context.colors.primary,
                     fontSize:   AppSizes.fontXXL,
                     fontWeight: FontWeight.bold,
                   ),
@@ -97,8 +97,8 @@ Widget build(BuildContext context) {
                 const SizedBox(height: AppSizes.paddingXS),
                 Text(
                   AppStrings.loginSubtitle,
-                  style: const TextStyle(
-                    color:    AppColors.textSecondary,
+                  style: TextStyle(
+                    color:    context.colors.textSecondary,
                     fontSize: AppSizes.fontM,
                   ),
                 ),
@@ -108,11 +108,11 @@ Widget build(BuildContext context) {
                 TextFormField(
                   controller:   _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText:   AppStrings.email,
                     prefixIcon: Icon(
                       Icons.email_outlined,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                   validator: (value) {
@@ -129,16 +129,16 @@ Widget build(BuildContext context) {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText:   AppStrings.password,
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.lock_outlined,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                       onPressed: () => setState(
                         () => _obscurePassword = !_obscurePassword,
@@ -158,10 +158,10 @@ Widget build(BuildContext context) {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text(
+                    child: Text(
                       AppStrings.forgotPassword,
                       style: TextStyle(
-                        color:    AppColors.primary,
+                        color:    context.colors.primary,
                         fontSize: AppSizes.fontM,
                       ),
                     ),
@@ -172,10 +172,10 @@ Widget build(BuildContext context) {
                 // Botón iniciar sesión
                 ElevatedButton(
                   onPressed: _onLogin,
-                  child: const Text(
+                  child: Text(
                     AppStrings.loginButton,
                     style: TextStyle(
-                      color:      AppColors.white,
+                      color:      context.colors.white,
                       fontSize:   AppSizes.fontL,
                       fontWeight: FontWeight.w600,
                     ),
@@ -189,10 +189,10 @@ Widget build(BuildContext context) {
                     context,
                     AppRouter.register,
                   ),
-                  child: const Text(
+                  child: Text(
                     AppStrings.createAccount,
                     style: TextStyle(
-                      color:      AppColors.primary,
+                      color:      context.colors.primary,
                       fontSize:   AppSizes.fontM,
                       fontWeight: FontWeight.w600,
                     ),
@@ -205,24 +205,24 @@ Widget build(BuildContext context) {
                   children: [
                     Expanded(
                       child: Divider(
-                        color: AppColors.textSecondary.withOpacity(0.3),
+                        color: context.colors.textSecondary.withOpacity(0.3),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSizes.paddingM,
                       ),
-                      child: const Text(
+                      child: Text(
                         AppStrings.continueWith,
                         style: TextStyle(
-                          color:    AppColors.textSecondary,
+                          color:    context.colors.textSecondary,
                           fontSize: AppSizes.fontM,
                         ),
                       ),
                     ),
                     Expanded(
                       child: Divider(
-                        color: AppColors.textSecondary.withOpacity(0.3),
+                        color: context.colors.textSecondary.withOpacity(0.3),
                       ),
                     ),
                   ],
@@ -243,10 +243,10 @@ Widget build(BuildContext context) {
                     const SizedBox(width: AppSizes.paddingL),
                     InkWell(
                       onTap: () {},
-                      child: const Icon(
+                      child: Icon(
                         Icons.apple,
                         size:  35,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ],

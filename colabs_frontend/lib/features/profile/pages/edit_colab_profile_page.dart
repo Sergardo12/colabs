@@ -66,9 +66,9 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
   void _onSubmit() {
     if (_selectedOccupationIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona al menos una ocupación'),
-          backgroundColor: AppColors.error,
+        SnackBar(
+          content: const Text('Selecciona al menos una ocupación'),
+          backgroundColor: context.colors.error,
         ),
       );
       return;
@@ -112,9 +112,9 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
         if (state is EditColabProfileSuccess) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Perfil actualizado correctamente'),
-              backgroundColor: AppColors.primary,
+            SnackBar(
+              content: const Text('Perfil actualizado correctamente'),
+              backgroundColor: context.colors.primary,
             ),
           );
         }
@@ -122,24 +122,24 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: AppColors.error,
+              backgroundColor: context.colors.error,
             ),
           );
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.white,
+          backgroundColor: context.colors.surface,
           elevation:       0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
+          title: Text(
             'Editar perfil',
             style: TextStyle(
-              color:      AppColors.textPrimary,
+              color:      context.colors.textPrimary,
               fontSize:   AppSizes.fontXL,
               fontWeight: FontWeight.bold,
             ),
@@ -148,8 +148,8 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
         body: BlocBuilder<EditColabProfileBloc, EditColabProfileState>(
           builder: (context, state) {
             if (state is EditColabProfileLoading) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+              return Center(
+                child: CircularProgressIndicator(color: context.colors.primary),
               );
             }
 
@@ -157,7 +157,7 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
               return Center(
                 child: Text(
                   state.message,
-                  style: const TextStyle(color: AppColors.error),
+                  style: TextStyle(color: context.colors.error),
                 ),
               );
             }
@@ -168,8 +168,8 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
             }
 
             if (state is EditColabProfileSubmitting) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+              return Center(
+                child: CircularProgressIndicator(color: context.colors.primary),
               );
             }
 
@@ -193,9 +193,9 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
 
             TextFormField(
               controller:   _nameCtrl,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText:   'Nombre',
-                prefixIcon: Icon(Icons.person_outline, color: AppColors.textSecondary),
+                prefixIcon: Icon(Icons.person_outline, color: context.colors.textSecondary),
               ),
               validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
             ),
@@ -203,9 +203,9 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
 
             TextFormField(
               controller:   _lastNameCtrl,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText:   'Apellido',
-                prefixIcon: Icon(Icons.person_outline, color: AppColors.textSecondary),
+                prefixIcon: Icon(Icons.person_outline, color: context.colors.textSecondary),
               ),
               validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
             ),
@@ -214,9 +214,9 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
             TextFormField(
               controller:   _phoneCtrl,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText:   'Teléfono',
-                prefixIcon: Icon(Icons.phone_outlined, color: AppColors.textSecondary),
+                prefixIcon: Icon(Icons.phone_outlined, color: context.colors.textSecondary),
               ),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Requerido';
@@ -229,18 +229,18 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
             TextFormField(
               controller:   _dateBirthCtrl,
               keyboardType: TextInputType.datetime,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText:   'Fecha de nacimiento (YYYY-MM-DD)',
-                prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
+                prefixIcon: Icon(Icons.calendar_today_outlined, color: context.colors.textSecondary),
               ),
             ),
             const SizedBox(height: AppSizes.paddingM),
 
             DropdownButtonFormField<String>(
               value: _selectedGender,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText:   'Género',
-                prefixIcon: Icon(Icons.wc_outlined, color: AppColors.textSecondary),
+                prefixIcon: Icon(Icons.wc_outlined, color: context.colors.textSecondary),
               ),
               items: const [
                 DropdownMenuItem(value: 'male',   child: Text('Masculino')),
@@ -257,12 +257,12 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
             TextFormField(
               controller:   _descriptionCtrl,
               maxLines:     3,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText:    'Descripción de tus servicios',
                 alignLabelWithHint: true,
                 prefixIcon: Padding(
-                  padding: EdgeInsets.only(bottom: 48),
-                  child: Icon(Icons.description_outlined, color: AppColors.textSecondary),
+                  padding: const EdgeInsets.only(bottom: 48),
+                  child: Icon(Icons.description_outlined, color: context.colors.textSecondary),
                 ),
               ),
               validator: (v) {
@@ -275,9 +275,9 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
 
             TextFormField(
               controller:   _experienceCtrl,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText:   'Años de experiencia',
-                prefixIcon: Icon(Icons.work_outline, color: AppColors.textSecondary),
+                prefixIcon: Icon(Icons.work_outline, color: context.colors.textSecondary),
               ),
               validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
             ),
@@ -285,9 +285,9 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
 
             TextFormField(
               controller:   _certCtrl,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText:   'Certificaciones (opcional)',
-                prefixIcon: Icon(Icons.verified_outlined, color: AppColors.textSecondary),
+                prefixIcon: Icon(Icons.verified_outlined, color: context.colors.textSecondary),
               ),
             ),
 
@@ -322,14 +322,14 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
                         height: 20,
                         width:  20,
                         child: CircularProgressIndicator(
-                          color: AppColors.white,
+                          color: Colors.white,
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Guardar cambios',
                         style: TextStyle(
-                          color:      AppColors.white,
+                          color:      context.colors.white,
                           fontSize:   AppSizes.fontL,
                           fontWeight: FontWeight.w600,
                         ),
@@ -346,8 +346,8 @@ class _EditColabProfilePageState extends State<EditColabProfilePage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        color:      AppColors.textPrimary,
+      style: TextStyle(
+        color:      context.colors.textPrimary,
         fontSize:   AppSizes.fontL,
         fontWeight: FontWeight.bold,
       ),
@@ -377,25 +377,25 @@ class _OccupationChip extends StatelessWidget {
           vertical:   AppSizes.paddingS,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.white,
+          color: isSelected ? context.colors.primary : context.colors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusXL),
           border: Border.all(
             color: isSelected
-                ? AppColors.primary
-                : AppColors.textSecondary.withOpacity(0.3),
+                ? context.colors.primary
+                : context.colors.textSecondary.withOpacity(0.3),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isSelected) ...[
-              const Icon(Icons.check, color: AppColors.white, size: 16),
+              const Icon(Icons.check, color: Colors.white, size: 16),
               const SizedBox(width: 4),
             ],
             Text(
               occupation.name,
               style: TextStyle(
-                color: isSelected ? AppColors.white : AppColors.textPrimary,
+                color: isSelected ? context.colors.white : context.colors.textPrimary,
                 fontSize:   AppSizes.fontM,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),

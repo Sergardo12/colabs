@@ -12,25 +12,28 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: context.colors.surface,
         elevation:       0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Mi perfil',
           style: TextStyle(
-            color:      AppColors.textPrimary,
+            color:      context.colors.textPrimary,
             fontSize:   AppSizes.fontXL,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+            icon: Icon(
+              Icons.edit_outlined,
+              color: Theme.of(context).iconTheme.color,
+            ),
             onPressed: () {
               Navigator.pushNamed(context, AppRouter.editColabProfile);
             },
@@ -40,8 +43,8 @@ class ProfilePage extends StatelessWidget {
       body: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, state) {
           if (state is ProfileLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+            return Center(
+              child: CircularProgressIndicator(color: context.colors.primary),
             );
           }
 
@@ -49,7 +52,7 @@ class ProfilePage extends StatelessWidget {
             return Center(
               child: Text(
                 state.message,
-                style: const TextStyle(color: AppColors.error),
+                style: TextStyle(color: context.colors.error),
               ),
             );
           }
@@ -62,20 +65,20 @@ class ProfilePage extends StatelessWidget {
                   Container(
                     width:   double.infinity,
                     padding: const EdgeInsets.all(AppSizes.paddingXL),
-                    color:   AppColors.white,
+                    color:   context.colors.surface,
                     child: Column(
                       children: [
                         // Avatar
                         CircleAvatar(
                           radius:          50,
-                          backgroundColor: AppColors.primary.withOpacity(0.1),
+                          backgroundColor: context.colors.primary.withOpacity(0.1),
                           backgroundImage: state.user.imageProfile != null
                               ? NetworkImage(state.user.imageProfile!)
                               : null,
                           child: state.user.imageProfile == null
-                              ? const Icon(
+                              ? Icon(
                                   Icons.person,
-                                  color: AppColors.primary,
+                                  color: Theme.of(context).iconTheme.color,
                                   size:  50,
                                 )
                               : null,
@@ -85,8 +88,8 @@ class ProfilePage extends StatelessWidget {
                         // Nombre
                         Text(
                           '${state.user.name} ${state.user.lastName}',
-                          style: const TextStyle(
-                            color:      AppColors.textPrimary,
+                          style: TextStyle(
+                            color:      context.colors.textPrimary,
                             fontSize:   AppSizes.fontXXL,
                             fontWeight: FontWeight.bold,
                           ),
@@ -98,8 +101,8 @@ class ProfilePage extends StatelessWidget {
                           const SizedBox(height: AppSizes.paddingXS),
                           Text(
                             state.colab!.occupations.first.name,
-                            style: const TextStyle(
-                              color:    AppColors.primary,
+                            style: TextStyle(
+                              color:    context.colors.primary,
                               fontSize: AppSizes.fontL,
                             ),
                           ),
@@ -189,15 +192,15 @@ class _InfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.white,
+      color: context.colors.surface,
       padding: const EdgeInsets.all(AppSizes.paddingL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              color:      AppColors.textPrimary,
+            style: TextStyle(
+              color:      context.colors.textPrimary,
               fontSize:   AppSizes.fontL,
               fontWeight: FontWeight.bold,
             ),
@@ -227,22 +230,22 @@ class _InfoItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSizes.paddingM),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.primary, size: 20),
+          Icon(icon, color: Theme.of(context).iconTheme.color, size: 20),
           const SizedBox(width: AppSizes.paddingM),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  color:    AppColors.textSecondary,
+                style: TextStyle(
+                  color:    context.colors.textSecondary,
                   fontSize: AppSizes.fontS,
                 ),
               ),
               Text(
                 value,
-                style: const TextStyle(
-                  color:    AppColors.textPrimary,
+                style: TextStyle(
+                  color:    context.colors.textPrimary,
                   fontSize: AppSizes.fontM,
                 ),
               ),

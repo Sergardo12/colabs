@@ -59,7 +59,10 @@ class _HomeTabState extends State<HomeTab> {
                   Navigator.pushNamed(
                     context,
                     AppRouter.chat,
-                    arguments: state.conversation,
+                    arguments: {
+                      'conversation': state.conversation,
+                      'post':         state.post,
+                    },
                   );
                 }
               },

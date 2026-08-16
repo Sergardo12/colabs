@@ -86,6 +86,7 @@ class PostCard extends StatelessWidget {
                       StartConversationRequested(
                         profileColabId: post.profileColabId,
                         postId:         post.id,
+                        post:           post,
                       ),
                     );
                   },
@@ -231,9 +232,11 @@ class PostCard extends StatelessWidget {
   }
 
   String _formatTime(String createdAt) {
-    final date     = DateTime.parse(createdAt);
-    final now      = DateTime.now();
-    final diff     = now.difference(date);
+    final date = DateTime.parse(
+      createdAt.endsWith('Z') ? createdAt : '${createdAt}Z',
+    ).toLocal();
+    final now  = DateTime.now();
+    final diff = now.difference(date);
 
     if (diff.inMinutes < 60)  return 'Hace ${diff.inMinutes} minutos';
     if (diff.inHours < 24)    return 'Hace ${diff.inHours} horas';

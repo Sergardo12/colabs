@@ -84,6 +84,15 @@ class ChatRepository {
     );
   }
 
+  /// Obtiene una conversación con su estado actualizado
+  Future<ConversationModel> getConversation(String conversationId) async {
+    final token = await _getToken();
+    return _chatService.getConversation(
+      token:          token,
+      conversationId: conversationId,
+    );
+  }
+
   /// Envía un mensaje
   Future<MessageModel> sendMessage({
     required String conversationId,
@@ -94,6 +103,34 @@ class ChatRepository {
       token:          token,
       conversationId: conversationId,
       content:        content,
+    );
+  }
+
+  /// Envía una oferta formal
+  Future<MessageModel> sendOffer({
+    required String conversationId,
+    required String content,
+    required double amount,
+  }) async {
+    final token = await _getToken();
+    return _chatService.sendOffer(
+      token:          token,
+      conversationId: conversationId,
+      content:        content,
+      amount:         amount,
+    );
+  }
+
+  /// Acepta una oferta
+  Future<Map<String, dynamic>> acceptOffer({
+    required String conversationId,
+    required String direction,
+  }) async {
+    final token = await _getToken();
+    return _chatService.acceptOffer(
+      token:          token,
+      conversationId: conversationId,
+      direction:      direction,
     );
   }
 }

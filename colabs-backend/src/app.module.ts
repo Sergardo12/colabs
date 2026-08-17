@@ -39,7 +39,6 @@ import { SupportModule } from './modules/support/support.module';
         entities: [__dirname + '/modules/**/entities/*.entity{.ts,.js}'],
         synchronize: process.env.NODE_ENV !== 'production',
         logging: process.env.NODE_ENV === 'development',
-        timezone: 'Z',
       }),
       inject: [ConfigService],
     }),

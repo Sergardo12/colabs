@@ -85,6 +85,27 @@ class PostModel {
           : const PostOccupation(id: '', name: 'Sin ocupación'),
     );
   }
+
+  /// Usado cuando el post viene embebido en una conversación
+  /// No tiene profileColab, likesCount, commentsCount ni isLiked
+  factory PostModel.fromConversationJson(Map<String, dynamic> json) {
+    return PostModel(
+      id:           json['id']          as String,
+      profileColabId: '',
+      description:  json['description'] as String,
+      price:        (json['price'] ?? '0').toString(),
+      media:        json['media'] != null
+                      ? (json['media'] as List<dynamic>).cast<String>()
+                      : [],
+      likesCount:   0,
+      commentsCount: 0,
+      isLiked:      false,
+      createdAt:    json['createdAt']   as String,
+      author:       const PostAuthor(
+                      id: '', name: '', lastName: ''),
+      occupation:   const PostOccupation(id: '', name: ''),
+    );
+  }
 }
 
 class PostsResponse {

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_router.dart';
 import '../../auth/bloc/auth_bloc.dart';
-import '../../auth/data/auth_repository.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

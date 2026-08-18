@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../profile/bloc/profile_bloc.dart';
+import '../../profile/bloc/profile_event.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/colabs_tab.dart';
 import 'tabs/search_tab.dart';
@@ -25,6 +28,12 @@ class _HomeShellState extends State<HomeShell> {
     HistoryTab(),
     FavoritesTab(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<ProfileBloc>().add(const ProfileLoadRequested());
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
+import '../../home/models/post_model.dart';
 
 abstract class ChatState extends Equatable {
   const ChatState();
@@ -25,13 +26,16 @@ class MessagesLoaded extends ChatState {
   final List<MessageModel> messages;
   final String             conversationId;
   final String             currentUserId;
+  final String             conversationStatus;
   const MessagesLoaded({
     required this.messages,
     required this.conversationId,
     required this.currentUserId,
+    required this.conversationStatus,
   });
   @override
-  List<Object?> get props => [messages, conversationId, currentUserId];
+  List<Object?> get props =>
+      [messages, conversationId, currentUserId, conversationStatus];
 }
 
 class ChatError extends ChatState {
@@ -43,7 +47,22 @@ class ChatError extends ChatState {
 
 class ConversationCreated extends ChatState {
   final ConversationModel conversation;
-  const ConversationCreated({required this.conversation});
+  final PostModel?        post;
+
+  const ConversationCreated({
+    required this.conversation,
+    this.post,
+  });
+
   @override
-  List<Object?> get props => [conversation];
+  List<Object?> get props => [conversation, post];
+}
+
+class OfferAccepted extends ChatState {
+  final String serviceRequestId;
+
+  const OfferAccepted({required this.serviceRequestId});
+
+  @override
+  List<Object?> get props => [serviceRequestId];
 }

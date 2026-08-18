@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../models/message_model.dart';
+import '../../home/models/post_model.dart';
 
 abstract class ChatEvent extends Equatable {
   const ChatEvent();
@@ -48,12 +49,44 @@ class NewMessageReceived extends ChatEvent {
 }
 
 class StartConversationRequested extends ChatEvent {
-  final String  profileColabId;
-  final String? postId;
+  final String    profileColabId;
+  final String?   postId;
+  final PostModel? post;
+
   const StartConversationRequested({
     required this.profileColabId,
     this.postId,
+    this.post,
   });
+
   @override
-  List<Object?> get props => [profileColabId, postId];
+  List<Object?> get props => [profileColabId, postId, post];
+}
+
+class SendOfferRequested extends ChatEvent {
+  final String conversationId;
+  final String content;
+  final double amount;
+
+  const SendOfferRequested({
+    required this.conversationId,
+    required this.content,
+    required this.amount,
+  });
+
+  @override
+  List<Object?> get props => [conversationId, content, amount];
+}
+
+class AcceptOfferRequested extends ChatEvent {
+  final String conversationId;
+  final String direction;
+
+  const AcceptOfferRequested({
+    required this.conversationId,
+    required this.direction,
+  });
+
+  @override
+  List<Object?> get props => [conversationId, direction];
 }

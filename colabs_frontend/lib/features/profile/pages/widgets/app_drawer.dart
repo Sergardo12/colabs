@@ -7,7 +7,6 @@ import '../../../../core/bloc/theme/theme_bloc.dart';
 import '../../../../core/bloc/theme/theme_event.dart';
 import '../../../../core/bloc/theme/theme_state.dart';
 import '../../../auth/bloc/auth_bloc.dart';
-import '../../../auth/bloc/auth_state.dart';
 import '../../bloc/profile_bloc.dart';
 import '../../bloc/profile_event.dart';
 import '../../bloc/profile_state.dart';
@@ -218,10 +217,15 @@ class _AppDrawerState extends State<AppDrawer> {
                             .read<AuthBloc>()
                             .authRepository
                             .deleteToken();
-                        Navigator.pushReplacementNamed(
-                          context,
-                          AppRouter.welcome,
-                        );
+                        if (context.mounted) {
+                          context
+                              .read<ProfileBloc>()
+                              .add(const ProfileLoadRequested());
+                          Navigator.pushReplacementNamed(
+                            context,
+                            AppRouter.welcome,
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.colors.error,

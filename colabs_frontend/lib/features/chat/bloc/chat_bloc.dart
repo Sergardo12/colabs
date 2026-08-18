@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../data/chat_repository.dart';
+import '../models/conversation_model.dart';
+import '../models/message_model.dart';
 import 'chat_event.dart';
 import 'chat_state.dart';
 
@@ -15,6 +17,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<MessageSendRequested>(_onMessageSendRequested);
     on<NewMessageReceived>(_onNewMessageReceived);
     on<StartConversationRequested>(_onStartConversationRequested);
+    on<SendOfferRequested>(_onSendOfferRequested);
+    on<AcceptOfferRequested>(_onAcceptOfferRequested);
   }
 
   Future<void> _onConversationsLoadRequested(
@@ -41,11 +45,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _chatRepository.onNewMessage((message) {
         add(NewMessageReceived(message: message));
       });
-      final messages = await _chatRepository.getMessages(event.conversationId);
+      final results = await Future.wait([
+        _chatRepository.getMessages(event.conversationId),
+        _chatRepository.getConversation(event.conversationId),
+      ]);
+      final messages     = results[0] as List<MessageModel>;
+      final conversation = results[1] as ConversationModel;
       emit(MessagesLoaded(
-        messages:       messages,
-        conversationId: event.conversationId,
-        currentUserId:  event.currentUserId,
+        messages:           messages,
+        conversationId:     event.conversationId,
+        currentUserId:      event.currentUserId,
+        conversationStatus: conversation.status,
       ));
     } catch (e) {
       emit(const ChatError(message: 'Error al abrir el chat'));
@@ -73,9 +83,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         content:        event.content,
       );
       emit(MessagesLoaded(
-        messages:       [...current.messages, message],
-        conversationId: current.conversationId,
-        currentUserId:  current.currentUserId,
+        messages:           [...current.messages, message],
+        conversationId:     current.conversationId,
+        currentUserId:      current.currentUserId,
+        conversationStatus: current.conversationStatus,
       ));
     } catch (e) {
       emit(const ChatError(message: 'Error al enviar el mensaje'));
@@ -91,9 +102,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final exists = current.messages.any((m) => m.id == event.message.id);
     if (exists) return;
     emit(MessagesLoaded(
-      messages:       [...current.messages, event.message],
-      conversationId: current.conversationId,
-      currentUserId:  current.currentUserId,
+      messages:           [...current.messages, event.message],
+      conversationId:     current.conversationId,
+      currentUserId:      current.currentUserId,
+      conversationStatus: current.conversationStatus,
     ));
   }
 
@@ -107,7 +119,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         profileColabId: event.profileColabId,
         postId:         event.postId,
       );
-      emit(ConversationCreated(conversation: conversation));
+      emit(ConversationCreated(
+        conversation: conversation,
+        post:         event.post,
+      ));
     } catch (e) {
       if (e.toString().contains('409')) {
         // Ya existe una conversación — buscar y navegar a ella
@@ -116,13 +131,65 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           final existing = conversations.firstWhere(
             (c) => c.profileColabId == event.profileColabId,
           );
-          emit(ConversationCreated(conversation: existing));
+          emit(ConversationCreated(
+            conversation: existing,
+            post:         event.post,
+          ));
         } catch (e2) {
           emit(const ChatError(message: 'Error al abrir la conversación'));
         }
       } else {
         emit(const ChatError(message: 'Error al iniciar la conversación'));
       }
+    }
+  }
+
+  Future<void> _onSendOfferRequested(
+    SendOfferRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    final current = state;
+    if (current is! MessagesLoaded) return;
+    try {
+      final message = await _chatRepository.sendOffer(
+        conversationId: event.conversationId,
+        content:        event.content,
+        amount:         event.amount,
+      );
+      emit(MessagesLoaded(
+        messages:           [...current.messages, message],
+        conversationId:     current.conversationId,
+        currentUserId:      current.currentUserId,
+        conversationStatus: current.conversationStatus,
+      ));
+    } catch (e) {
+      emit(const ChatError(message: 'Error al enviar la oferta'));
+    }
+  }
+
+  Future<void> _onAcceptOfferRequested(
+    AcceptOfferRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    try {
+      final result = await _chatRepository.acceptOffer(
+        conversationId: event.conversationId,
+        direction:      event.direction,
+      );
+      final serviceRequestId =
+          result['serviceRequest']['id'] as String;
+      final current = state;
+      if (current is MessagesLoaded) {
+        emit(MessagesLoaded(
+          messages:           current.messages,
+          conversationId:     current.conversationId,
+          currentUserId:      current.currentUserId,
+          conversationStatus: 'accepted',
+        ));
+      }
+      emit(OfferAccepted(serviceRequestId: serviceRequestId));
+    } catch (e) {
+      emit(const ChatError(message: 'Error al aceptar la oferta'));
     }
   }
 }

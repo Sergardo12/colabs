@@ -14,8 +14,8 @@ Aplicación móvil SaaS que conecta usuarios que ofrecen servicios empíricos (c
 `13 de 15 módulos completados`
 
 ### Frontend (Flutter)
-![Frontend Progress](https://progress-bar.xyz/68/?title=Flutter&width=500&color=017DB0)
-`18 de 26 funcionalidades completadas`
+![Frontend Progress](https://progress-bar.xyz/72/?title=Flutter&width=500&color=017DB0)
+`19 de 26 funcionalidades completadas`
 
 ### Flujos principales
 | Flujo | Estado | Descripción |
@@ -724,6 +724,7 @@ google_sign_in: ^6.2.2
 - [x] Flujo "Convertirse en colaborador" con selector de ocupaciones
 - [x] Edición de perfil de colaborador
 - [x] Búsqueda de colaboradores con paginación y filtro query
+- [x] Pantalla "Mis solicitudes" con estados y link a chat
 - [x] Chat en tiempo real (WebSocket + Socket.io)
 - [x] Flujo B completo — consulta desde post, oferta y aceptación
 - [x] Lista de conversaciones con interlocutor correcto

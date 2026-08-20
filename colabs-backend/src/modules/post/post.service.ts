@@ -34,7 +34,9 @@ export class PostService {
     });
 
     if (!profile) {
-      throw new ForbiddenException('Solo los colaboradores pueden publicar posts');
+      throw new ForbiddenException(
+        'Solo los colaboradores pueden publicar posts',
+      );
     }
 
     const post = this.postRepository.create({
@@ -54,30 +56,59 @@ export class PostService {
     limit: number = 10,
     profileColabId?: string,
   ) {
-    const [posts, total] = await this.postRepository.findAndCount({
-      where: {
-        status: 'active',
-        ...(profileColabId ? { profileColabId } : {}),
-      },
-      relations: [
-        'profileColab',
-        'profileColab.user',
-        'profileColab.occupations',
-        'likes',
-        'comments',
-      ],
-      order: { creationDate: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    let posts: Post[];
+    let total: number;
+
+    if (profileColabId) {
+      const countQb = this.postRepository
+        .createQueryBuilder('post')
+        .where('post.status = :status', { status: 'active' })
+        .andWhere('post.profileColabId = :profileColabId', {
+          profileColabId,
+        });
+
+      const dataQb = countQb
+        .clone()
+        .leftJoinAndSelect('post.profileColab', 'profileColab')
+        .leftJoinAndSelect('profileColab.user', 'user')
+        .leftJoinAndSelect('profileColab.occupations', 'occupations')
+        .leftJoinAndSelect('post.likes', 'likes')
+        .leftJoinAndSelect('post.comments', 'comments')
+        .orderBy(
+          '(SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = post.id)',
+          'DESC',
+        )
+        .addOrderBy('post.creation_date', 'DESC')
+        .skip((page - 1) * limit)
+        .take(limit);
+
+      [posts, total] = await Promise.all([
+        dataQb.getMany(),
+        countQb.getCount(),
+      ]);
+    } else {
+      [posts, total] = await this.postRepository.findAndCount({
+        where: { status: 'active' },
+        relations: [
+          'profileColab',
+          'profileColab.user',
+          'profileColab.occupations',
+          'likes',
+          'comments',
+        ],
+        order: { creationDate: 'DESC' },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+    }
 
     // Agrega si el usuario actual dio like
-    const postsWithLikeStatus = posts.map(post => ({
+    const postsWithLikeStatus = posts.map((post) => ({
       ...post,
       likesCount: post.likes.length,
       commentsCount: post.comments.length,
-      isLiked: post.likes.some(like => like.userId === userId),
-      likes: undefined,    // no mandamos el array completo
+      isLiked: post.likes.some((like) => like.userId === userId),
+      likes: undefined, // no mandamos el array completo
       comments: undefined, // no mandamos el array completo
     }));
 
@@ -108,7 +139,7 @@ export class PostService {
       ...post,
       likesCount: post.likes.length,
       commentsCount: post.comments.length,
-      isLiked: post.likes.some(like => like.userId === userId),
+      isLiked: post.likes.some((like) => like.userId === userId),
     };
   }
 
@@ -117,13 +148,15 @@ export class PostService {
       where: { userId },
     });
 
-    if (!profile) throw new ForbiddenException('No tienes perfil de colaborador');
+    if (!profile)
+      throw new ForbiddenException('No tienes perfil de colaborador');
 
     const post = await this.postRepository.findOne({
       where: { id, profileColabId: profile.id },
     });
 
-    if (!post) throw new NotFoundException('Post no encontrado o no te pertenece');
+    if (!post)
+      throw new NotFoundException('Post no encontrado o no te pertenece');
 
     post.status = 'inactive';
     return this.postRepository.save(post);

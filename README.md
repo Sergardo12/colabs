@@ -3,7 +3,29 @@
 Aplicación móvil SaaS que conecta usuarios que ofrecen servicios empíricos (carpintero, electricista, gasfitero, etc.) con usuarios que los buscan.
  
 ---
- 
+
+## 📊 Progreso del proyecto
+
+**🚀 Lanzamiento objetivo: 27 de diciembre de 2026**
+**🧪 Pruebas con usuarios reales: 1 — 20 de diciembre de 2026**
+
+### Backend (NestJS)
+![Backend Progress](https://progress-bar.xyz/87/?title=Backend&width=500&color=1E41BC)
+`13 de 15 módulos completados`
+
+### Frontend (Flutter)
+![Frontend Progress](https://progress-bar.xyz/68/?title=Flutter&width=500&color=017DB0)
+`18 de 26 funcionalidades completadas`
+
+### Flujos principales
+| Flujo | Estado | Descripción |
+|---|---|---|
+| Flujo A — Solicitud InDriver | 🔴 Pendiente | Usuario solicita por ubicación, colaboradores proponen |
+| Flujo B — Consulta desde post | 🟢 Completo | Usuario consulta desde feed, chat con oferta y aceptación |
+| Flujo C — Re-solicitar desde historial | 🔴 Pendiente | Re-solicitar servicio anterior |
+
+---
+
 ## Inspiración
  
 | Referente | Elemento adoptado |
@@ -702,14 +724,28 @@ google_sign_in: ^6.2.2
 - [x] Flujo "Convertirse en colaborador" con selector de ocupaciones
 - [x] Edición de perfil de colaborador
 - [x] Búsqueda de colaboradores con paginación y filtro query
-- [ ] Chat en tiempo real (WebSocket)
+- [x] Chat en tiempo real (WebSocket + Socket.io)
+- [x] Flujo B completo — consulta desde post, oferta y aceptación
+- [x] Lista de conversaciones con interlocutor correcto
+- [x] Burbujas de mensaje estilo WhatsApp
 - [ ] Botón central — solicitud tipo InDriver
 - [ ] Historial de servicios
 - [ ] Favoritos
 - [ ] Notificaciones
-- [ ] Perfil público tipo Instagram
+- [x] Vista pública de colaborador
 - [ ] Subida de imágenes (Cloudinary)
 - [ ] Panel de administración
+
+---
+
+## 🔧 Deuda técnica conocida
+
+| Issue | Impacto | Prioridad |
+|---|---|---|
+| Zona horaria en mensajes del chat | Visual — hora incorrecta en dev local | Media |
+| WebSocket persistente en chat | Performance — reconecta por cada conversación | Media |
+| currentUserId via ProfileBloc en router | Frágil si perfil no cargado | Baja |
+| withOpacity deprecado (~45 usos) | Warning de lint | Baja |
 
 ---
 

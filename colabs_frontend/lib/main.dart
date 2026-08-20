@@ -25,6 +25,9 @@ import 'features/chat/bloc/chat_bloc.dart';
 import 'features/chat/data/chat_repository.dart';
 import 'features/chat/data/chat_service.dart';
 import 'features/chat/data/chat_socket_service.dart';
+import 'features/service_request/bloc/service_request_bloc.dart';
+import 'features/service_request/data/service_request_repository.dart';
+import 'features/service_request/data/service_request_service.dart';
 import 'core/bloc/theme/theme_bloc.dart';
 import 'core/storage/theme_repository.dart';
 
@@ -82,6 +85,13 @@ Future<void> main() async {
     secureStorage: secureStorage,
   );
 
+  // Service Request
+  final serviceRequestService    = ServiceRequestService(dio);
+  final serviceRequestRepository = ServiceRequestRepository(
+    service:       serviceRequestService,
+    secureStorage: secureStorage,
+  );
+
 // Public Profile
 final publicProfileRepository = PublicProfileRepository(
   profileService: profileService,
@@ -117,6 +127,11 @@ final publicProfileRepository = PublicProfileRepository(
           create: (_) => PublicProfileBloc(repository: publicProfileRepository),
         ),
         BlocProvider(create: (_) => ChatBloc(chatRepository: chatRepository)),
+        BlocProvider(
+          create: (_) => ServiceRequestBloc(
+            repository: serviceRequestRepository,
+          ),
+        ),
       ],
       child: const ColabsApp(),
     ),

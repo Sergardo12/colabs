@@ -18,4 +18,27 @@ class ServiceRequestService {
         .map((e) => ServiceRequestModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  /// Crea una nueva solicitud de servicio
+  Future<ServiceRequestModel> createRequest({
+    required String token,
+    required double lat,
+    required double lng,
+    required String direction,
+    required String occupationId,
+    required String description,
+  }) async {
+    final response = await _dio.post(
+      '/service-requests',
+      data: {
+        'lat':          lat,
+        'lng':          lng,
+        'direction':    direction,
+        'occupationId': occupationId,
+        'description':  description,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return ServiceRequestModel.fromJson(response.data as Map<String, dynamic>);
+  }
 }

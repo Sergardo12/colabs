@@ -100,7 +100,9 @@ final publicProfileRepository = PublicProfileRepository(
 );
 
   runApp(
-    MultiBlocProvider(
+    RepositoryProvider<BecomeColabRepository>(
+      create: (_) => becomeColabRepository,
+      child: MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (_) => ThemeBloc(
@@ -133,7 +135,8 @@ final publicProfileRepository = PublicProfileRepository(
           ),
         ),
       ],
-      child: const ColabsApp(),
+        child: const ColabsApp(),
+      ),
     ),
   );
 }

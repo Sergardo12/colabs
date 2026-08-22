@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../favorites/bloc/favorites_bloc.dart';
+import '../../../favorites/bloc/favorites_event.dart';
+import '../../../favorites/bloc/favorites_state.dart';
 import '../../../search/bloc/search_bloc.dart';
 import '../../../search/bloc/search_event.dart';
 import '../../../search/bloc/search_state.dart';
@@ -130,7 +133,21 @@ class _ColabsTabState extends State<ColabsTab> {
                     itemCount:  state.results.length + 1,
                     itemBuilder: (context, index) {
                       if (index < state.results.length) {
-                        return ColabCard(colab: state.results[index]);
+                        final colab = state.results[index];
+                        return BlocBuilder<FavoritesBloc, FavoritesState>(
+                          builder: (context, favState) {
+                            final isFavorite = favState is FavoritesLoaded
+                                ? favState.isFavorite(colab.id)
+                                : false;
+                            return ColabCard(
+                              colab:      colab,
+                              isFavorite: isFavorite,
+                              onToggleFavorite: () => context
+                                  .read<FavoritesBloc>()
+                                  .add(ToggleFavorite(colab.id, colab: colab)),
+                            );
+                          },
+                        );
                       }
 
                       if (state is SearchLoadingMore) {

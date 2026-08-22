@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../favorites/bloc/favorites_bloc.dart';
+import '../../favorites/bloc/favorites_event.dart';
 import '../../profile/bloc/profile_bloc.dart';
 import '../../profile/bloc/profile_event.dart';
 import 'tabs/home_tab.dart';
@@ -33,6 +35,7 @@ class _HomeShellState extends State<HomeShell> {
   void initState() {
     super.initState();
     context.read<ProfileBloc>().add(const ProfileLoadRequested());
+    context.read<FavoritesBloc>().add(const FavoritesLoadRequested());
   }
 
   @override
@@ -45,7 +48,16 @@ class _HomeShellState extends State<HomeShell> {
       ),
       bottomNavigationBar: ColabsBottomNav(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+
+          // Re-sincroniza favoritos con el servidor cada vez que se abre el tab
+          if (index == 4) {
+            context
+                .read<FavoritesBloc>()
+                .add(const FavoritesLoadRequested());
+          }
+        },
       ),
       drawer: const AppDrawer(),
     );

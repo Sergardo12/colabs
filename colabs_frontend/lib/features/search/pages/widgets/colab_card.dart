@@ -5,8 +5,15 @@ import '../../models/colab_search_model.dart';
 
 class ColabCard extends StatelessWidget {
   final ColabSearchModel colab;
+  final bool             isFavorite;
+  final VoidCallback?    onToggleFavorite;
 
-  const ColabCard({super.key, required this.colab});
+  const ColabCard({
+    super.key,
+    required this.colab,
+    this.isFavorite      = false,
+    this.onToggleFavorite,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +82,44 @@ class ColabCard extends StatelessWidget {
               color: Theme.of(context).iconTheme.color,
               size:  20,
             ),
+
+          // Favorito + rating
+          Column(
+            children: [
+              InkWell(
+                onTap:     onToggleFavorite,
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSizes.paddingXS),
+                  child: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: context.colors.primary,
+                    size:  24,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSizes.paddingXS),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.star_rounded,
+                    color: Colors.amber,
+                    size:  16,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    colab.avgRating.toStringAsFixed(1),
+                    style: TextStyle(
+                      color:    context.colors.textSecondary,
+                      fontSize: AppSizes.fontS,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );

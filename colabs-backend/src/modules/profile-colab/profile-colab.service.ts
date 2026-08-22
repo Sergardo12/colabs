@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { ProfileColab } from './entities/profile-colab.entity';
 import { Occupation } from '../occupation/entities/occupation.entity';
 import { User } from '../users/entities/user.entity';
+import { CommentRequest } from '../service-request/entities/comment-request.entity';
+import { Proposal } from '../proposal/entities/proposal.entity';
 import { CreateProfileColabDto } from './dto/create-profile-colab.dto';
 import { UpdateProfileColabDto } from './dto/update-profile-colab.dto';
 import { RedisService } from 'src/common/services/redis.service';
@@ -75,7 +77,17 @@ export class ProfileColabService {
     .createQueryBuilder('profile')
     .leftJoinAndSelect('profile.user', 'user')
     .leftJoinAndSelect('profile.occupations', 'occupation')
-    .where('profile.status = :status', { status: 'active' });
+    .where('profile.status = :status', { status: 'active' })
+    .addSelect(
+      (sub) =>
+        sub
+          .select('AVG(cr.rating)', 'avg_rating')
+          .from(CommentRequest, 'cr')
+          .innerJoin(Proposal, 'p', 'p.service_request_id = cr.service_request_id')
+          .where('p.profile_colab_id = profile.id')
+          .andWhere('cr.status = :status', { status: 'active' }),
+      'avg_rating',
+    );
 
   if (query) {
     // query tiene prioridad — busca en nombre, apellido y ocupación
@@ -98,18 +110,21 @@ export class ProfileColabService {
     }
   }
 
-  const [data, total] = await qb
+  const total = await qb.getCount();
+
+  const { entities, raw } = await qb
     .skip((page - 1) * limit)
     .take(limit)
-    .getManyAndCount();
+    .getRawAndEntities();
 
   return {
-    data: data.map(profile => ({
+    data: entities.map((profile, i) => ({
       id: profile.id,
       userId: profile.userId,
       description: profile.description,
       experience: profile.experience,
       verificationStatus: profile.verificationStatus,
+      avgRating: Math.round(Number(raw[i]?.avg_rating ?? 0) * 10) / 10,
       occupations: profile.occupations.map(o => ({
         id: o.id,
         name: o.name,

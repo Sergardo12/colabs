@@ -52,7 +52,9 @@ class PublicProfileBloc extends Bloc<PublicProfileEvent, PublicProfileState> {
         posts:   posts.data,
         reviews: reviews.comments,
       ));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('ERROR PUBLIC PROFILE: $e');
+      print(stackTrace);
       emit(const PublicProfileError(
         message: 'Error al cargar el perfil público',
       ));

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../home/models/post_model.dart';
 import '../../home/pages/widgets/post_card.dart';
 import '../bloc/public_profile_bloc.dart';
 import '../bloc/public_profile_event.dart';
@@ -108,6 +109,12 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   Widget _buildTabContent(PublicProfileSuccess state) {
     // POST (0) y LIKES (2) muestran las publicaciones del colaborador
     if (_selectedTab == 0 || _selectedTab == 2) {
+      // Tab LIKES (2): ordenar por cantidad de likes descendente
+      final posts = _selectedTab == 2
+          ? (List<PostModel>.from(state.posts)
+              ..sort((a, b) => b.likesCount.compareTo(a.likesCount)))
+          : state.posts;
+
       return ListView(
         key: ValueKey('posts-$_selectedTab'),
         shrinkWrap:     true,
@@ -116,7 +123,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
           top:    AppSizes.paddingS,
           bottom: AppSizes.paddingXL,
         ),
-        children: state.posts.isEmpty
+        children: posts.isEmpty
             ? const [
                 EmptyState(
                   icon:        Icons.post_add,
@@ -124,7 +131,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                   buttonLabel: 'Crear Post',
                 ),
               ]
-            : state.posts.map((post) => PostCard(post: post)).toList(),
+            : posts.map((post) => PostCard(post: post)).toList(),
       );
     }
 

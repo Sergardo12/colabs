@@ -14,8 +14,8 @@ Aplicación móvil SaaS que conecta usuarios que ofrecen servicios empíricos (c
 `13 de 15 módulos completados`
 
 ### Frontend (Flutter)
-![Frontend Progress](https://progress-bar.xyz/72/?title=Flutter&width=500&color=017DB0)
-`19 de 26 funcionalidades completadas`
+![Frontend Progress](https://progress-bar.xyz/76/?title=Flutter&width=500&color=017DB0)
+`20 de 27 funcionalidades completadas`
 
 ### Flujos principales
 | Flujo | Estado | Descripción |
@@ -268,7 +268,7 @@ colabs_frontend/
 │ │ ├── home/ → shell, bottom nav, feed, carrusel ocupaciones
 │ │ ├── profile/ → drawer, perfil, become colab, edit colab
 │ │ ├── search/ → búsqueda de colaboradores con paginación
-│ │ ├── favorites/ → favoritos del demandante (bloc, data)
+│ │ ├── favorites/ → favoritos del demandante (bloc, data) + posts likeados (PostFavoritesBloc)
 │ │ ├── feed/ → pendiente
 │ │ ├── chat/ → pendiente
 │ │ └── service_request/ → pendiente
@@ -507,6 +507,24 @@ Providers pendientes: Facebook, Apple
 | follower_id | uuid FK → users |
 | following_id | uuid FK → users |
 | created_at | timestamp |
+
+### API — Endpoints del módulo de posts
+
+Todos requieren JWT (Bearer token).
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/posts` | Crear post (solo colaborador) |
+| GET | `/api/posts` | Feed paginado (`page`, `limit`, `profileColabId?`) |
+| GET | `/api/posts/favorites` | Posts likeados por el usuario — orden por like más reciente, solo posts activos, paginado `{data, total, page, lastPage}` |
+| GET | `/api/posts/:id` | Detalle de un post |
+| DELETE | `/api/posts/:id` | Eliminar mi post (soft delete) |
+| POST | `/api/posts/:id/like` | Dar like (403 si ya existe) |
+| DELETE | `/api/posts/:id/like` | Quitar like (404 si no existe) |
+| POST | `/api/posts/:id/comments` | Comentar un post |
+| GET | `/api/posts/:id/comments` | Ver comentarios |
+
+> El cliente móvil trata el 403 (like duplicado) y el 404 (unlike sin like) como éxito idempotente — tolera la desincronización de estado entre tabs sin bloquear la UI.
  
 ---
  
@@ -745,6 +763,7 @@ google_sign_in: ^6.2.2
 - [ ] Botón central — solicitud tipo InDriver
 - [ ] Historial de servicios
 - [x] Favoritos
+- [x] Posts favoritos — like en feed y sección "Publicaciones" en tab Favoritos
 - [ ] Notificaciones
 - [x] Vista pública de colaborador
 - [ ] Subida de imágenes (Cloudinary)

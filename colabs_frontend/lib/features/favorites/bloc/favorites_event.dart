@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../search/models/colab_search_model.dart';
+import '../models/favorite_filter.dart';
 
 abstract class FavoritesEvent extends Equatable {
   const FavoritesEvent();
@@ -24,4 +25,14 @@ class ToggleFavorite extends FavoritesEvent {
 
   @override
   List<Object?> get props => [profileColabId, colab];
+}
+
+/// Cambia el filtro activo entre trabajadores y publicaciones
+class FavoriteFilterChanged extends FavoritesEvent {
+  final FavoriteFilterType filter;
+
+  const FavoriteFilterChanged(this.filter);
+
+  @override
+  List<Object?> get props => [filter];
 }

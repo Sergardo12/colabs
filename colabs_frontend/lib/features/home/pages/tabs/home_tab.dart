@@ -120,7 +120,13 @@ class _HomeTabState extends State<HomeTab> {
 
                         // Posts
                         if (index <= state.posts.length) {
-                          return PostCard(post: state.posts[index - 1]);
+                          final post = state.posts[index - 1];
+                          return PostCard(
+                            post: post,
+                            onToggleLike: () => context
+                                .read<HomeBloc>()
+                                .add(PostLikeToggled(post.id)),
+                          );
                         }
 
                         // Loader de infinite scroll

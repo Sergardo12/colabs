@@ -14,3 +14,18 @@ class FeedLoadRequested extends HomeEvent {
 class FeedLoadMoreRequested extends HomeEvent {
   const FeedLoadMoreRequested();
 }
+
+/// Re-sincroniza el feed con el servidor sin mostrar spinner
+class FeedRefreshRequested extends HomeEvent {
+  const FeedRefreshRequested();
+}
+
+/// Alterna el like de un post en el feed
+class PostLikeToggled extends HomeEvent {
+  final String postId;
+
+  const PostLikeToggled(this.postId);
+
+  @override
+  List<Object?> get props => [postId];
+}

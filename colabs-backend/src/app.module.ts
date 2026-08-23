@@ -13,6 +13,7 @@ import { ServiceRequestModule } from './modules/service-request/service-request.
 import { RedisModule } from './common/redis.module';
 import { ProposalModule } from './modules/proposal/proposal.module';
 import { PostModule } from './modules/post/post.module';
+import { FavoriteModule } from './modules/favorite/favorite.module';
 import { CommentRequestModule } from './modules/comment-request/comment-request.module';
 import { ConversationModule } from './modules/conversation/conversation.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -52,6 +53,7 @@ import { SupportModule } from './modules/support/support.module';
     ServiceRequestModule,
     ProposalModule,
     PostModule,
+    FavoriteModule,
     CommentRequestModule,
     ConversationModule,
     NotificationModule,

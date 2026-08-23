@@ -4,6 +4,7 @@ class ColabSearchModel {
   final String  description;
   final String  experience;
   final String  verificationStatus;
+  final double  avgRating;
   final List<ColabOccupation> occupations;
   final ColabUser user;
 
@@ -13,6 +14,7 @@ class ColabSearchModel {
     required this.description,
     required this.experience,
     required this.verificationStatus,
+    this.avgRating = 0.0,
     required this.occupations,
     required this.user,
   });
@@ -24,6 +26,7 @@ class ColabSearchModel {
       description:        json['description']        as String,
       experience:         json['experience']         as String,
       verificationStatus: json['verificationStatus'] as String,
+      avgRating:          (json['avgRating'] as num?)?.toDouble() ?? 0.0,
       occupations: (json['occupations'] as List<dynamic>)
           .map((e) => ColabOccupation.fromJson(e as Map<String, dynamic>))
           .toList(),

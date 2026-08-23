@@ -200,6 +200,7 @@ colabs/
 │   │   │   ├── conversation/
 │   │   │   ├── message/
 │   │   │   ├── post/
+│   │   │   ├── favorite/
 │   │   │   ├── notification/
 │   │   │   ├── report/
 │   │   │   ├── suggestion/
@@ -267,6 +268,7 @@ colabs_frontend/
 │ │ ├── home/ → shell, bottom nav, feed, carrusel ocupaciones
 │ │ ├── profile/ → drawer, perfil, become colab, edit colab
 │ │ ├── search/ → búsqueda de colaboradores con paginación
+│ │ ├── favorites/ → favoritos del demandante (bloc, data)
 │ │ ├── feed/ → pendiente
 │ │ ├── chat/ → pendiente
 │ │ └── service_request/ → pendiente
@@ -428,6 +430,17 @@ Providers pendientes: Facebook, Apple
 | rating | int |
 | creation_date | timestamp |
 | status | string |
+
+**`profile_colab_favorites`** — favoritos del demandante
+| Campo | Tipo |
+|---|---|
+| id | uuid PK |
+| user_id | uuid FK → users (demandante) |
+| profile_colab_id | uuid FK → profile_colab |
+| status | string |
+| created_at | timestamp |
+
+Índice único `(user_id, profile_colab_id)` — evita duplicados.
  
 ---
  
@@ -731,7 +744,7 @@ google_sign_in: ^6.2.2
 - [x] Burbujas de mensaje estilo WhatsApp
 - [ ] Botón central — solicitud tipo InDriver
 - [ ] Historial de servicios
-- [ ] Favoritos
+- [x] Favoritos
 - [ ] Notificaciones
 - [x] Vista pública de colaborador
 - [ ] Subida de imágenes (Cloudinary)

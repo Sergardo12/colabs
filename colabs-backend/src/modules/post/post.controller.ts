@@ -48,6 +48,18 @@ export class PostController {
     return this.postService.findFeed(user.id, +page, +limit, profileColabId);
   }
 
+  @Get('favorites')
+  @ApiOperation({ summary: 'Posts likeados por el usuario actual' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  findFavorites(
+    @CurrentUser() user: any,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.postService.findFavorites(user.id, +page, +limit);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Detalle de un post' })
   findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: any) {

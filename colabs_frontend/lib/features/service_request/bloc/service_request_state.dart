@@ -17,6 +17,15 @@ class ServiceRequestSuccess extends ServiceRequestState {
   List<Object?> get props => [requests];
 }
 
+class ServiceRequestCreating extends ServiceRequestState {}
+
+class ServiceRequestCreated extends ServiceRequestState {
+  final ServiceRequestModel request;
+  const ServiceRequestCreated({required this.request});
+  @override
+  List<Object?> get props => [request];
+}
+
 class ServiceRequestError extends ServiceRequestState {
   final String message;
   const ServiceRequestError({required this.message});

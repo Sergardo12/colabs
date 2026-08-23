@@ -15,6 +15,7 @@ import '../../features/chat/pages/chat_page.dart';
 import '../../features/chat/pages/conversations_page.dart';
 import '../../features/chat/models/conversation_model.dart';
 import '../../features/home/models/post_model.dart';
+import '../../features/service_request/pages/request_map_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -30,6 +31,7 @@ class AppRouter {
   static const String publicProfile = '/public-profile';
   static const String chat = '/chat';
   static const String conversations = '/conversations';
+  static const String requestMap = '/request-map';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -57,6 +59,10 @@ class AppRouter {
         );
       case conversations:
         return MaterialPageRoute(builder: (_) => const ConversationsPage());
+      case requestMap:
+        return MaterialPageRoute(
+          builder: (_) => const RequestMapPage(),
+        );
       case chat:
         final args = settings.arguments;
         if (args is Map) {

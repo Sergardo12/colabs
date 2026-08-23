@@ -10,6 +10,7 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       : _repository = repository,
         super(ServiceRequestInitial()) {
     on<MyRequestsLoadRequested>(_onMyRequestsLoadRequested);
+    on<CreateRequestRequested>(_onCreateRequestRequested);
   }
 
   Future<void> _onMyRequestsLoadRequested(
@@ -23,6 +24,26 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     } catch (e) {
       emit(const ServiceRequestError(
         message: 'Error al cargar tus solicitudes'));
+    }
+  }
+
+  Future<void> _onCreateRequestRequested(
+    CreateRequestRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    emit(ServiceRequestCreating());
+    try {
+      final request = await _repository.createRequest(
+        lat:          event.lat,
+        lng:          event.lng,
+        direction:    event.direction,
+        occupationId: event.occupationId,
+        description:  event.description,
+      );
+      emit(ServiceRequestCreated(request: request));
+    } catch (e) {
+      emit(const ServiceRequestError(
+        message: 'Error al crear la solicitud'));
     }
   }
 }

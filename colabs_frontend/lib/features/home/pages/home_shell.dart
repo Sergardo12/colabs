@@ -10,6 +10,7 @@ import 'tabs/history_tab.dart';
 import 'tabs/favorites_tab.dart';
 import 'widgets/bottom_nav_bar.dart';
 import '../../../features/profile/pages/widgets/app_drawer.dart';
+import '../../../core/routes/app_router.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -45,7 +46,13 @@ class _HomeShellState extends State<HomeShell> {
       ),
       bottomNavigationBar: ColabsBottomNav(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          if (index == 2) {
+            Navigator.pushNamed(context, AppRouter.requestMap);
+            return;
+          }
+          setState(() => _currentIndex = index);
+        },
       ),
       drawer: const AppDrawer(),
     );

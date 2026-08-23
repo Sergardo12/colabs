@@ -9,7 +9,10 @@ import '../../../chat/bloc/chat_event.dart';
 class PostCard extends StatelessWidget {
   final PostModel post;
 
-  const PostCard({super.key, required this.post});
+  /// Callback opcional para alternar el like — el feed lo conecta al HomeBloc
+  final VoidCallback? onToggleLike;
+
+  const PostCard({super.key, required this.post, this.onToggleLike});
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +148,7 @@ class PostCard extends StatelessWidget {
                   children: [
                     // Like
                     GestureDetector(
-                      onTap: () {},
+                      onTap: onToggleLike,
                       child: Row(
                         children: [
                           Icon(

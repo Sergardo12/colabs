@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
+import '../bloc/home_bloc.dart';
+import '../bloc/home_event.dart';
 import '../../favorites/bloc/favorites_bloc.dart';
 import '../../favorites/bloc/favorites_event.dart';
+import '../../favorites/bloc/post_favorites_bloc.dart';
+import '../../favorites/bloc/post_favorites_event.dart';
 import '../../profile/bloc/profile_bloc.dart';
 import '../../profile/bloc/profile_event.dart';
 import 'tabs/home_tab.dart';
@@ -37,6 +41,7 @@ class _HomeShellState extends State<HomeShell> {
     super.initState();
     context.read<ProfileBloc>().add(const ProfileLoadRequested());
     context.read<FavoritesBloc>().add(const FavoritesLoadRequested());
+    context.read<PostFavoritesBloc>().add(const PostFavoritesLoadRequested());
   }
 
   @override
@@ -54,6 +59,10 @@ class _HomeShellState extends State<HomeShell> {
             Navigator.pushNamed(context, AppRouter.requestMap);
             return;
           }
+          // Re-sincroniza el feed con el servidor al volver al tab Home
+          if (index == 0 && _currentIndex != 0) {
+            context.read<HomeBloc>().add(const FeedRefreshRequested());
+          }
           setState(() => _currentIndex = index);
 
           // Re-sincroniza favoritos con el servidor cada vez que se abre el tab
@@ -61,6 +70,9 @@ class _HomeShellState extends State<HomeShell> {
             context
                 .read<FavoritesBloc>()
                 .add(const FavoritesLoadRequested());
+            context
+                .read<PostFavoritesBloc>()
+                .add(const PostFavoritesLoadRequested());
           }
         },
       ),

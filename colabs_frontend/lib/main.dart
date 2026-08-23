@@ -32,6 +32,9 @@ import 'features/service_request/bloc/request_map_bloc.dart';
 import 'features/favorites/bloc/favorites_bloc.dart';
 import 'features/favorites/data/favorite_repository.dart';
 import 'features/favorites/data/favorite_service.dart';
+import 'features/favorites/bloc/post_favorites_bloc.dart';
+import 'features/favorites/data/post_favorite_repository.dart';
+import 'features/favorites/data/post_favorite_service.dart';
 import 'core/bloc/theme/theme_bloc.dart';
 import 'core/storage/theme_repository.dart';
 
@@ -110,6 +113,13 @@ final publicProfileRepository = PublicProfileRepository(
     secureStorage:   secureStorage,
   );
 
+  // Posts favoritos
+  final postFavoriteService    = PostFavoriteService(dio);
+  final postFavoriteRepository = PostFavoriteRepository(
+    postFavoriteService: postFavoriteService,
+    secureStorage:       secureStorage,
+  );
+
   runApp(
     RepositoryProvider<BecomeColabRepository>(
       create: (_) => becomeColabRepository,
@@ -142,6 +152,10 @@ final publicProfileRepository = PublicProfileRepository(
         BlocProvider(create: (_) => ChatBloc(chatRepository: chatRepository)),
         BlocProvider(
           create: (_) => FavoritesBloc(repository: favoriteRepository),
+        ),
+        BlocProvider(
+          create: (_) =>
+              PostFavoritesBloc(postFavoriteRepository: postFavoriteRepository),
         ),
         BlocProvider(
           create: (_) => ServiceRequestBloc(

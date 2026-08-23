@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import '../../profile/data/become_colab_repository.dart';
 import '../../profile/models/occupation_model.dart';
+import '../bloc/request_map_bloc.dart';
+import '../bloc/request_map_event.dart';
+import '../bloc/request_map_state.dart';
 import '../bloc/service_request_bloc.dart';
 import '../bloc/service_request_event.dart';
 import '../bloc/service_request_state.dart';
@@ -23,7 +25,6 @@ class _RequestMapPageState extends State<RequestMapPage> {
   final TextEditingController  _descCtrl        = TextEditingController();
 
   LatLng _pinLocation = const LatLng(-12.046, -77.042); // Lima por defecto
-  List<OccupationItem> _occupations = [];
   OccupationItem?      _selectedOccupation;
   bool                 _loadingLocation = true;
   final Dio _nominatimDio = Dio();
@@ -35,7 +36,7 @@ class _RequestMapPageState extends State<RequestMapPage> {
   @override
   void initState() {
     super.initState();
-    _loadOccupations();
+    context.read<RequestMapBloc>().add(const OccupationsLoadRequested());
     _getCurrentLocation();
   }
 
@@ -44,14 +45,6 @@ class _RequestMapPageState extends State<RequestMapPage> {
     _directionCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadOccupations() async {
-    try {
-      final repo = context.read<BecomeColabRepository>();
-      final list = await repo.getOccupations();
-      setState(() => _occupations = list);
-    } catch (_) {}
   }
 
   Future<void> _getCurrentLocation() async {
@@ -164,6 +157,11 @@ class _RequestMapPageState extends State<RequestMapPage> {
   }
 
   void _showOccupationPicker() {
+    final state = context.read<RequestMapBloc>().state;
+    final occupations = state is RequestMapOccupationsLoaded
+        ? state.occupations
+        : <OccupationItem>[];
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -190,24 +188,29 @@ class _RequestMapPageState extends State<RequestMapPage> {
           ),
           const SizedBox(height: 8),
           Flexible(
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: _occupations.length,
-              itemBuilder: (_, index) {
-                final o = _occupations[index];
-                return ListTile(
-                  leading: const Icon(Icons.build_outlined, size: 20),
-                  title: Text(o.name),
-                  trailing: _selectedOccupation?.id == o.id
-                      ? const Icon(Icons.check, color: Color(0xFF1E41BC))
-                      : null,
-                  onTap: () {
-                    setState(() => _selectedOccupation = o);
-                    Navigator.pop(ctx);
-                  },
-                );
-              },
-            ),
+            child: occupations.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('No hay ocupaciones disponibles'),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: occupations.length,
+                    itemBuilder: (_, index) {
+                      final o = occupations[index];
+                      return ListTile(
+                        leading: const Icon(Icons.build_outlined, size: 20),
+                        title: Text(o.name),
+                        trailing: _selectedOccupation?.id == o.id
+                            ? const Icon(Icons.check, color: Color(0xFF1E41BC))
+                            : null,
+                        onTap: () {
+                          setState(() => _selectedOccupation = o);
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    },
+                  ),
           ),
           const SizedBox(height: 16),
         ],

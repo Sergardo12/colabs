@@ -28,6 +28,7 @@ import 'features/chat/data/chat_socket_service.dart';
 import 'features/service_request/bloc/service_request_bloc.dart';
 import 'features/service_request/data/service_request_repository.dart';
 import 'features/service_request/data/service_request_service.dart';
+import 'features/service_request/bloc/request_map_bloc.dart';
 import 'features/favorites/bloc/favorites_bloc.dart';
 import 'features/favorites/data/favorite_repository.dart';
 import 'features/favorites/data/favorite_service.dart';
@@ -146,6 +147,9 @@ final publicProfileRepository = PublicProfileRepository(
           create: (_) => ServiceRequestBloc(
             repository: serviceRequestRepository,
           ),
+        ),
+        BlocProvider(
+          create: (_) => RequestMapBloc(repository: becomeColabRepository),
         ),
       ],
         child: const ColabsApp(),

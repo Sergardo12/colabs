@@ -4,11 +4,13 @@ import '../../../../core/constants/app_colors.dart';
 class ColabsBottomNav extends StatelessWidget {
   final int              currentIndex;
   final ValueChanged<int> onTap;
+  final bool isColaborador;
 
   const ColabsBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    required this.isColaborador,
   });
 
   @override
@@ -57,8 +59,12 @@ class ColabsBottomNav extends StatelessWidget {
             onTap:    onTap,
           ),
           _NavItem(
-            icon:     Icons.favorite_outline,
-            iconActive: Icons.favorite,
+            icon:     isColaborador
+                ? Icons.assignment_outlined
+                : Icons.favorite_outline,
+            iconActive: isColaborador
+                ? Icons.assignment
+                : Icons.favorite,
             index:    4,
             current:  currentIndex,
             onTap:    onTap,

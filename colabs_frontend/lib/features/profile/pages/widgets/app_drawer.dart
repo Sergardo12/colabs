@@ -180,6 +180,26 @@ class _AppDrawerState extends State<AppDrawer> {
                       },
                     ),
 
+                  // Favoritos — solo colaboradores
+                  if (state.colab != null)
+                    ListTile(
+                      leading: Icon(
+                        Icons.favorite_outline,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                      title: Text(
+                        'Favoritos',
+                        style: TextStyle(
+                          color:    context.colors.textPrimary,
+                          fontSize: AppSizes.fontL,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, AppRouter.favorites);
+                      },
+                    ),
+
                   const Spacer(),
 
                   // Cambiar tema

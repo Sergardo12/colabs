@@ -61,6 +61,7 @@ class _HomeShellState extends State<HomeShell> {
         ];
         return Scaffold(
           backgroundColor: context.colors.background,
+          extendBody: true,
           body: IndexedStack(
             index: _currentIndex.clamp(0, tabs.length - 1),
             children: tabs,

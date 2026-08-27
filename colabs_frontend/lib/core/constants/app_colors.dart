@@ -10,6 +10,8 @@ class AppPalette {
     required this.background,
     required this.surface,
     required this.error,
+    required this.navBarBackground,
+    required this.navBarBubble,
   });
 
   final Color primary;
@@ -20,6 +22,8 @@ class AppPalette {
   final Color background;
   final Color surface;
   final Color error;
+  final Color navBarBackground;
+  final Color navBarBubble;
 
   static const AppPalette light = AppPalette(
     primary:       Color(0xFF1E41BC),
@@ -30,6 +34,8 @@ class AppPalette {
     background:    Color(0xFFF5F7FA),
     surface:       Color(0xFFFFFFFF),
     error:         Color(0xFFE53935),
+    navBarBackground: Color(0xFFE5E5E5),
+    navBarBubble:     Color(0xFF3871FE),
   );
 
   static const AppPalette dark = AppPalette(
@@ -41,6 +47,8 @@ class AppPalette {
     background:    Color(0xFF1C1C1C),
     surface:       Color(0xFF2A2A2A),
     error:         Color(0xFFE53935),
+    navBarBackground: Color(0xFF2E2E2E),
+    navBarBubble:     Color(0xFF3871FE),
   );
 }
 

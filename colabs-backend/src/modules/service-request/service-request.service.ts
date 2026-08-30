@@ -1,17 +1,16 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ServiceRequest } from './entities/service-request.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
+import { User } from '../users/entities/user.entity';
+import { Occupation } from '../occupation/entities/occupation.entity';
 import { RedisService } from '../../common/services/redis.service';
 import { CollabsGateway } from '../gateway/colabs.gateway';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { ServiceRequestStatus } from 'src/common/enums/service-request-status.enum';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ServiceRequestService {
@@ -22,6 +21,13 @@ export class ServiceRequestService {
     @InjectRepository(ProfileColab)
     private profileColabRepository: Repository<ProfileColab>,
 
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+
+    @InjectRepository(Occupation)
+    private occupationRepository: Repository<Occupation>,
+
+    private notificationService: NotificationService,
     private redisService: RedisService,
     private collabsGateway: CollabsGateway,
   ) {}
@@ -76,6 +82,37 @@ export class ServiceRequestService {
       // Marcar colaboradores como busy en Redis
       for (const colab of inRange) {
         await this.redisService.setCollaboratorStatus(colab.userId, 'busy');
+      }
+    }
+
+    // Notificación persistente a TODOS los colaboradores de la ocupación (aunque offline).
+    // Se excluye a sí mismo si el solicitante es colaborador de la misma ocupación.
+    const occupation = await this.occupationRepository.findOne({
+      where: { id: dto.occupationId },
+    });
+
+    const targets = await this.profileColabRepository
+      .createQueryBuilder('pc')
+      .innerJoin('pc.occupations', 'occ')
+      .where('occ.id = :occupationId', { occupationId: dto.occupationId })
+      .andWhere('pc.userId != :userId', { userId })
+      .getMany();
+
+    if (targets.length > 0) {
+      const occupationName = occupation?.name ?? 'Servicio';
+      const notifications = targets.map(target =>
+        this.notificationService.notify({
+          userId: target.userId,
+          type: 'service_request_new',
+          title: `Nueva solicitud: ${occupationName}`,
+          body: dto.description ?? dto.direction ?? '',
+          entityType: 'service_request',
+          entityId: saved.id,
+        }),
+      );
+      // Procesar en lotes para evitar saturar la conexión
+      for (let i = 0; i < notifications.length; i += 50) {
+        await Promise.all(notifications.slice(i, i + 50));
       }
     }
 

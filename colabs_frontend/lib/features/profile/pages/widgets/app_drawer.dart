@@ -10,6 +10,9 @@ import '../../../auth/bloc/auth_bloc.dart';
 import '../../bloc/profile_bloc.dart';
 import '../../bloc/profile_event.dart';
 import '../../bloc/profile_state.dart';
+import '../../../notifications/bloc/notification_bloc.dart';
+import '../../../notifications/bloc/notification_event.dart';
+import '../../../notifications/bloc/notification_state.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -25,6 +28,7 @@ class _AppDrawerState extends State<AppDrawer> {
   void initState() {
     super.initState();
     context.read<ProfileBloc>().add(const ProfileLoadRequested());
+    context.read<NotificationBloc>().add(const NotificationsLoadRequested());
   }
 
   @override
@@ -168,24 +172,32 @@ class _AppDrawerState extends State<AppDrawer> {
                         const SizedBox(width: AppSizes.paddingS),
 
                         // Campana — notificaciones no leídas
-                        Badge.count(
-                          count:           0,
-                          backgroundColor: context.colors.error,
-                          textColor:       context.colors.white,
-                          offset:          const Offset(-8, 4),
-                          child: IconButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamed(
-                                context,
-                                AppRouter.notifications,
-                              );
-                            },
-                            icon: Icon(
-                              Icons.notifications_outlined,
-                              color: context.colors.white,
-                            ),
-                          ),
+                        BlocBuilder<NotificationBloc, NotificationState>(
+                          builder: (context, nState) {
+                            final unread = nState is NotificationLoaded
+                                ? nState.unreadCount
+                                : 0;
+                            return Badge.count(
+                              count:           unread,
+                              isLabelVisible:  unread > 0,
+                              backgroundColor: context.colors.error,
+                              textColor:       context.colors.white,
+                              offset:          const Offset(-8, 4),
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRouter.notifications,
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.notifications_outlined,
+                                  color: context.colors.white,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

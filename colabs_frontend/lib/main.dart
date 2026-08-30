@@ -35,6 +35,9 @@ import 'features/favorites/data/favorite_service.dart';
 import 'features/favorites/bloc/post_favorites_bloc.dart';
 import 'features/favorites/data/post_favorite_repository.dart';
 import 'features/favorites/data/post_favorite_service.dart';
+import 'features/notifications/bloc/notification_bloc.dart';
+import 'features/notifications/data/notification_repository.dart';
+import 'features/notifications/data/notification_service.dart';
 import 'core/bloc/theme/theme_bloc.dart';
 import 'core/storage/theme_repository.dart';
 
@@ -120,6 +123,13 @@ final publicProfileRepository = PublicProfileRepository(
     secureStorage:       secureStorage,
   );
 
+  // Notificaciones
+  final notificationService = NotificationService(dio);
+  final notificationRepository = NotificationRepository(
+    notificationService: notificationService,
+    secureStorage:       secureStorage,
+  );
+
   runApp(
     RepositoryProvider<BecomeColabRepository>(
       create: (_) => becomeColabRepository,
@@ -164,6 +174,11 @@ final publicProfileRepository = PublicProfileRepository(
         ),
         BlocProvider(
           create: (_) => RequestMapBloc(repository: becomeColabRepository),
+        ),
+        BlocProvider(
+          create: (_) => NotificationBloc(
+            notificationRepository: notificationRepository,
+          ),
         ),
       ],
         child: const ColabsApp(),

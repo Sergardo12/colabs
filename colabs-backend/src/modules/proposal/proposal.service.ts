@@ -1,14 +1,10 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Proposal } from './entities/proposal.entity';
 import { ServiceRequest } from '../service-request/entities/service-request.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { ProposalStatus } from 'src/common/enums/proposal-status.enum';
 import { ServiceRequestStatus } from 'src/common/enums/service-request-status.enum';
@@ -25,6 +21,9 @@ export class ProposalService {
 
     @InjectRepository(ProfileColab)
     private profileColabRepository: Repository<ProfileColab>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
 
     private notificationService: NotificationService,
   ) {}
@@ -165,6 +164,24 @@ export class ProposalService {
       type: 'proposal_accepted',
       title: 'Propuesta aceptada',
       body: `Tu propuesta de S/. ${proposal.amount} fue aceptada`,
+      entityType: 'service_request',
+      entityId: proposal.serviceRequestId,
+    });
+
+    // Notificar al solicitante (Caso 2) — "Aceptado por {nombre del colaborador}"
+    const collabUser = await this.userRepository.findOne({
+      where: { id: proposal.profileColab.userId },
+    });
+
+    const collabName = collabUser
+      ? `${collabUser.name} ${collabUser.lastName}`
+      : 'un colaborador';
+
+    await this.notificationService.notify({
+      userId: proposal.serviceRequest.userId,
+      type: 'service_request_accepted',
+      title: `Aceptado por ${collabName}`,
+      body: proposal.serviceRequest.description ?? '',
       entityType: 'service_request',
       entityId: proposal.serviceRequestId,
     });

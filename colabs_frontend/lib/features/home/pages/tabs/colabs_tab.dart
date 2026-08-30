@@ -9,6 +9,7 @@ import '../../../search/bloc/search_bloc.dart';
 import '../../../search/bloc/search_event.dart';
 import '../../../search/bloc/search_state.dart';
 import '../../../search/pages/widgets/colab_card.dart';
+import '../../../../core/routes/app_router.dart';
 
 class ColabsTab extends StatefulWidget {
   const ColabsTab({super.key});
@@ -75,6 +76,11 @@ class _ColabsTabState extends State<ColabsTab> {
                 onToggleFavorite: () => context
                     .read<FavoritesBloc>()
                     .add(ToggleFavorite(colab.id, colab: colab)),
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  AppRouter.publicProfile,
+                  arguments: colab.userId,
+                ),
               );
             },
           );

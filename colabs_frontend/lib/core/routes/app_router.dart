@@ -17,6 +17,7 @@ import '../../features/chat/models/conversation_model.dart';
 import '../../features/home/models/post_model.dart';
 import '../../features/service_request/pages/request_map_page.dart';
 import '../../features/favorites/pages/favorites_page.dart';
+import '../../features/notifications/pages/notifications_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -34,6 +35,7 @@ class AppRouter {
   static const String conversations = '/conversations';
   static const String requestMap = '/request-map';
   static const String favorites = '/favorites';
+  static const String notifications = '/notifications';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -69,6 +71,8 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const StandaloneFavoritesPage(),
         );
+      case notifications:
+        return MaterialPageRoute(builder: (_) => const NotificationsPage());
       case chat:
         final args = settings.arguments;
         if (args is Map) {

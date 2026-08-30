@@ -9,6 +9,7 @@ import '../../../favorites/bloc/post_favorites_bloc.dart';
 import '../../../favorites/bloc/post_favorites_event.dart';
 import '../../../favorites/bloc/post_favorites_state.dart';
 import '../../../search/pages/widgets/colab_card.dart';
+import '../../../../core/routes/app_router.dart';
 import '../../../favorites/models/favorite_filter.dart';
 import '../../../favorites/pages/widgets/favorites_filter_bar.dart';
 import '../widgets/post_card.dart';
@@ -127,6 +128,11 @@ class _FavoritesTabState extends State<FavoritesTab> {
                         onToggleFavorite: () => context
                             .read<FavoritesBloc>()
                             .add(ToggleFavorite(colab.id, colab: colab)),
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRouter.publicProfile,
+                          arguments: colab.userId,
+                        ),
                       );
                     },
                   );

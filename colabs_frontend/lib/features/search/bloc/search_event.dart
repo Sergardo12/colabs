@@ -16,6 +16,15 @@ class SearchColabRequested extends SearchEvent {
   List<Object?> get props => [query];
 }
 
+class SearchQueryChanged extends SearchEvent {
+  final String query;
+
+  const SearchQueryChanged(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}
+
 class SearchLoadMoreRequested extends SearchEvent {
   const SearchLoadMoreRequested();
 }

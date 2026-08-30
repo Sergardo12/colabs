@@ -42,11 +42,59 @@ class _ColabsTabState extends State<ColabsTab> {
     }
   }
 
-  void _onSearch(String value) {
-  context.read<SearchBloc>().add(
-    SearchColabRequested(query: value.isEmpty ? null : value),
-  );
-}
+  /// Búsqueda en tiempo real mientras se escribe
+  void _onSearchChanged(String value) {
+    context.read<SearchBloc>().add(SearchQueryChanged(value));
+  }
+
+  /// Limpia el texto y restaura la lista completa
+  void _onClearSearch() {
+    _searchCtrl.clear();
+    context.read<SearchBloc>().add(const SearchQueryChanged(''));
+  }
+
+  /// Lista de resultados (compartida por SearchSuccess y SearchFiltering)
+  Widget _buildResultsList(SearchSuccess state) {
+    return ListView.builder(
+      controller: _scrollCtrl,
+      padding:    const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingL,
+      ),
+      itemCount:  state.results.length + 1,
+      itemBuilder: (context, index) {
+        if (index < state.results.length) {
+          final colab = state.results[index];
+          return BlocBuilder<FavoritesBloc, FavoritesState>(
+            builder: (context, favState) {
+              final isFavorite = favState is FavoritesLoaded
+                  ? favState.isFavorite(colab.id)
+                  : false;
+              return ColabCard(
+                colab:      colab,
+                isFavorite: isFavorite,
+                onToggleFavorite: () => context
+                    .read<FavoritesBloc>()
+                    .add(ToggleFavorite(colab.id, colab: colab)),
+              );
+            },
+          );
+        }
+
+        if (state is SearchLoadingMore) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSizes.paddingL),
+            child:   Center(
+              child: CircularProgressIndicator(
+                color: context.colors.primary,
+              ),
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,12 +106,26 @@ class _ColabsTabState extends State<ColabsTab> {
             padding: const EdgeInsets.all(AppSizes.paddingL),
             child: TextField(
               controller: _searchCtrl,
-              onSubmitted: _onSearch,
+              onChanged:  _onSearchChanged,
               decoration: InputDecoration(
-                hintText:   'Busca a un colaborador...',
+                hintText:   'Busca por nombre u ocupación...',
                 prefixIcon: Icon(
                   Icons.search,
                   color: context.colors.textSecondary,
+                ),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _searchCtrl,
+                  builder: (context, value, _) {
+                    return value.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: context.colors.textSecondary,
+                            ),
+                            onPressed: _onClearSearch,
+                          )
+                        : const SizedBox.shrink();
+                  },
                 ),
                 filled:       true,
                 fillColor:    context.colors.surface,
@@ -124,46 +186,26 @@ class _ColabsTabState extends State<ColabsTab> {
                   );
                 }
 
-                if (state is SearchSuccess) {
-                  return ListView.builder(
-                    controller: _scrollCtrl,
-                    padding:    const EdgeInsets.symmetric(
-                      horizontal: AppSizes.paddingL,
-                    ),
-                    itemCount:  state.results.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index < state.results.length) {
-                        final colab = state.results[index];
-                        return BlocBuilder<FavoritesBloc, FavoritesState>(
-                          builder: (context, favState) {
-                            final isFavorite = favState is FavoritesLoaded
-                                ? favState.isFavorite(colab.id)
-                                : false;
-                            return ColabCard(
-                              colab:      colab,
-                              isFavorite: isFavorite,
-                              onToggleFavorite: () => context
-                                  .read<FavoritesBloc>()
-                                  .add(ToggleFavorite(colab.id, colab: colab)),
-                            );
-                          },
-                        );
-                      }
-
-                      if (state is SearchLoadingMore) {
-                        return Padding(
-                          padding: const EdgeInsets.all(AppSizes.paddingL),
-                          child:   Center(
-                            child: CircularProgressIndicator(
-                              color: context.colors.primary,
-                            ),
-                          ),
-                        );
-                      }
-
-                      return const SizedBox.shrink();
-                    },
+                // Búsqueda en curso — mantiene resultados previos con overlay
+                if (state is SearchFiltering) {
+                  return Stack(
+                    children: [
+                      _buildResultsList(state),
+                      Positioned(
+                        top:    0,
+                        left:   0,
+                        right:  0,
+                        child:  LinearProgressIndicator(
+                          color:  context.colors.primary,
+                          backgroundColor: context.colors.primary.withOpacity(0.1),
+                        ),
+                      ),
+                    ],
                   );
+                }
+
+                if (state is SearchSuccess) {
+                  return _buildResultsList(state);
                 }
 
                 return const SizedBox.shrink();

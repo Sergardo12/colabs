@@ -12,6 +12,7 @@ class SearchService {
     String? query,
     int page  = 1,
     int limit = 10,
+    CancelToken? cancelToken,
   }) async {
     final queryParams = <String, dynamic>{
       'page':  page,
@@ -28,6 +29,7 @@ class SearchService {
       options: Options(
         headers: {'Authorization': 'Bearer $token'},
       ),
+      cancelToken: cancelToken,
     );
     return ColabSearchResponse.fromJson(response.data as Map<String, dynamic>);
   }

@@ -38,6 +38,15 @@ class SearchLoadingMore extends SearchSuccess {
   });
 }
 
+class SearchFiltering extends SearchSuccess {
+  const SearchFiltering({
+    required super.results,
+    required super.hasMore,
+    required super.currentPage,
+    super.query,
+  });
+}
+
 class SearchEmpty extends SearchState {
   final String query;
 

@@ -224,26 +224,6 @@ class _AppDrawerState extends State<AppDrawer> {
                     },
                   ),
 
-                  // Convertirse en colaborador (si no es colaborador)
-                  if (state.colab == null)
-                    ListTile(
-                      leading: Icon(
-                        Icons.handshake_outlined,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      title: Text(
-                        'Convertirse en colaborador',
-                        style: TextStyle(
-                          color:    context.colors.textPrimary,
-                          fontSize: AppSizes.fontL,
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.pushNamed(context, AppRouter.becomeColab);
-                      },
-                    ),
-
                   // Favoritos — solo colaboradores
                   if (state.colab != null)
                     ListTile(

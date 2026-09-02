@@ -33,4 +33,9 @@ class AppStrings {
   static const String alreadyHaveAccount = 'Ya tengo una cuenta';
   static const String createAccount     = 'Crear una cuenta';
   static const String continueWith      = 'Continuar con';
+
+  // Home Banner
+  static const String becomeColabBanner = '¿Deseas convertirte en colaborador?';
+  static const String whatToPostToday   = '¿Qué publicaremos hoy?';
+  static const String upcoming          = 'Próximamente';
 }

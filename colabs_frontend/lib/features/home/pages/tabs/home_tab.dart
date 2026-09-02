@@ -8,6 +8,8 @@ import '../../bloc/home_event.dart';
 import '../../bloc/home_state.dart';
 import '../../../chat/bloc/chat_bloc.dart';
 import '../../../chat/bloc/chat_state.dart';
+import '../../../profile/bloc/profile_bloc.dart';
+import '../../../profile/bloc/profile_state.dart';
 import '../widgets/post_card.dart';
 import '../widgets/occupation_carousel.dart';
 
@@ -160,62 +162,87 @@ class _HomeTabState extends State<HomeTab> {
 class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.paddingL,
-        vertical: AppSizes.paddingM,
-      ),
-      color: context.colors.surface,
-      child: Row(
-        children: [
-          // Avatar del usuario
-          GestureDetector(
-            onTap: () => Scaffold.of(context).openDrawer(),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: context.colors.primary.withOpacity(0.1),
-              child: Icon(
-                Icons.person,
-                color: Theme.of(context).iconTheme.color,
-                size: 20,
-              ),
-            ),
+    return BlocBuilder<ProfileBloc, ProfileState>(
+      buildWhen: (prev, curr) {
+        final prevColab = prev is ProfileSuccess && prev.colab != null;
+        final currColab = curr is ProfileSuccess && curr.colab != null;
+        return prevColab != currColab;
+      },
+      builder: (context, state) {
+        final isColab = state is ProfileSuccess && state.colab != null;
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.paddingL,
+            vertical: AppSizes.paddingM,
           ),
-          const SizedBox(width: AppSizes.paddingM),
-
-          // Banner convertirse en colaborador
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.paddingM,
-                vertical: AppSizes.paddingS,
-              ),
-              decoration: BoxDecoration(
-                color: context.colors.primary.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-              ),
-              child: Text(
-                '¿Deseas convertirte en colaborador?',
-                style: TextStyle(
-                  color: context.colors.primary,
-                  fontSize: AppSizes.fontM,
+          color: context.colors.surface,
+          child: Row(
+            children: [
+              // Avatar del usuario
+              GestureDetector(
+                onTap: () => Scaffold.of(context).openDrawer(),
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: context.colors.primary.withOpacity(0.1),
+                  child: Icon(
+                    Icons.person,
+                    color: Theme.of(context).iconTheme.color,
+                    size: 20,
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: AppSizes.paddingM),
+              const SizedBox(width: AppSizes.paddingM),
 
-          // Ícono de mensajes
-          IconButton(
-            onPressed: () =>
-                Navigator.pushNamed(context, AppRouter.conversations),
-            icon: Icon(
-              Icons.chat_bubble_outline,
-              color: Theme.of(context).iconTheme.color,
-            ),
+              // Banner role-aware
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    if (isColab) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Próximamente'),
+                        ),
+                      );
+                    } else {
+                      Navigator.pushNamed(context, AppRouter.becomeColab);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.paddingM,
+                      vertical: AppSizes.paddingS,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.colors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusXL),
+                    ),
+                    child: Text(
+                      isColab
+                          ? '¿Qué publicaremos hoy?'
+                          : '¿Deseas convertirte en colaborador?',
+                      style: TextStyle(
+                        color: context.colors.primary,
+                        fontSize: AppSizes.fontM,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSizes.paddingM),
+
+              // Ícono de mensajes
+              IconButton(
+                onPressed: () =>
+                    Navigator.pushNamed(context, AppRouter.conversations),
+                icon: Icon(
+                  Icons.chat_bubble_outline,
+                  color: Theme.of(context).iconTheme.color,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

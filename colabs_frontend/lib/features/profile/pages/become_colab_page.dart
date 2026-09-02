@@ -5,6 +5,8 @@ import '../../../core/constants/app_sizes.dart';
 import '../bloc/become_colab_bloc.dart';
 import '../bloc/become_colab_event.dart';
 import '../bloc/become_colab_state.dart';
+import '../bloc/profile_bloc.dart';
+import '../bloc/profile_event.dart';
 import '../models/occupation_model.dart';
 
 class BecomeColabPage extends StatefulWidget {
@@ -79,6 +81,7 @@ class _BecomeColabPageState extends State<BecomeColabPage> {
     return BlocListener<BecomeColabBloc, BecomeColabState>(
       listener: (context, state) {
         if (state is BecomeColabSuccess) {
+          context.read<ProfileBloc>().add(const ProfileLoadRequested());
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

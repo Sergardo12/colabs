@@ -14,4 +14,9 @@ export class CreateReportDto {
   @ApiProperty({ example: 'comportamiento_inapropiado' })
   @IsString()
   category!: string;
+
+  @ApiProperty({ example: 'El colaborador no llegó a la cita acordada', required: false })
+  @IsString()
+  @IsOptional()
+  description?: string;
 }

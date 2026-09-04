@@ -27,4 +27,30 @@ class HomeService {
     );
     return PostsResponse.fromJson(response.data as Map<String, dynamic>);
   }
+
+  /// Da like a un post
+  Future<void> likePost({
+    required String token,
+    required String postId,
+  }) async {
+    await _dio.post(
+      '/posts/$postId/like',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+  }
+
+  /// Quita el like de un post
+  Future<void> unlikePost({
+    required String token,
+    required String postId,
+  }) async {
+    await _dio.delete(
+      '/posts/$postId/like',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+  }
 }

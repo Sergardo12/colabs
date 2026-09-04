@@ -56,54 +56,37 @@ export class PostService {
     limit: number = 10,
     profileColabId?: string,
   ) {
-    let posts: Post[];
-    let total: number;
-
+    const where: any = { status: 'active' };
     if (profileColabId) {
-      const countQb = this.postRepository
-        .createQueryBuilder('post')
-        .where('post.status = :status', { status: 'active' })
-        .andWhere('post.profileColabId = :profileColabId', {
-          profileColabId,
-        });
-
-      const dataQb = countQb
-        .clone()
-        .leftJoinAndSelect('post.profileColab', 'profileColab')
-        .leftJoinAndSelect('profileColab.user', 'user')
-        .leftJoinAndSelect('profileColab.occupations', 'occupations')
-        .leftJoinAndSelect('post.likes', 'likes')
-        .leftJoinAndSelect('post.comments', 'comments')
-        .orderBy(
-          '(SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = post.id)',
-          'DESC',
-        )
-        .addOrderBy('post.creation_date', 'DESC')
-        .skip((page - 1) * limit)
-        .take(limit);
-
-      [posts, total] = await Promise.all([
-        dataQb.getMany(),
-        countQb.getCount(),
-      ]);
-    } else {
-      [posts, total] = await this.postRepository.findAndCount({
-        where: { status: 'active' },
-        relations: [
-          'profileColab',
-          'profileColab.user',
-          'profileColab.occupations',
-          'likes',
-          'comments',
-        ],
-        order: { creationDate: 'DESC' },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
+      where.profileColabId = profileColabId;
     }
 
+    const [posts, total] = await this.postRepository.findAndCount({
+      where,
+      relations: [
+        'profileColab',
+        'profileColab.user',
+        'profileColab.occupations',
+        'likes',
+        'comments',
+      ],
+      order: { creationDate: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
     // Agrega si el usuario actual dio like
-    const postsWithLikeStatus = posts.map((post) => ({
+    return {
+      data: this.mapPosts(posts, userId),
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
+
+  /// Mapeo compartido — garantiza el mismo shape en feed y favoritos
+  private mapPosts(posts: Post[], userId: string) {
+    return posts.map((post) => ({
       ...post,
       likesCount: post.likes.length,
       commentsCount: post.comments.length,
@@ -111,9 +94,29 @@ export class PostService {
       likes: undefined, // no mandamos el array completo
       comments: undefined, // no mandamos el array completo
     }));
+  }
+
+  /// Posts likeados por el usuario, ordenados del like más reciente
+  async findFavorites(userId: string, page: number = 1, limit: number = 10) {
+    const [likes, total] = await this.postLikeRepository.findAndCount({
+      where: { userId, post: { status: 'active' } },
+      relations: [
+        'post',
+        'post.profileColab',
+        'post.profileColab.user',
+        'post.profileColab.occupations',
+        'post.likes',
+        'post.comments',
+      ],
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const posts = likes.map((like) => like.post);
 
     return {
-      data: postsWithLikeStatus,
+      data: this.mapPosts(posts, userId),
       total,
       page,
       lastPage: Math.ceil(total / limit),

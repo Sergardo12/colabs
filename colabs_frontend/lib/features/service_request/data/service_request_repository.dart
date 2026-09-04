@@ -19,4 +19,23 @@ class ServiceRequestRepository {
     if (token == null) throw Exception('No hay sesión activa');
     return _service.getMyRequests(token: token);
   }
+
+  Future<ServiceRequestModel> createRequest({
+    required double lat,
+    required double lng,
+    required String direction,
+    required String occupationId,
+    required String description,
+  }) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.createRequest(
+      token:        token,
+      lat:          lat,
+      lng:          lng,
+      direction:    direction,
+      occupationId: occupationId,
+      description:  description,
+    );
+  }
 }

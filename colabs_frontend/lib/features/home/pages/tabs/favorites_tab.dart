@@ -1,14 +1,214 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_sizes.dart';
+import '../../../favorites/bloc/favorites_bloc.dart';
+import '../../../favorites/bloc/favorites_event.dart';
+import '../../../favorites/bloc/favorites_state.dart';
+import '../../../favorites/bloc/post_favorites_bloc.dart';
+import '../../../favorites/bloc/post_favorites_event.dart';
+import '../../../favorites/bloc/post_favorites_state.dart';
+import '../../../search/pages/widgets/colab_card.dart';
+import '../../../../core/routes/app_router.dart';
+import '../../../favorites/models/favorite_filter.dart';
+import '../../../favorites/pages/widgets/favorites_filter_bar.dart';
+import '../widgets/post_card.dart';
 
-class FavoritesTab extends StatelessWidget {
+class FavoritesTab extends StatefulWidget {
   const FavoritesTab({super.key});
 
   @override
+  State<FavoritesTab> createState() => _FavoritesTabState();
+}
+
+class _FavoritesTabState extends State<FavoritesTab> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<FavoritesBloc>().add(const FavoritesLoadRequested());
+    context.read<PostFavoritesBloc>().add(const PostFavoritesLoadRequested());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      body: const Center(child: Text('Favoritos')),
+    return SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppSizes.paddingL),
+            child: Row(
+              children: [
+                Text(
+                  'Favoritos',
+                  style: TextStyle(
+                    color:      context.colors.textPrimary,
+                    fontSize:   AppSizes.fontXL,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+
+                // Filtro Trabajador | Publicaciones — siempre visible
+                BlocBuilder<FavoritesBloc, FavoritesState>(
+                  builder: (_, state) {
+                    final filter = state is FavoritesLoaded
+                        ? state.activeFilter
+                        : FavoriteFilterType.workers;
+
+                    return FavoritesFilterBar(
+                      activeFilter:    filter,
+                      onFilterChanged: (f) => context
+                          .read<FavoritesBloc>()
+                          .add(FavoriteFilterChanged(f)),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: BlocBuilder<FavoritesBloc, FavoritesState>(
+              builder: (context, state) {
+                if (state is FavoritesLoading) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: context.colors.primary,
+                    ),
+                  );
+                }
+
+                if (state is FavoritesError) {
+                  return Center(
+                    child: Text(
+                      state.message,
+                      style: TextStyle(color: context.colors.error),
+                    ),
+                  );
+                }
+
+                if (state is FavoritesLoaded &&
+                    state.activeFilter == FavoriteFilterType.posts) {
+                  return _buildFavoritePosts(context);
+                }
+
+                if (state is FavoritesLoaded) {
+                  if (state.favorites.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.favorite_border,
+                            color: context.colors.textSecondary,
+                            size:  48,
+                          ),
+                          const SizedBox(height: AppSizes.paddingM),
+                          Text(
+                            'Aún no tienes favoritos',
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.paddingL,
+                    ),
+                    itemCount: state.favorites.length,
+                    itemBuilder: (context, index) {
+                      final colab = state.favorites[index];
+                      return ColabCard(
+                        colab:      colab,
+                        isFavorite: state.isFavorite(colab.id),
+                        onToggleFavorite: () => context
+                            .read<FavoritesBloc>()
+                            .add(ToggleFavorite(colab.id, colab: colab)),
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRouter.publicProfile,
+                          arguments: colab.userId,
+                        ),
+                      );
+                    },
+                  );
+                }
+
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Lista de posts favoritos — tocar el corazón quita el like
+  Widget _buildFavoritePosts(BuildContext context) {
+    return BlocBuilder<PostFavoritesBloc, PostFavoritesState>(
+      builder: (context, state) {
+        if (state is PostFavoritesLoading) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: context.colors.primary,
+            ),
+          );
+        }
+
+        if (state is PostFavoritesError) {
+          return Center(
+            child: Text(
+              state.message,
+              style: TextStyle(color: context.colors.error),
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        if (state is PostFavoritesLoaded) {
+          if (state.posts.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.bookmark_border,
+                    color: context.colors.textSecondary,
+                    size:  48,
+                  ),
+                  const SizedBox(height: AppSizes.paddingM),
+                  Text(
+                    'Aún no tienes publicaciones favoritas',
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.only(bottom: AppSizes.paddingXL),
+            itemCount: state.posts.length,
+            itemBuilder: (context, index) {
+              final post = state.posts[index];
+              return PostCard(
+                post: post,
+                onToggleLike: () => context
+                    .read<PostFavoritesBloc>()
+                    .add(PostFavoriteToggled(post.id)),
+              );
+            },
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 }

@@ -30,6 +30,12 @@ export class NotificationController {
     return this.notificationService.findMyNotifications(user.id);
   }
 
+  @Get('enriched')
+  @ApiOperation({ summary: 'Mis notificaciones enriquecidas (cards)' })
+  findMyNotificationsEnriched(@CurrentUser() user: JwtPayload) {
+    return this.notificationService.findMyNotificationsEnriched(user.id);
+  }
+
   @Patch(':id/read')
   @ApiOperation({ summary: 'Marcar notificación como leída' })
   markAsRead(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {

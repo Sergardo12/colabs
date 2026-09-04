@@ -28,6 +28,16 @@ import 'features/chat/data/chat_socket_service.dart';
 import 'features/service_request/bloc/service_request_bloc.dart';
 import 'features/service_request/data/service_request_repository.dart';
 import 'features/service_request/data/service_request_service.dart';
+import 'features/service_request/bloc/request_map_bloc.dart';
+import 'features/favorites/bloc/favorites_bloc.dart';
+import 'features/favorites/data/favorite_repository.dart';
+import 'features/favorites/data/favorite_service.dart';
+import 'features/favorites/bloc/post_favorites_bloc.dart';
+import 'features/favorites/data/post_favorite_repository.dart';
+import 'features/favorites/data/post_favorite_service.dart';
+import 'features/notifications/bloc/notification_bloc.dart';
+import 'features/notifications/data/notification_repository.dart';
+import 'features/notifications/data/notification_service.dart';
 import 'core/bloc/theme/theme_bloc.dart';
 import 'core/storage/theme_repository.dart';
 
@@ -99,8 +109,31 @@ final publicProfileRepository = PublicProfileRepository(
   secureStorage:  secureStorage,
 );
 
+  // Favorites
+  final favoriteService = FavoriteService(dio);
+  final favoriteRepository = FavoriteRepository(
+    favoriteService: favoriteService,
+    secureStorage:   secureStorage,
+  );
+
+  // Posts favoritos
+  final postFavoriteService    = PostFavoriteService(dio);
+  final postFavoriteRepository = PostFavoriteRepository(
+    postFavoriteService: postFavoriteService,
+    secureStorage:       secureStorage,
+  );
+
+  // Notificaciones
+  final notificationService = NotificationService(dio);
+  final notificationRepository = NotificationRepository(
+    notificationService: notificationService,
+    secureStorage:       secureStorage,
+  );
+
   runApp(
-    MultiBlocProvider(
+    RepositoryProvider<BecomeColabRepository>(
+      create: (_) => becomeColabRepository,
+      child: MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (_) => ThemeBloc(
@@ -128,12 +161,28 @@ final publicProfileRepository = PublicProfileRepository(
         ),
         BlocProvider(create: (_) => ChatBloc(chatRepository: chatRepository)),
         BlocProvider(
+          create: (_) => FavoritesBloc(repository: favoriteRepository),
+        ),
+        BlocProvider(
+          create: (_) =>
+              PostFavoritesBloc(postFavoriteRepository: postFavoriteRepository),
+        ),
+        BlocProvider(
           create: (_) => ServiceRequestBloc(
             repository: serviceRequestRepository,
           ),
         ),
+        BlocProvider(
+          create: (_) => RequestMapBloc(repository: becomeColabRepository),
+        ),
+        BlocProvider(
+          create: (_) => NotificationBloc(
+            notificationRepository: notificationRepository,
+          ),
+        ),
       ],
-      child: const ColabsApp(),
+        child: const ColabsApp(),
+      ),
     ),
   );
 }

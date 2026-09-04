@@ -10,6 +10,9 @@ import '../../../auth/bloc/auth_bloc.dart';
 import '../../bloc/profile_bloc.dart';
 import '../../bloc/profile_event.dart';
 import '../../bloc/profile_state.dart';
+import '../../../notifications/bloc/notification_bloc.dart';
+import '../../../notifications/bloc/notification_event.dart';
+import '../../../notifications/bloc/notification_state.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -19,10 +22,13 @@ class AppDrawer extends StatefulWidget {
 }
 
 class _AppDrawerState extends State<AppDrawer> {
+  bool _showAllOccupations = false;
+
   @override
   void initState() {
     super.initState();
     context.read<ProfileBloc>().add(const ProfileLoadRequested());
+    context.read<NotificationBloc>().add(const NotificationsLoadRequested());
   }
 
   @override
@@ -53,9 +59,9 @@ class _AppDrawerState extends State<AppDrawer> {
                   // Header del drawer
                   Container(
                     width:   double.infinity,
-                    padding: const EdgeInsets.all(AppSizes.paddingXL),
+                    padding: const EdgeInsets.all(AppSizes.paddingL),
                     color:   context.colors.primary,
-                    child: Column(
+                    child: Row(
                       children: [
                         // Avatar — navega al perfil público si es colaborador
                         Material(
@@ -73,7 +79,7 @@ class _AppDrawerState extends State<AppDrawer> {
                               );
                             },
                             child: CircleAvatar(
-                              radius:          40,
+                              radius:          25,
                               backgroundColor: context.colors.white.withOpacity(0.2),
                               backgroundImage: state.user.imageProfile != null
                                   ? NetworkImage(state.user.imageProfile!)
@@ -82,59 +88,117 @@ class _AppDrawerState extends State<AppDrawer> {
                                   ? Icon(
                                       Icons.person,
                                       color: context.colors.white,
-                                      size:  40,
+                                      size:  28,
                                     )
                                   : null,
                             ),
                           ),
                         ),
-                        const SizedBox(height: AppSizes.paddingM),
+                        const SizedBox(width: AppSizes.paddingM),
 
-                        // Nombre
-                        Text(
-                          '${state.user.name} ${state.user.lastName}',
-                          style: TextStyle(
-                            color:      context.colors.white,
-                            fontSize:   AppSizes.fontXL,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: AppSizes.paddingXS),
-
-                        // Email
-                        Text(
-                          state.user.email,
-                          style: TextStyle(
-                            color:    context.colors.white.withOpacity(0.8),
-                            fontSize: AppSizes.fontM,
-                          ),
-                        ),
-
-                        // Badge colaborador
-                        if (state.colab != null) ...[
-                          const SizedBox(height: AppSizes.paddingS),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSizes.paddingM,
-                              vertical:   AppSizes.paddingXS,
-                            ),
-                            decoration: BoxDecoration(
-                              color:        context.colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(AppSizes.radiusXL),
-                            ),
-                            child: Text(
-                              state.colab!.occupations.isNotEmpty
-                                ? state.colab!.occupations
-                                    .map((o) => o.name)
-                                    .join(' · ')
-                                : 'Colaborador',
-                              style: TextStyle(
-                                color:    context.colors.white,
-                                fontSize: AppSizes.fontS,
+                        // Nombre + Badge colaborador
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize:       MainAxisSize.min,
+                            children: [
+                              // Nombre
+                              Text(
+                                '${state.user.name} ${state.user.lastName}',
+                                style: TextStyle(
+                                  color:      context.colors.white,
+                                  fontSize:   AppSizes.fontL,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
+                              if (state.colab != null) ...[
+                                const SizedBox(height: AppSizes.paddingXS),
+                                GestureDetector(
+                                  onTap: () => setState(
+                                    () => _showAllOccupations = !_showAllOccupations,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSizes.paddingM,
+                                      vertical:   AppSizes.paddingXS,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:        context.colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(AppSizes.radiusXL),
+                                    ),
+                                    child: _showAllOccupations
+                                        ? Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize:       MainAxisSize.min,
+                                            children: state.colab!.occupations.isNotEmpty
+                                              ? state.colab!.occupations
+                                                  .map((o) => Text(
+                                                        o.name,
+                                                        style: TextStyle(
+                                                          color:    context.colors.white,
+                                                          fontSize: AppSizes.fontS,
+                                                        ),
+                                                      ))
+                                                  .toList()
+                                              : [
+                                                  Text(
+                                                    'Colaborador',
+                                                    style: TextStyle(
+                                                      color:    context.colors.white,
+                                                      fontSize: AppSizes.fontS,
+                                                    ),
+                                                  ),
+                                                ],
+                                          )
+                                        : Text(
+                                            state.colab!.occupations.isNotEmpty
+                                              ? state.colab!.occupations
+                                                  .map((o) => o.name)
+                                                  .join(' · ')
+                                              : 'Colaborador',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color:    context.colors.white,
+                                              fontSize: AppSizes.fontS,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: AppSizes.paddingS),
+
+                        // Campana — notificaciones no leídas
+                        BlocBuilder<NotificationBloc, NotificationState>(
+                          builder: (context, nState) {
+                            final unread = nState is NotificationLoaded
+                                ? nState.unreadCount
+                                : 0;
+                            return Badge.count(
+                              count:           unread,
+                              isLabelVisible:  unread > 0,
+                              backgroundColor: context.colors.error,
+                              textColor:       context.colors.white,
+                              offset:          const Offset(-8, 4),
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRouter.notifications,
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.notifications_outlined,
+                                  color: context.colors.white,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -160,15 +224,15 @@ class _AppDrawerState extends State<AppDrawer> {
                     },
                   ),
 
-                  // Convertirse en colaborador (si no es colaborador)
-                  if (state.colab == null)
+                  // Favoritos — solo colaboradores
+                  if (state.colab != null)
                     ListTile(
                       leading: Icon(
-                        Icons.handshake_outlined,
+                        Icons.favorite_outline,
                         color: Theme.of(context).iconTheme.color,
                       ),
                       title: Text(
-                        'Convertirse en colaborador',
+                        'Favoritos',
                         style: TextStyle(
                           color:    context.colors.textPrimary,
                           fontSize: AppSizes.fontL,
@@ -176,7 +240,7 @@ class _AppDrawerState extends State<AppDrawer> {
                       ),
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.pushNamed(context, AppRouter.becomeColab);
+                        Navigator.pushNamed(context, AppRouter.favorites);
                       },
                     ),
 

@@ -34,6 +34,7 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: context.colors.surface,
         elevation:       0,
         title: Text(

@@ -73,7 +73,8 @@ class PostModel {
       id: json['id'] as String,
       profileColabId: profileColab['id'] as String,
       description: json['description'] as String,
-      price: json['price'] as String,
+      // Null-safe — un post sin price no debe reventar el feed
+      price: (json['price'] ?? '0').toString(),
       media: (json['media'] as List<dynamic>).cast<String>(),
       likesCount: json['likesCount'] as int,
       commentsCount: json['commentsCount'] as int,

@@ -20,6 +20,11 @@ import '../../features/favorites/pages/favorites_page.dart';
 import '../../features/notifications/pages/notifications_page.dart';
 import '../../features/notifications/models/notification_model.dart';
 import '../../features/service_request/pages/service_request_detail_page.dart';
+import '../../features/profile/pages/help_center_page.dart';
+import '../../features/profile/pages/support_request_page.dart';
+import '../../features/profile/pages/report_colab_page.dart';
+import '../../features/profile/pages/suggestion_service_page.dart';
+import '../../features/profile/pages/contact_us_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -39,6 +44,11 @@ class AppRouter {
   static const String favorites = '/favorites';
   static const String notifications = '/notifications';
   static const String serviceRequestDetail = '/service-request-detail';
+  static const String helpCenter       = '/help-center';
+  static const String supportRequest   = '/support-request';
+  static const String reportColab      = '/report-colab';
+  static const String suggestionService = '/suggestion-service';
+  static const String contactUs        = '/contact-us';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -82,6 +92,16 @@ class AppRouter {
             notification: settings.arguments as NotificationModel,
           ),
         );
+      case helpCenter:
+        return MaterialPageRoute(builder: (_) => const HelpCenterPage());
+      case supportRequest:
+        return MaterialPageRoute(builder: (_) => const SupportRequestPage());
+      case reportColab:
+        return MaterialPageRoute(builder: (_) => const ReportColabPage());
+      case suggestionService:
+        return MaterialPageRoute(builder: (_) => const SuggestionServicePage());
+      case contactUs:
+        return MaterialPageRoute(builder: (_) => const ContactUsPage());
       case chat:
         final args = settings.arguments;
         if (args is Map) {

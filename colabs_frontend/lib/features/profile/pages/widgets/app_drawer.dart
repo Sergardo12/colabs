@@ -246,6 +246,19 @@ class _AppDrawerState extends State<AppDrawer> {
 
                   const Spacer(),
 
+                  // Necesito ayuda
+                  ListTile(
+                    leading: const Icon(
+                      Icons.help_outline,
+                      color: Color(0xFF1E41BC),
+                    ),
+                    title: const Text('Necesito ayuda'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRouter.helpCenter);
+                    },
+                  ),
+
                   // Cambiar tema
                   BlocBuilder<ThemeBloc, ThemeState>(
                     builder: (context, state) {

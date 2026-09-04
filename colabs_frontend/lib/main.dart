@@ -20,6 +20,8 @@ import 'features/search/data/search_service.dart';
 import 'features/profile/bloc/become_colab_bloc.dart';
 import 'features/profile/data/become_colab_repository.dart';
 import 'features/profile/data/become_colab_service.dart';
+import 'features/profile/data/support_repository.dart';
+import 'features/profile/data/support_service.dart';
 import 'features/profile/bloc/edit_colab_profile_bloc.dart';
 import 'features/chat/bloc/chat_bloc.dart';
 import 'features/chat/data/chat_repository.dart';
@@ -130,9 +132,23 @@ final publicProfileRepository = PublicProfileRepository(
     secureStorage:       secureStorage,
   );
 
+  // Support
+  final supportService    = SupportService(dio);
+  final supportRepository = SupportRepository(
+    service:       supportService,
+    secureStorage: secureStorage,
+  );
+
   runApp(
-    RepositoryProvider<BecomeColabRepository>(
-      create: (_) => becomeColabRepository,
+    MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<BecomeColabRepository>(
+          create: (_) => becomeColabRepository,
+        ),
+        RepositoryProvider<SupportRepository>(
+          create: (_) => supportRepository,
+        ),
+      ],
       child: MultiBlocProvider(
       providers: [
         BlocProvider(

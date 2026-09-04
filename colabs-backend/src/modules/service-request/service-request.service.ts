@@ -125,7 +125,12 @@ export class ServiceRequestService {
   async findMyRequests(userId: string) {
     return this.serviceRequestRepository.find({
       where: { userId },
-      relations: ['occupation'],
+      relations: [
+        'occupation',
+        'proposals',
+        'proposals.profileColab',
+        'proposals.profileColab.user',
+      ],
       order: { creationDate: 'DESC' },
     });
   }

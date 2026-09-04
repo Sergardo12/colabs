@@ -29,6 +29,9 @@ export class Report extends BaseEntity {
   @Column()
   category!: string;
 
+  @Column({ nullable: true })
+  description?: string;
+
   @CreateDateColumn()
   date!: Date;
 

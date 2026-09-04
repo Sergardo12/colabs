@@ -17,6 +17,7 @@ export class ReportService {
       reportedUserId: dto.reportedUserId,
       serviceRequestId: dto.serviceRequestId,
       category: dto.category,
+      description: dto.description,
       status: 'pending',
     });
 

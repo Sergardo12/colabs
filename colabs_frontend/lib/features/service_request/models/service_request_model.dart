@@ -11,8 +11,8 @@ class ServiceRequestOccupation {
 
   factory ServiceRequestOccupation.fromJson(Map<String, dynamic> json) {
     return ServiceRequestOccupation(
-      id:    json['id']    as String,
-      name:  json['name']  as String,
+      id:    json['id']    as String? ?? '',
+      name:  json['name']  as String? ?? '',
       image: json['image'] as String?,
     );
   }
@@ -74,8 +74,8 @@ class ServiceRequestModel {
     return ServiceRequestModel(
       id:             json['id']             as String,
       status:         json['status']         as String,
-      direction:      json['direction']      as String,
-      description:    json['description']    as String,
+      direction:   json['direction']   as String? ?? '',
+      description: json['description'] as String? ?? '',
       createdAt:      json['createdAt']      as String,
       acceptanceDate: json['acceptanceDate'] as String?,
       completionDate: json['completionDate'] as String?,

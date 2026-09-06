@@ -48,3 +48,19 @@ class NearbyRequestsError extends ServiceRequestState {
   @override
   List<Object?> get props => [message];
 }
+
+class ProposalSending extends ServiceRequestState {}
+
+class ProposalSent extends ServiceRequestState {
+  final String serviceRequestId;
+  const ProposalSent({required this.serviceRequestId});
+  @override
+  List<Object?> get props => [serviceRequestId];
+}
+
+class ProposalSendError extends ServiceRequestState {
+  final String message;
+  const ProposalSendError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}

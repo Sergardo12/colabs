@@ -195,13 +195,23 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
                   const SizedBox(height: AppSizes.paddingM),
               itemBuilder: (context, index) {
                 final nearbyRequest = state.requests[index];
+                final dialogContext = context;
                 return GestureDetector(
                   onTap: () => showDialog(
-                    context: context,
-                    builder: (_) =>
-                        _ServiceRequestDetailDialog(request: nearbyRequest),
+                    context: dialogContext,
+                    builder: (dialogCtx) => _ServiceRequestDetailDialog(
+                      request: nearbyRequest,
+                      onAccept: () {
+                        Navigator.of(dialogCtx).pop();
+                        _openProposalDialog(dialogContext, nearbyRequest);
+                      },
+                    ),
                   ),
-                  child: _SpecialtyRequestCard(request: nearbyRequest),
+                  child: _SpecialtyRequestCard(
+                    request: nearbyRequest,
+                    onAccept: () =>
+                        _openProposalDialog(dialogContext, nearbyRequest),
+                  ),
                 );
               },
             );
@@ -216,8 +226,12 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
 
 class _SpecialtyRequestCard extends StatelessWidget {
   final ServiceRequestModel request;
+  final VoidCallback onAccept;
 
-  const _SpecialtyRequestCard({required this.request});
+  const _SpecialtyRequestCard({
+    required this.request,
+    required this.onAccept,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -295,8 +309,8 @@ class _SpecialtyRequestCard extends StatelessWidget {
                   _ActionIcon(
                     icon:     Icons.check,
                     color:    Colors.green,
-                    tooltip:  'Aceptar',
-                    onPressed: () {},
+                    tooltip:  'Cotizar',
+                    onPressed: onAccept,
                   ),
                   const SizedBox(height: AppSizes.paddingXS),
                   _ActionIcon(
@@ -392,16 +406,191 @@ class _SpecialtyRequestCard extends StatelessWidget {
 }
 
 String _formatDateTime(String createdAt) {
-  final date = DateTime.parse(
-    createdAt.endsWith('Z') ? createdAt : '${createdAt}Z',
-  ).toLocal();
-  return DateFormat('dd/MM/yyyy hh:mm a').format(date);
+  try {
+    final date = DateTime.parse(
+      createdAt.endsWith('Z') ? createdAt : '${createdAt}Z',
+    ).toLocal();
+    return DateFormat('dd/MM/yyyy hh:mm a').format(date);
+  } catch (_) {
+    return createdAt;
+  }
+}
+
+void _openProposalDialog(BuildContext context, ServiceRequestModel request) {
+  showDialog(
+    context: context,
+    builder: (_) => _PriceProposalDialog(request: request),
+  );
+}
+
+class _PriceProposalDialog extends StatefulWidget {
+  final ServiceRequestModel request;
+
+  const _PriceProposalDialog({required this.request});
+
+  @override
+  State<_PriceProposalDialog> createState() => _PriceProposalDialogState();
+}
+
+class _PriceProposalDialogState extends State<_PriceProposalDialog> {
+  final TextEditingController _amountController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    final amount = double.parse(_amountController.text.trim());
+    context.read<ServiceRequestBloc>().add(
+          ProposalSendRequested(
+            serviceRequestId: widget.request.id,
+            amount:           amount,
+          ),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<ServiceRequestBloc, ServiceRequestState>(
+      listenWhen: (prev, curr) =>
+          curr is ProposalSent || curr is ProposalSendError,
+      listener: (context, state) {
+        final messenger = ScaffoldMessenger.of(context);
+        if (state is ProposalSent) {
+          Navigator.of(context).pop();
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text('Propuesta enviada por S/. ${_amountController.text.trim()}'),
+            ),
+          );
+          context.read<ServiceRequestBloc>().add(const NearbyRequestsLoadRequested());
+        } else if (state is ProposalSendError) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+        }
+      },
+      child: Dialog(
+        backgroundColor: context.colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusL),
+        ),
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.paddingL,
+          vertical:   AppSizes.paddingXL,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSizes.paddingL),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Icon(
+                      Icons.close,
+                      color: context.colors.textSecondary,
+                      size:  24,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.paddingS),
+                Text(
+                  'Ingresa el precio de tu servicio',
+                  style: TextStyle(
+                    color:      context.colors.textPrimary,
+                    fontSize:   AppSizes.fontL,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.paddingL),
+                TextFormField(
+                  controller: _amountController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    prefixText: 'S/. ',
+                    hintText:   '0.00',
+                    filled:     true,
+                    fillColor:  context.colors.primary.withOpacity(0.06),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                      borderSide:   BorderSide.none,
+                    ),
+                  ),
+                  validator: (value) {
+                    final amount = double.tryParse(value?.trim() ?? '');
+                    if (amount == null || amount <= 0) {
+                      return 'Ingresa un monto mayor a 0';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: AppSizes.paddingL),
+                BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
+                  buildWhen: (prev, curr) => curr is ProposalSending,
+                  builder: (context, state) {
+                    final sending = state is ProposalSending;
+                    return SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: sending ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.colors.primary,
+                          foregroundColor: Colors.white,
+                          minimumSize:
+                              const Size.fromHeight(AppSizes.buttonHeight),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                          ),
+                        ),
+                        child: sending
+                            ? const SizedBox(
+                                width:  20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color:       Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Enviar',
+                                style: TextStyle(
+                                  fontSize:   AppSizes.fontL,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ServiceRequestDetailDialog extends StatelessWidget {
   final ServiceRequestModel request;
+  final VoidCallback onAccept;
 
-  const _ServiceRequestDetailDialog({required this.request});
+  const _ServiceRequestDetailDialog({
+    required this.request,
+    required this.onAccept,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -567,11 +756,11 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.paddingL),
 
-            // Acción principal (solo UI)
+            // Acción principal — abre el dialog de cotización
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: onAccept,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
                   foregroundColor: Colors.white,

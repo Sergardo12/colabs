@@ -44,4 +44,17 @@ class ServiceRequestRepository {
       description:  description,
     );
   }
+
+  Future<void> sendProposal({
+    required String serviceRequestId,
+    required double amount,
+  }) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.sendProposal(
+      token:            token,
+      serviceRequestId: serviceRequestId,
+      amount:           amount,
+    );
+  }
 }

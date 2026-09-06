@@ -12,6 +12,15 @@ class ServiceRequestDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final sr = notification.serviceRequest;
     final requester = notification.requester;
+    final prop = notification.proposal;
+    final isProposal = notification.type == 'proposal_received' && prop != null;
+
+    // En una propuesta, mostrar al colaborador que cotizó
+    final headerName = isProposal ? prop.colab?.fullName : requester?.fullName;
+    final headerImage = isProposal
+        ? prop.colab?.imageProfile
+        : requester?.imageProfile;
+    final headerLabel = isProposal ? 'Colaborador' : 'Solicitante';
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -19,7 +28,7 @@ class ServiceRequestDetailPage extends StatelessWidget {
         backgroundColor: context.colors.surface,
         elevation:       0,
         title: Text(
-          'Solicitud',
+          isProposal ? 'Propuesta recibida' : 'Solicitud',
           style: TextStyle(
             color:      context.colors.textPrimary,
             fontSize:   AppSizes.fontXL,
@@ -30,7 +39,7 @@ class ServiceRequestDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(AppSizes.paddingL),
         children: [
-          // Solicitante
+          // Encabezado: colaborador que cotizó o solicitante
           Container(
             padding: const EdgeInsets.all(AppSizes.paddingM),
             decoration: BoxDecoration(
@@ -42,10 +51,10 @@ class ServiceRequestDetailPage extends StatelessWidget {
                 CircleAvatar(
                   radius: 28,
                   backgroundColor: context.colors.primary.withOpacity(0.1),
-                  backgroundImage: requester?.imageProfile != null
-                      ? NetworkImage(requester!.imageProfile!)
+                  backgroundImage: headerImage != null
+                      ? NetworkImage(headerImage)
                       : null,
-                  child: requester?.imageProfile == null
+                  child: headerImage == null
                       ? Icon(Icons.person,
                           color: context.colors.primary, size: 28)
                       : null,
@@ -56,9 +65,7 @@ class ServiceRequestDetailPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        requester?.fullName.isNotEmpty == true
-                            ? requester!.fullName
-                            : 'Solicitante',
+                        headerName?.isNotEmpty == true ? headerName! : headerLabel,
                         style: TextStyle(
                           color:      context.colors.textPrimary,
                           fontSize:   AppSizes.fontL,
@@ -80,6 +87,72 @@ class ServiceRequestDetailPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSizes.paddingM),
+
+          // Precio cotizado + distancia (solo propuestas)
+          if (isProposal) ...[
+            Container(
+              padding: const EdgeInsets.all(AppSizes.paddingM),
+              decoration: BoxDecoration(
+                color:        context.colors.primary.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.payments_outlined,
+                    color: context.colors.primary,
+                    size: 28,
+                  ),
+                  const SizedBox(width: AppSizes.paddingM),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Precio cotizado',
+                          style: TextStyle(
+                            color:    context.colors.textSecondary,
+                            fontSize: AppSizes.fontS,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          prop.amount != null
+                              ? 'S/. ${prop.amount!.toStringAsFixed(2)}'
+                              : 'S/. --',
+                          style: TextStyle(
+                            color:      context.colors.textPrimary,
+                            fontSize:   AppSizes.fontXL,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (prop.distanceKm != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Icon(
+                          Icons.near_me_outlined,
+                          color: context.colors.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'a ${prop.distanceKm!.toStringAsFixed(1)} km',
+                          style: TextStyle(
+                            color:    context.colors.textSecondary,
+                            fontSize: AppSizes.fontS,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingM),
+          ],
 
           // Descripción
           _InfoCard(

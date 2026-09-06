@@ -14,6 +14,7 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     on<NearbyRequestsLoadRequested>(_onNearbyRequestsLoadRequested);
     on<NearbyRequestsLocationUnavailable>(_onNearbyRequestsLocationUnavailable);
     on<CreateRequestRequested>(_onCreateRequestRequested);
+    on<ProposalSendRequested>(_onProposalSendRequested);
   }
 
   Future<void> _onMyRequestsLoadRequested(
@@ -92,5 +93,39 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       emit(const ServiceRequestError(
         message: 'Error al crear la solicitud'));
     }
+  }
+
+  Future<void> _onProposalSendRequested(
+    ProposalSendRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    emit(ProposalSending());
+    try {
+      await _repository.sendProposal(
+        serviceRequestId: event.serviceRequestId,
+        amount:           event.amount,
+      );
+      emit(ProposalSent(serviceRequestId: event.serviceRequestId));
+    } catch (e) {
+      emit(ProposalSendError(message: _proposalErrorMessage(e)));
+    }
+  }
+
+  String _proposalErrorMessage(Object error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map<String, dynamic>) {
+        final message = data['message'];
+        if (message is String && message.isNotEmpty) return message;
+        if (message is List && message.isNotEmpty && message.first is String) {
+          return message.first as String;
+        }
+      }
+      final statusMessage = error.response?.statusMessage;
+      if (statusMessage != null && statusMessage.isNotEmpty) {
+        return statusMessage;
+      }
+    }
+    return 'No se pudo enviar la propuesta';
   }
 }

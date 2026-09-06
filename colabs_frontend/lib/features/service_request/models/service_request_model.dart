@@ -52,6 +52,7 @@ class ServiceRequestModel {
   final String?                  acceptanceDate;
   final String?                  completionDate;
   final double?                  distanceKm;
+  final int?                     proposalsCount;
   final ServiceRequestOccupation occupation;
   final ServiceRequestRequester? requester;
 
@@ -64,6 +65,7 @@ class ServiceRequestModel {
     this.acceptanceDate,
     this.completionDate,
     this.distanceKm,
+    this.proposalsCount,
     required this.occupation,
     this.requester,
   });
@@ -78,6 +80,7 @@ class ServiceRequestModel {
       acceptanceDate: json['acceptanceDate'] as String?,
       completionDate: json['completionDate'] as String?,
       distanceKm:     (json['distanceKm'] as num?)?.toDouble(),
+      proposalsCount: (json['proposalsCount'] as num?)?.toInt(),
       occupation:     ServiceRequestOccupation.fromJson(
                         json['occupation'] as Map<String, dynamic>),
       requester:      json['user'] != null

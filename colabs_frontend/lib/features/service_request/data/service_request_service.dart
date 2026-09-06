@@ -55,4 +55,20 @@ class ServiceRequestService {
     );
     return ServiceRequestModel.fromJson(response.data as Map<String, dynamic>);
   }
+
+  /// Envía una propuesta de precio por una solicitud
+  Future<void> sendProposal({
+    required String token,
+    required String serviceRequestId,
+    required double amount,
+  }) async {
+    await _dio.post(
+      '/proposals',
+      data: {
+        'serviceRequestId': serviceRequestId,
+        'amount': amount,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
 }

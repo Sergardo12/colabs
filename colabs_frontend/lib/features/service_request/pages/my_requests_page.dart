@@ -186,20 +186,24 @@ class _ServiceRequestCard extends StatelessWidget {
                 size:  20,
               ),
               const SizedBox(width: AppSizes.paddingS),
-              Expanded(
-                child: Text(
-                  request.occupation.name,
-                  style: TextStyle(
-                    color:      context.colors.textPrimary,
-                    fontSize:   AppSizes.fontL,
-                    fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      request.occupation.name,
+                      style: TextStyle(
+                        color:      context.colors.textPrimary,
+                        fontSize:   AppSizes.fontL,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
+                  if (request.proposalsCount != null &&
+                      request.proposalsCount! > 0)
+                    _ProposalsBadge(count: request.proposalsCount!),
+                  const SizedBox(width: AppSizes.paddingXS),
+                  _StatusBadge(status: request.status),
+                ],
               ),
-              _StatusBadge(status: request.status),
-            ],
-          ),
-          const SizedBox(height: AppSizes.paddingS),
+              const SizedBox(height: AppSizes.paddingS),
 
           Row(
             children: [
@@ -330,5 +334,44 @@ class _StatusBadge extends StatelessWidget {
       case 'cancelled':   return context.colors.error;
       default:            return context.colors.textSecondary;
     }
+  }
+}
+
+class _ProposalsBadge extends StatelessWidget {
+  final int count;
+
+  const _ProposalsBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingS,
+        vertical:   AppSizes.paddingXS,
+      ),
+      decoration: BoxDecoration(
+        color:        context.colors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXL),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.request_quote_outlined,
+            size:  14,
+            color: context.colors.primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            count == 1 ? '1 cotización' : '$count cotizaciones',
+            style: TextStyle(
+              color:      context.colors.primary,
+              fontSize:   AppSizes.fontS,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

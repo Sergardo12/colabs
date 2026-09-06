@@ -36,3 +36,16 @@ class CreateRequestRequested extends ServiceRequestEvent {
   @override
   List<Object?> get props => [lat, lng, direction, occupationId, description];
 }
+
+class ProposalSendRequested extends ServiceRequestEvent {
+  final String serviceRequestId;
+  final double amount;
+
+  const ProposalSendRequested({
+    required this.serviceRequestId,
+    required this.amount,
+  });
+
+  @override
+  List<Object?> get props => [serviceRequestId, amount];
+}

@@ -10,6 +10,14 @@ class MyRequestsLoadRequested extends ServiceRequestEvent {
   const MyRequestsLoadRequested();
 }
 
+class NearbyRequestsLoadRequested extends ServiceRequestEvent {
+  const NearbyRequestsLoadRequested();
+}
+
+class NearbyRequestsLocationUnavailable extends ServiceRequestEvent {
+  const NearbyRequestsLocationUnavailable();
+}
+
 class CreateRequestRequested extends ServiceRequestEvent {
   final double lat;
   final double lng;

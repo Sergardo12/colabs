@@ -20,6 +20,12 @@ class ServiceRequestRepository {
     return _service.getMyRequests(token: token);
   }
 
+  Future<List<ServiceRequestModel>> getNearbyRequests() async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.getNearbyRequests(token: token);
+  }
+
   Future<ServiceRequestModel> createRequest({
     required double lat,
     required double lng,

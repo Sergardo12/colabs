@@ -168,20 +168,28 @@ export class ServiceRequestService {
 
     const occupationIds = profile.occupations.map(o => o.id);
 
-    // Buscar solicitudes pending en PostgreSQL
+    // Buscar solicitudes pending en PostgreSQL de la ocupación del colaborador:
+    // - Dentro de un radio de 5km (PostGIS ST_DWithin sobre la columna geography)
+    // - Excluye auto-solicitudes del propio colaborador (igual que en notificaciones)
     const requests = await this.serviceRequestRepository
       .createQueryBuilder('sr')
       .where('sr.status = :status', { status: ServiceRequestStatus.PENDING })
       .andWhere('sr.occupationId IN (:...occupationIds)', { occupationIds })
+      .andWhere('sr.userId != :userId', { userId })
+      .andWhere(
+        `ST_DWithin(
+          sr.location,
+          ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
+          5000
+        )`,
+        { lat: location.lat, lng: location.lng },
+      )
       .leftJoinAndSelect('sr.occupation', 'occupation')
+      .leftJoinAndSelect('sr.user', 'user')
+      .orderBy('sr.creationDate', 'DESC')
       .getMany();
 
-    // Filtrar por radio de 5km
-    return requests.filter(request => {
-      if (!request.location) return false;
-      // La ubicación viene como string de PostGIS — la parseamos
-      return true; // simplificado — PostGIS hace el filtro real
-    });
+    return requests;
   }
 
   async updateStatus(

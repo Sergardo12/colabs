@@ -55,6 +55,10 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
           }
         },
         child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
+          buildWhen: (previous, current) =>
+              current is ServiceRequestLoading ||
+              current is ServiceRequestSuccess ||
+              current is ServiceRequestError,
           builder: (context, state) {
           if (state is ServiceRequestLoading) {
             return Center(

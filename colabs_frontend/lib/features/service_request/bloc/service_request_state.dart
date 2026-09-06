@@ -32,3 +32,19 @@ class ServiceRequestError extends ServiceRequestState {
   @override
   List<Object?> get props => [message];
 }
+
+class NearbyRequestsLoading extends ServiceRequestState {}
+
+class NearbyRequestsSuccess extends ServiceRequestState {
+  final List<ServiceRequestModel> requests;
+  const NearbyRequestsSuccess({required this.requests});
+  @override
+  List<Object?> get props => [requests];
+}
+
+class NearbyRequestsError extends ServiceRequestState {
+  final String message;
+  const NearbyRequestsError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}

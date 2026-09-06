@@ -99,4 +99,21 @@ class ProfileRepository {
 
     await _profileService.updateColabProfile(token: token, data: data);
   }
+
+  /// Activa disponibilidad y publica la ubicación del colaborador
+  Future<void> updateLocation({
+    required double lat,
+    required double lng,
+  }) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    await _profileService.updateLocation(token: token, lat: lat, lng: lng);
+  }
+
+  /// Desactiva la disponibilidad del colaborador
+  Future<void> deactivateLocation() async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    await _profileService.deactivateLocation(token: token);
+  }
 }

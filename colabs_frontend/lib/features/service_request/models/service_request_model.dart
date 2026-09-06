@@ -18,15 +18,41 @@ class ServiceRequestOccupation {
   }
 }
 
+class ServiceRequestRequester {
+  final String? id;
+  final String? name;
+  final String? lastName;
+  final String? imageProfile;
+
+  const ServiceRequestRequester({
+    this.id,
+    this.name,
+    this.lastName,
+    this.imageProfile,
+  });
+
+  factory ServiceRequestRequester.fromJson(Map<String, dynamic> json) {
+    return ServiceRequestRequester(
+      id:           json['id']           as String?,
+      name:         json['name']         as String?,
+      lastName:     json['lastName']     as String?,
+      imageProfile: json['imageProfile'] as String?,
+    );
+  }
+
+  String get fullName => '${name ?? ''} ${lastName ?? ''}'.trim();
+}
+
 class ServiceRequestModel {
-  final String                  id;
-  final String                  status;
-  final String                  direction;
-  final String                  description;
-  final String                  createdAt;
-  final String?                 acceptanceDate;
-  final String?                 completionDate;
+  final String                   id;
+  final String                   status;
+  final String                   direction;
+  final String                   description;
+  final String                   createdAt;
+  final String?                  acceptanceDate;
+  final String?                  completionDate;
   final ServiceRequestOccupation occupation;
+  final ServiceRequestRequester? requester;
 
   const ServiceRequestModel({
     required this.id,
@@ -37,6 +63,7 @@ class ServiceRequestModel {
     this.acceptanceDate,
     this.completionDate,
     required this.occupation,
+    this.requester,
   });
 
   factory ServiceRequestModel.fromJson(Map<String, dynamic> json) {
@@ -50,6 +77,10 @@ class ServiceRequestModel {
       completionDate: json['completionDate'] as String?,
       occupation:     ServiceRequestOccupation.fromJson(
                         json['occupation'] as Map<String, dynamic>),
+      requester:      json['user'] != null
+                        ? ServiceRequestRequester.fromJson(
+                            json['user'] as Map<String, dynamic>)
+                        : null,
     );
   }
 }

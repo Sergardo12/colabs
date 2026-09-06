@@ -148,6 +148,9 @@ final publicProfileRepository = PublicProfileRepository(
         RepositoryProvider<SupportRepository>(
           create: (_) => supportRepository,
         ),
+        RepositoryProvider<ProfileRepository>(
+          create: (_) => profileRepository,
+        ),
       ],
       child: MultiBlocProvider(
       providers: [

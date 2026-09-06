@@ -19,6 +19,20 @@ class ServiceRequestService {
         .toList();
   }
 
+  /// Solicitudes pendientes cercanas para un colaborador
+  /// (el backend filtra por ocupación, radio 5km y excluye auto-solicitudes)
+  Future<List<ServiceRequestModel>> getNearbyRequests({
+    required String token,
+  }) async {
+    final response = await _dio.get(
+      '/service-requests/nearby',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return (response.data as List<dynamic>)
+        .map((e) => ServiceRequestModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Crea una nueva solicitud de servicio
   Future<ServiceRequestModel> createRequest({
     required String token,

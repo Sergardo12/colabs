@@ -123,7 +123,7 @@ export class ServiceRequestService {
   }
 
   async findMyRequests(userId: string) {
-    return this.serviceRequestRepository.find({
+    const requests = await this.serviceRequestRepository.find({
       where: { userId },
       relations: [
         'occupation',
@@ -133,6 +133,12 @@ export class ServiceRequestService {
       ],
       order: { creationDate: 'DESC' },
     });
+
+    // Añade el número de propuestas/cotizaciones recibidas por solicitud
+    return requests.map(request => ({
+      ...request,
+      proposalsCount: request.proposals?.length ?? 0,
+    }));
   }
 
   async findOne(id: string, userId: string) {
@@ -183,6 +189,15 @@ export class ServiceRequestService {
           5000
         )`,
         { lat: location.lat, lng: location.lng },
+      )
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1
+          FROM proposals p
+          WHERE p.service_request_id = sr.id
+            AND p.profile_colab_id = :profileColabId
+        )`,
+        { profileColabId: profile.id },
       )
       .addSelect(
         `ST_Distance(

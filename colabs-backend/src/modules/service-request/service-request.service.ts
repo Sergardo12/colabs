@@ -10,6 +10,7 @@ import { CollabsGateway } from '../gateway/colabs.gateway';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { ServiceRequestStatus } from 'src/common/enums/service-request-status.enum';
+import { ProposalStatus } from 'src/common/enums/proposal-status.enum';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
@@ -134,10 +135,12 @@ export class ServiceRequestService {
       order: { creationDate: 'DESC' },
     });
 
-    // Añade el número de propuestas/cotizaciones recibidas por solicitud
+    // Añade el número de propuestas/cotizaciones pendientes recibidas por solicitud
     return requests.map(request => ({
       ...request,
-      proposalsCount: request.proposals?.length ?? 0,
+      proposalsCount:
+        request.proposals?.filter(p => p.status === ProposalStatus.PENDING)
+          .length ?? 0,
     }));
   }
 

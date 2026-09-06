@@ -184,12 +184,22 @@ export class ServiceRequestService {
         )`,
         { lat: location.lat, lng: location.lng },
       )
+      .addSelect(
+        `ST_Distance(
+          sr.location,
+          ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+        )`,
+        'distance',
+      )
       .leftJoinAndSelect('sr.occupation', 'occupation')
       .leftJoinAndSelect('sr.user', 'user')
       .orderBy('sr.creationDate', 'DESC')
-      .getMany();
+      .getRawAndEntities();
 
-    return requests;
+    return requests.entities.map((request, index) => ({
+      ...request,
+      distanceKm: Number(requests.raw[index].distance) / 1000,
+    }));
   }
 
   async updateStatus(

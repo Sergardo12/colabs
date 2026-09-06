@@ -9,6 +9,8 @@ import { CreateProposalDto } from './dto/create-proposal.dto';
 import { ProposalStatus } from 'src/common/enums/proposal-status.enum';
 import { ServiceRequestStatus } from 'src/common/enums/service-request-status.enum';
 import { NotificationService } from '../notification/notification.service';
+import { RedisService } from 'src/common/services/redis.service';
+import { CollabsGateway } from '../gateway/colabs.gateway';
 
 @Injectable()
 export class ProposalService {
@@ -26,12 +28,15 @@ export class ProposalService {
     private userRepository: Repository<User>,
 
     private notificationService: NotificationService,
+    private redisService: RedisService,
+    private gateway: CollabsGateway,
   ) {}
 
   async create(userId: string, dto: CreateProposalDto) {
     // Verificar que el usuario es colaborador
     const profile = await this.profileColabRepository.findOne({
       where: { userId },
+      relations: ['user'],
     });
 
     if (!profile) {
@@ -41,6 +46,7 @@ export class ProposalService {
     // Verificar que la solicitud existe y está pending
     const serviceRequest = await this.serviceRequestRepository.findOne({
       where: { id: dto.serviceRequestId },
+      relations: ['occupation'],
     });
 
     if (!serviceRequest) {
@@ -72,15 +78,77 @@ export class ProposalService {
 
     const saved = await this.proposalRepository.save(proposal);
 
-    // Notifica al demandante
-    await this.notificationService.notify({
+    // Distancia entre el colaborador (Redis) y la solicitud (PostGIS) — en km.
+    // Si no se puede calcular (sin ubicación), se notifica igual con valor null.
+    let distanceKm: number | null = null;
+    try {
+      const location = await this.redisService.getCollaboratorLocation(userId);
+      if (location && serviceRequest.location) {
+        const distanceResult = await this.serviceRequestRepository
+          .createQueryBuilder('sr')
+          .select(
+            `ST_Distance(
+              sr.location,
+              ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+            )`,
+            'distance',
+          )
+          .where('sr.id = :id', { id: saved.serviceRequestId })
+          .setParameters({ lat: location.lat, lng: location.lng })
+          .getRawOne();
+        if (distanceResult && distanceResult.distance != null) {
+          distanceKm = Number(distanceResult.distance) / 1000;
+        }
+      }
+    } catch (_) {
+      distanceKm = null;
+    }
+
+    // Notifica al demandante que recibió una propuesta
+    const notification = await this.notificationService.notify({
       userId: serviceRequest.userId,
       type: 'proposal_received',
       title: 'Nueva propuesta',
       body: `Un colaborador ofrece S/. ${dto.amount} por tu solicitud`,
       entityType: 'proposal',
       entityId: saved.id,
-    })
+      data: { distanceKm },
+    });
+
+    // Emite la notificación en tiempo real al solicitante (si está conectado)
+    this.gateway.emitNewNotification(serviceRequest.userId, {
+      id: notification.id,
+      userId: serviceRequest.userId,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      entityType: notification.entityType,
+      entityId: saved.id,
+      isRead: false,
+      creationDate: notification.creationDate,
+      serviceRequest: {
+        id: serviceRequest.id,
+        description: serviceRequest.description,
+        direction: serviceRequest.direction,
+        occupationName: serviceRequest.occupation?.name ?? null,
+      },
+      requester: {
+        id: profile.user.id,
+        name: profile.user.name,
+        lastName: profile.user.lastName,
+        imageProfile: profile.user.imageProfile,
+      },
+      proposal: {
+        amount: dto.amount,
+        distanceKm,
+        colab: {
+          id: profile.user.id,
+          name: profile.user.name,
+          lastName: profile.user.lastName,
+          imageProfile: profile.user.imageProfile,
+        },
+      },
+    });
 
     return saved;
   }

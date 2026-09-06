@@ -7,11 +7,15 @@ import { ServiceRequest } from '../service-request/entities/service-request.enti
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationModule } from '../notification/notification.module';
+import { GatewayModule } from '../gateway/gateway.module';
+import { RedisModule } from '../../common/redis.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Proposal, ServiceRequest, ProfileColab, User]),
     NotificationModule,
+    GatewayModule,
+    RedisModule,
   ],
   controllers: [ProposalController],
   providers: [ProposalService],

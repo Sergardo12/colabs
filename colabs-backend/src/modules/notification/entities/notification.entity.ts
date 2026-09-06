@@ -37,6 +37,13 @@ export class Notification extends BaseEntity {
   @Column({ name: 'is_read', default: false })
   isRead!: boolean;
 
+  /**
+   * Datos extra opcionales para tipos específicos de notificación.
+   * Ej: proposal_received → { distanceKm }
+   */
+  @Column({ type: 'jsonb', nullable: true })
+  data?: Record<string, any>;
+
   @CreateDateColumn({ name: 'creation_date' })
   creationDate!: Date;
 

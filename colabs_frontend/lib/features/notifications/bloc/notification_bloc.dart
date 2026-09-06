@@ -11,9 +11,25 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       : _notificationRepository = notificationRepository,
         super(NotificationInitial()) {
     on<NotificationsLoadRequested>(_onLoadRequested);
+    on<NotificationPushReceived>(_onPushReceived);
     on<NotificationMarkRead>(_onMarkRead);
     on<NotificationsMarkAllRead>(_onMarkAllRead);
     on<NotificationDeleted>(_onDeleted);
+  }
+
+  void _onPushReceived(
+    NotificationPushReceived event,
+    Emitter<NotificationState> emit,
+  ) {
+    final current = state;
+    if (current is! NotificationLoaded) return;
+
+    // Prepende sin recargar toda la lista (evita flash del badge)
+    final exists = current.notifications.any((n) => n.id == event.notification.id);
+    if (exists) return;
+    emit(NotificationLoaded(
+      notifications: [event.notification, ...current.notifications],
+    ));
   }
 
   Future<void> _onLoadRequested(
@@ -102,6 +118,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       creationDate:  n.creationDate,
       serviceRequest: n.serviceRequest,
       requester:     n.requester,
+      proposal:      n.proposal,
     );
   }
 }

@@ -32,4 +32,8 @@ export class CreateNotificationDto {
   @IsUUID()
   @IsOptional()
   adminSenderId?: string;
+
+  @ApiProperty({ example: { distanceKm: 3.2 }, required: false })
+  @IsOptional()
+  data?: Record<string, any>;
 }

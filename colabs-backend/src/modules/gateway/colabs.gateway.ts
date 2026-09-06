@@ -111,4 +111,13 @@ export class CollabsGateway
       }
     }
   }
+
+  // Emitir una notificación (ej: propuesta recibida) a un usuario específico
+  // el cliente recibe 'proposal_received' y actualiza su bandeja/contador sin recargar toda la pantalla
+  emitNewNotification(userId: string, notification: any) {
+    const socketId = this.connectedUsers.get(userId);
+    if (socketId) {
+      this.server.to(socketId).emit('proposal_received', notification);
+    }
+  }
 }

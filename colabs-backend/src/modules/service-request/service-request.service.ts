@@ -10,6 +10,7 @@ import { CollabsGateway } from '../gateway/colabs.gateway';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
 import { ServiceRequestStatus } from 'src/common/enums/service-request-status.enum';
+import { ProposalStatus } from 'src/common/enums/proposal-status.enum';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
@@ -123,7 +124,7 @@ export class ServiceRequestService {
   }
 
   async findMyRequests(userId: string) {
-    return this.serviceRequestRepository.find({
+    const requests = await this.serviceRequestRepository.find({
       where: { userId },
       relations: [
         'occupation',
@@ -133,6 +134,14 @@ export class ServiceRequestService {
       ],
       order: { creationDate: 'DESC' },
     });
+
+    // Añade el número de propuestas/cotizaciones pendientes recibidas por solicitud
+    return requests.map(request => ({
+      ...request,
+      proposalsCount:
+        request.proposals?.filter(p => p.status === ProposalStatus.PENDING)
+          .length ?? 0,
+    }));
   }
 
   async findOne(id: string, userId: string) {
@@ -168,20 +177,47 @@ export class ServiceRequestService {
 
     const occupationIds = profile.occupations.map(o => o.id);
 
-    // Buscar solicitudes pending en PostgreSQL
+    // Buscar solicitudes pending en PostgreSQL de la ocupación del colaborador:
+    // - Dentro de un radio de 5km (PostGIS ST_DWithin sobre la columna geography)
+    // - Excluye auto-solicitudes del propio colaborador (igual que en notificaciones)
     const requests = await this.serviceRequestRepository
       .createQueryBuilder('sr')
       .where('sr.status = :status', { status: ServiceRequestStatus.PENDING })
       .andWhere('sr.occupationId IN (:...occupationIds)', { occupationIds })
+      .andWhere('sr.userId != :userId', { userId })
+      .andWhere(
+        `ST_DWithin(
+          sr.location,
+          ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
+          5000
+        )`,
+        { lat: location.lat, lng: location.lng },
+      )
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1
+          FROM proposals p
+          WHERE p.service_request_id = sr.id
+            AND p.profile_colab_id = :profileColabId
+        )`,
+        { profileColabId: profile.id },
+      )
+      .addSelect(
+        `ST_Distance(
+          sr.location,
+          ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+        )`,
+        'distance',
+      )
       .leftJoinAndSelect('sr.occupation', 'occupation')
-      .getMany();
+      .leftJoinAndSelect('sr.user', 'user')
+      .orderBy('sr.creationDate', 'DESC')
+      .getRawAndEntities();
 
-    // Filtrar por radio de 5km
-    return requests.filter(request => {
-      if (!request.location) return false;
-      // La ubicación viene como string de PostGIS — la parseamos
-      return true; // simplificado — PostGIS hace el filtro real
-    });
+    return requests.entities.map((request, index) => ({
+      ...request,
+      distanceKm: Number(requests.raw[index].distance) / 1000,
+    }));
   }
 
   async updateStatus(

@@ -11,6 +11,7 @@ import '../bloc/service_request_bloc.dart';
 import '../bloc/service_request_event.dart';
 import '../bloc/service_request_state.dart';
 import '../models/service_request_model.dart';
+import 'widgets/proposals_dialog.dart';
 
 class MyRequestsPage extends StatefulWidget {
   const MyRequestsPage({super.key});
@@ -55,6 +56,10 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
           }
         },
         child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
+          buildWhen: (previous, current) =>
+              current is ServiceRequestLoading ||
+              current is ServiceRequestSuccess ||
+              current is ServiceRequestError,
           builder: (context, state) {
           if (state is ServiceRequestLoading) {
             return Center(
@@ -117,6 +122,10 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
                           'post':         null,
                         },
                       ),
+                      onQuotesTap: request.status == 'pending' &&
+                              (request.proposalsCount ?? 0) > 0
+                          ? () => showProposalsDialog(context, request)
+                          : null,
                     );
                   },
                 );
@@ -149,16 +158,20 @@ class _ServiceRequestCard extends StatelessWidget {
   final ServiceRequestModel  request;
   final ConversationModel?   conversation;
   final void Function(ConversationModel) onChatTap;
+  final VoidCallback?        onQuotesTap;
 
   const _ServiceRequestCard({
     required this.request,
     required this.conversation,
     required this.onChatTap,
+    this.onQuotesTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onQuotesTap,
+      child: Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
       decoration: BoxDecoration(
         color:        context.colors.surface,
@@ -182,20 +195,25 @@ class _ServiceRequestCard extends StatelessWidget {
                 size:  20,
               ),
               const SizedBox(width: AppSizes.paddingS),
-              Expanded(
-                child: Text(
-                  request.occupation.name,
-                  style: TextStyle(
-                    color:      context.colors.textPrimary,
-                    fontSize:   AppSizes.fontL,
-                    fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      request.occupation.name,
+                      style: TextStyle(
+                        color:      context.colors.textPrimary,
+                        fontSize:   AppSizes.fontL,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
+                  if (request.status == 'pending' &&
+                      request.proposalsCount != null &&
+                      request.proposalsCount! > 0)
+                    _ProposalsBadge(count: request.proposalsCount!),
+                  const SizedBox(width: AppSizes.paddingXS),
+                  _StatusBadge(status: request.status),
+                ],
               ),
-              _StatusBadge(status: request.status),
-            ],
-          ),
-          const SizedBox(height: AppSizes.paddingS),
+              const SizedBox(height: AppSizes.paddingS),
 
           Row(
             children: [
@@ -268,6 +286,7 @@ class _ServiceRequestCard extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -320,11 +339,50 @@ class _StatusBadge extends StatelessWidget {
   Color _statusColor(BuildContext context) {
     switch (status) {
       case 'pending':     return Colors.orange;
-      case 'accepted':    return context.colors.primary;
+      case 'accepted':    return Colors.green;
       case 'in_progress': return Colors.deepOrange;
       case 'completed':   return Colors.green;
       case 'cancelled':   return context.colors.error;
       default:            return context.colors.textSecondary;
     }
+  }
+}
+
+class _ProposalsBadge extends StatelessWidget {
+  final int count;
+
+  const _ProposalsBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingS,
+        vertical:   AppSizes.paddingXS,
+      ),
+      decoration: BoxDecoration(
+        color:        context.colors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXL),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.request_quote_outlined,
+            size:  14,
+            color: context.colors.primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            count == 1 ? '1 cotización' : '$count cotizaciones',
+            style: TextStyle(
+              color:      context.colors.primary,
+              fontSize:   AppSizes.fontS,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

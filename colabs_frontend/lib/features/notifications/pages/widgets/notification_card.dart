@@ -36,14 +36,20 @@ class NotificationCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Foto de perfil (solicitante en Caso 1, colaborador en Caso 2)
+            // Foto del colaborador que cotiza (proposal_received)
+            // o del solicitante en el resto de notificaciones
             CircleAvatar(
               radius: 22,
               backgroundColor: context.colors.primary.withOpacity(0.1),
-              backgroundImage: notification.requester?.imageProfile != null
-                  ? NetworkImage(notification.requester!.imageProfile!)
+              backgroundImage:
+                  (notification.proposal?.colab?.imageProfile ??
+                      notification.requester?.imageProfile) != null
+                  ? NetworkImage(notification.proposal?.colab?.imageProfile ??
+                      notification.requester!.imageProfile!)
                   : null,
-              child: notification.requester?.imageProfile == null
+              child: (notification.proposal?.colab?.imageProfile ??
+                          notification.requester?.imageProfile) ==
+                      null
                   ? Icon(
                       Icons.person,
                       color: context.colors.primary,
@@ -145,6 +151,39 @@ class NotificationCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ],
+
+                  // Propuesta de precio (solo proposal_received)
+                  if (notification.proposal != null) ...[
+                    const SizedBox(height: AppSizes.paddingS),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.payments_outlined,
+                          color: context.colors.primary,
+                          size:  16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'S/. ${notification.proposal!.amount?.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color:      context.colors.textPrimary,
+                            fontSize:   AppSizes.fontM,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (notification.proposal!.distanceKm != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'a ${notification.proposal!.distanceKm!.toStringAsFixed(1)} km',
+                        style: TextStyle(
+                          color:    context.colors.textSecondary,
+                          fontSize: AppSizes.fontS,
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),

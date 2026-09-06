@@ -50,6 +50,57 @@ class NotificationServiceRequest {
   }
 }
 
+class NotificationColab {
+  final String? id;
+  final String? name;
+  final String? lastName;
+  final String? imageProfile;
+
+  const NotificationColab({
+    this.id,
+    this.name,
+    this.lastName,
+    this.imageProfile,
+  });
+
+  factory NotificationColab.fromJson(Map<String, dynamic> json) {
+    return NotificationColab(
+      id: json['id'] as String?,
+      name: json['name'] as String?,
+      lastName: json['lastName'] as String?,
+      imageProfile: json['imageProfile'] as String?,
+    );
+  }
+
+  String get fullName {
+    final n = name ?? '';
+    final l = lastName ?? '';
+    return '$n $l'.trim();
+  }
+}
+
+class NotificationProposal {
+  final double? amount;
+  final double? distanceKm;
+  final NotificationColab? colab;
+
+  const NotificationProposal({
+    this.amount,
+    this.distanceKm,
+    this.colab,
+  });
+
+  factory NotificationProposal.fromJson(Map<String, dynamic> json) {
+    return NotificationProposal(
+      amount: (json['amount'] as num?)?.toDouble(),
+      distanceKm: (json['distanceKm'] as num?)?.toDouble(),
+      colab: json['colab'] != null
+          ? NotificationColab.fromJson(json['colab'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
 class NotificationModel {
   final String id;
   final String userId;
@@ -62,6 +113,7 @@ class NotificationModel {
   final String creationDate;
   final NotificationServiceRequest? serviceRequest;
   final NotificationRequester? requester;
+  final NotificationProposal? proposal;
 
   const NotificationModel({
     required this.id,
@@ -75,6 +127,7 @@ class NotificationModel {
     required this.creationDate,
     this.serviceRequest,
     this.requester,
+    this.proposal,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
@@ -95,6 +148,10 @@ class NotificationModel {
       requester: json['requester'] != null
           ? NotificationRequester.fromJson(
               json['requester'] as Map<String, dynamic>)
+          : null,
+      proposal: json['proposal'] != null
+          ? NotificationProposal.fromJson(
+              json['proposal'] as Map<String, dynamic>)
           : null,
     );
   }

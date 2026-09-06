@@ -102,4 +102,31 @@ class ProfileService {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  /// Activa la disponibilidad del colaborador y publica su ubicación en Redis
+  Future<void> updateLocation({
+    required String token,
+    required double lat,
+    required double lng,
+  }) async {
+    await _dio.put(
+      '/profile-colab/me/location',
+      data: {'lat': lat, 'lng': lng},
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+  }
+
+  /// Desactiva la disponibilidad del colaborador (elimina de Redis)
+  Future<void> deactivateLocation({
+    required String token,
+  }) async {
+    await _dio.delete(
+      '/profile-colab/me/location',
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+  }
 }

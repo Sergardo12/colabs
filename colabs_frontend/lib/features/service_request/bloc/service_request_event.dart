@@ -49,3 +49,32 @@ class ProposalSendRequested extends ServiceRequestEvent {
   @override
   List<Object?> get props => [serviceRequestId, amount];
 }
+
+class ProposalsLoadRequested extends ServiceRequestEvent {
+  final String requestId;
+  const ProposalsLoadRequested({required this.requestId});
+  @override
+  List<Object?> get props => [requestId];
+}
+
+class ProposalAcceptRequested extends ServiceRequestEvent {
+  final String proposalId;
+  final String requestId;
+  const ProposalAcceptRequested({
+    required this.proposalId,
+    required this.requestId,
+  });
+  @override
+  List<Object?> get props => [proposalId, requestId];
+}
+
+class ProposalRejectRequested extends ServiceRequestEvent {
+  final String proposalId;
+  final String requestId;
+  const ProposalRejectRequested({
+    required this.proposalId,
+    required this.requestId,
+  });
+  @override
+  List<Object?> get props => [proposalId, requestId];
+}

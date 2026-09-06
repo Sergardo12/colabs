@@ -15,6 +15,9 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     on<NearbyRequestsLocationUnavailable>(_onNearbyRequestsLocationUnavailable);
     on<CreateRequestRequested>(_onCreateRequestRequested);
     on<ProposalSendRequested>(_onProposalSendRequested);
+    on<ProposalsLoadRequested>(_onProposalsLoadRequested);
+    on<ProposalAcceptRequested>(_onProposalAcceptRequested);
+    on<ProposalRejectRequested>(_onProposalRejectRequested);
   }
 
   Future<void> _onMyRequestsLoadRequested(
@@ -127,5 +130,60 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       }
     }
     return 'No se pudo enviar la propuesta';
+  }
+
+  Future<void> _onProposalsLoadRequested(
+    ProposalsLoadRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    emit(ProposalsLoading());
+    try {
+      final proposals = await _repository.getProposals(event.requestId);
+      var requestStatus = 'pending';
+      if (event.requestId.isNotEmpty) {
+        try {
+          final requests = await _repository.getMyRequests();
+          requestStatus = requests
+              .firstWhere((r) => r.id == event.requestId)
+              .status;
+        } catch (_) {
+          // Lista de solicitudes no disponible; se asume pending.
+        }
+      }
+      emit(ProposalsLoaded(
+        proposals:    proposals,
+        requestStatus: requestStatus,
+      ));
+    } catch (e) {
+      emit(const ProposalsError(
+        message: 'No se pudieron cargar las propuestas'));
+    }
+  }
+
+  Future<void> _onProposalAcceptRequested(
+    ProposalAcceptRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    try {
+      await _repository.acceptProposal(event.proposalId);
+      emit(ProposalAccepted(requestId: event.requestId));
+      add(const MyRequestsLoadRequested());
+      add(ProposalsLoadRequested(requestId: event.requestId));
+    } catch (e) {
+      emit(ProposalActionError(message: _proposalErrorMessage(e)));
+    }
+  }
+
+  Future<void> _onProposalRejectRequested(
+    ProposalRejectRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    try {
+      await _repository.rejectProposal(event.proposalId);
+      add(ProposalsLoadRequested(requestId: event.requestId));
+      add(const MyRequestsLoadRequested());
+    } catch (e) {
+      emit(ProposalActionError(message: _proposalErrorMessage(e)));
+    }
   }
 }

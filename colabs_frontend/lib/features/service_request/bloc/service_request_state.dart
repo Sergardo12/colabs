@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../models/proposal_model.dart';
 import '../models/service_request_model.dart';
 
 abstract class ServiceRequestState extends Equatable {
@@ -61,6 +62,40 @@ class ProposalSent extends ServiceRequestState {
 class ProposalSendError extends ServiceRequestState {
   final String message;
   const ProposalSendError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}
+
+class ProposalsLoading extends ServiceRequestState {}
+
+class ProposalsLoaded extends ServiceRequestState {
+  final List<ProposalModel> proposals;
+  final String requestStatus;
+  const ProposalsLoaded({
+    required this.proposals,
+    required this.requestStatus,
+  });
+  @override
+  List<Object?> get props => [proposals, requestStatus];
+}
+
+class ProposalsError extends ServiceRequestState {
+  final String message;
+  const ProposalsError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}
+
+class ProposalAccepted extends ServiceRequestState {
+  final String requestId;
+  const ProposalAccepted({required this.requestId});
+  @override
+  List<Object?> get props => [requestId];
+}
+
+class ProposalActionError extends ServiceRequestState {
+  final String message;
+  const ProposalActionError({required this.message});
   @override
   List<Object?> get props => [message];
 }

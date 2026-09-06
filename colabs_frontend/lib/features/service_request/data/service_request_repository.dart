@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../models/proposal_model.dart';
 import '../models/service_request_model.dart';
 import 'service_request_service.dart';
 
@@ -56,5 +57,23 @@ class ServiceRequestRepository {
       serviceRequestId: serviceRequestId,
       amount:           amount,
     );
+  }
+
+  Future<List<ProposalModel>> getProposals(String requestId) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.getProposals(token: token, requestId: requestId);
+  }
+
+  Future<void> acceptProposal(String proposalId) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.acceptProposal(token: token, proposalId: proposalId);
+  }
+
+  Future<void> rejectProposal(String proposalId) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.rejectProposal(token: token, proposalId: proposalId);
   }
 }

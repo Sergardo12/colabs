@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Proposal } from './entities/proposal.entity';
 import { ServiceRequest } from '../service-request/entities/service-request.entity';
+import { CommentRequest } from '../service-request/entities/comment-request.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
@@ -181,11 +182,40 @@ export class ProposalService {
       throw new ForbiddenException('No tienes acceso a estas propuestas');
     }
 
-    return this.proposalRepository.find({
-      where: { serviceRequestId },
-      relations: ['profileColab', 'profileColab.occupations'],
-      order: { amount: 'ASC' },
+    const { entities, raw } = await this.proposalRepository
+      .createQueryBuilder('proposal')
+      .leftJoinAndSelect('proposal.serviceRequest', 'serviceRequest')
+      .leftJoinAndSelect('proposal.profileColab', 'profileColab')
+      .leftJoinAndSelect('profileColab.user', 'user')
+      .where('proposal.serviceRequestId = :serviceRequestId', {
+        serviceRequestId,
+      })
+      .andWhere('proposal.status = :proposalStatus', {
+        proposalStatus: ProposalStatus.PENDING,
+      })
+      .orderBy('proposal.amount', 'ASC')
+      .addSelect(
+        (sub) =>
+          sub
+            .select('AVG(cr.rating)', 'avg_rating')
+            .from(CommentRequest, 'cr')
+            .innerJoin(
+              Proposal,
+              'p',
+              'p.service_request_id = cr.service_request_id',
+            )
+            .where('p.profile_colab_id = profileColab.id')
+            .andWhere('cr.status = :status', { status: 'active' }),
+        'avg_rating',
+      )
+      .getRawAndEntities();
+
+    entities.forEach((proposal, i) => {
+      (proposal as any).profileColab.averageRating =
+        Math.round(Number(raw[i]?.avg_rating ?? 0) * 10) / 10;
     });
+
+    return entities;
   }
 
   async accept(id: string, userId: string) {
@@ -263,7 +293,7 @@ export class ProposalService {
   async reject(id: string, userId: string) {
     const proposal = await this.proposalRepository.findOne({
       where: { id },
-      relations: ['serviceRequest'],
+      relations: ['serviceRequest', 'profileColab'],
     });
 
     if (!proposal) throw new NotFoundException('Propuesta no encontrada');
@@ -273,6 +303,18 @@ export class ProposalService {
     }
 
     proposal.status = ProposalStatus.REJECTED;
-    return this.proposalRepository.save(proposal);
+    await this.proposalRepository.save(proposal);
+
+    // Notificar al colaborador
+    await this.notificationService.notify({
+      userId: proposal.profileColab.userId,
+      type: 'proposal_rejected',
+      title: 'Propuesta rechazada',
+      body: `Tu propuesta de S/. ${proposal.amount} no fue aceptada`,
+      entityType: 'service_request',
+      entityId: proposal.serviceRequestId,
+    });
+
+    return proposal;
   }
 }

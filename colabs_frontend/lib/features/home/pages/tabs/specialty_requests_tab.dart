@@ -193,8 +193,17 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
               itemCount: state.requests.length,
               separatorBuilder: (_, __) =>
                   const SizedBox(height: AppSizes.paddingM),
-              itemBuilder: (context, index) =>
-                  _SpecialtyRequestCard(request: state.requests[index]),
+              itemBuilder: (context, index) {
+                final nearbyRequest = state.requests[index];
+                return GestureDetector(
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (_) =>
+                        _ServiceRequestDetailDialog(request: nearbyRequest),
+                  ),
+                  child: _SpecialtyRequestCard(request: nearbyRequest),
+                );
+              },
             );
           }
 
@@ -379,6 +388,264 @@ class _SpecialtyRequestCard extends StatelessWidget {
     } catch (_) {
       return createdAt;
     }
+  }
+}
+
+String _formatDateTime(String createdAt) {
+  final date = DateTime.parse(
+    createdAt.endsWith('Z') ? createdAt : '${createdAt}Z',
+  ).toLocal();
+  return DateFormat('dd/MM/yyyy hh:mm a').format(date);
+}
+
+class _ServiceRequestDetailDialog extends StatelessWidget {
+  final ServiceRequestModel request;
+
+  const _ServiceRequestDetailDialog({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    final requester = request.requester;
+
+    return Dialog(
+      backgroundColor: context.colors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+      ),
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingL,
+        vertical:   AppSizes.paddingXL,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSizes.paddingL),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Cierre del modal
+            Align(
+              alignment: Alignment.topRight,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Icon(
+                  Icons.close,
+                  color: context.colors.textSecondary,
+                  size:  24,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingS),
+
+            // Encabezado: foto y nombre en vertical, centrado
+            Center(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 36,
+                    backgroundColor: context.colors.primary.withOpacity(0.1),
+                    backgroundImage: requester?.imageProfile != null
+                        ? NetworkImage(requester!.imageProfile!)
+                        : null,
+                    child: requester?.imageProfile == null
+                        ? Icon(
+                            Icons.person,
+                            color: context.colors.primary,
+                            size: 40,
+                          )
+                        : null,
+                  ),
+                  const SizedBox(height: AppSizes.paddingS),
+                  Text(
+                    requester?.fullName.isNotEmpty == true
+                        ? requester!.fullName
+                        : 'Solicitante',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color:      context.colors.textPrimary,
+                      fontSize:   AppSizes.fontL,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingL),
+
+            // Descripción completa del servicio
+            Text(
+              'Solicita:',
+              style: TextStyle(
+                color:      context.colors.textSecondary,
+                fontSize:   AppSizes.fontS,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingXS),
+            Text(
+              request.description.isEmpty
+                  ? 'Sin descripción'
+                  : request.description,
+              style: TextStyle(
+                color:    context.colors.textPrimary,
+                fontSize: AppSizes.fontM,
+                height:   1.4,
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingL),
+
+            // Ubicación y distancia
+            Text(
+              'Ubicación:',
+              style: TextStyle(
+                color:      context.colors.textSecondary,
+                fontSize:   AppSizes.fontS,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingXS),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  color: context.colors.primary,
+                  size:  20,
+                ),
+                const SizedBox(width: AppSizes.paddingS),
+                Expanded(
+                  child: Text(
+                    request.direction,
+                    style: TextStyle(
+                      color:    context.colors.textPrimary,
+                      fontSize: AppSizes.fontM,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.paddingS),
+                OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.map_outlined, size: 18),
+                  label: const Text('Ver ubicación'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.colors.primary,
+                    side:             BorderSide(color: context.colors.primary),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.paddingS,
+                      vertical:   AppSizes.paddingXS,
+                    ),
+                    textStyle: TextStyle(
+                      fontSize:   AppSizes.fontS,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSizes.paddingL),
+
+            // Distancia y fecha
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoBox(
+                    label: 'Distancia',
+                    value: request.distanceKm != null
+                        ? 'a ${request.distanceKm!.toStringAsFixed(1)} km'
+                        : 'Cerca de ti',
+                    icon: Icons.near_me_outlined,
+                  ),
+                ),
+                const SizedBox(width: AppSizes.paddingS),
+                Expanded(
+                  child: _InfoBox(
+                    label: 'Fecha',
+                    value: _formatDateTime(request.createdAt),
+                    icon: Icons.calendar_today_outlined,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSizes.paddingL),
+
+            // Acción principal (solo UI)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.colors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                  ),
+                ),
+                child: const Text(
+                  'ACEPTAR',
+                  style: TextStyle(
+                    fontSize:     AppSizes.fontL,
+                    fontWeight:   FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoBox extends StatelessWidget {
+  final String   label;
+  final String   value;
+  final IconData icon;
+
+  const _InfoBox({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingS),
+      decoration: BoxDecoration(
+        color:        context.colors.primary.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: context.colors.primary),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color:    context.colors.textSecondary,
+                  fontSize: AppSizes.fontS,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.paddingXS),
+          Text(
+            value,
+            style: TextStyle(
+              color:      context.colors.textPrimary,
+              fontSize:   AppSizes.fontM,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
   }
 }
 

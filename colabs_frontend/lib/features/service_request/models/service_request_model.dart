@@ -51,6 +51,7 @@ class ServiceRequestModel {
   final String                   createdAt;
   final String?                  acceptanceDate;
   final String?                  completionDate;
+  final double?                  distanceKm;
   final ServiceRequestOccupation occupation;
   final ServiceRequestRequester? requester;
 
@@ -62,6 +63,7 @@ class ServiceRequestModel {
     required this.createdAt,
     this.acceptanceDate,
     this.completionDate,
+    this.distanceKm,
     required this.occupation,
     this.requester,
   });
@@ -75,6 +77,7 @@ class ServiceRequestModel {
       createdAt:      json['createdAt']      as String,
       acceptanceDate: json['acceptanceDate'] as String?,
       completionDate: json['completionDate'] as String?,
+      distanceKm:     (json['distanceKm'] as num?)?.toDouble(),
       occupation:     ServiceRequestOccupation.fromJson(
                         json['occupation'] as Map<String, dynamic>),
       requester:      json['user'] != null

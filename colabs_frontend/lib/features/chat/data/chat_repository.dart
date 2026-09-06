@@ -51,6 +51,14 @@ class ChatRepository {
     _socketService.onNewMessage(callback);
   }
 
+  /// Escucha notificaciones de propuesta recibida (app-wide)
+  void onNewNotification(Function(Map<String, dynamic>) callback) {
+    _socketService.onNewNotification(callback);
+  }
+
+  /// ¿El socket está conectado? (para no reconectar en cada opening)
+  bool get isSocketConnected => _socketService.isConnected;
+
   /// Desconecta el WebSocket
   void disconnect() {
     _socketService.disconnect();

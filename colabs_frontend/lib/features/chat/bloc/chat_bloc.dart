@@ -40,7 +40,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) async {
     emit(MessagesLoading());
     try {
-      await _chatRepository.connectSocket();
+      // Conecta solo si no hay socket activo (evita reconexión en cada apertura)
+      if (!_chatRepository.isSocketConnected) {
+        await _chatRepository.connectSocket();
+      }
       _chatRepository.joinConversation(event.conversationId);
       _chatRepository.onNewMessage((message) {
         add(NewMessageReceived(message: message));
@@ -66,8 +69,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatClosed event,
     Emitter<ChatState> emit,
   ) async {
+    // No desconecta el socket global: solo sale de la sala de la conversación
     _chatRepository.leaveConversation(event.conversationId);
-    _chatRepository.disconnect();
     emit(ChatInitial());
   }
 

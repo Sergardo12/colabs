@@ -35,9 +35,18 @@ class ChatSocketService {
 
   /// Escucha mensajes nuevos en tiempo real
   void onNewMessage(Function(MessageModel) callback) {
+    _socket?.off('new_message');
     _socket?.on('new_message', (data) {
       final message = MessageModel.fromJson(data as Map<String, dynamic>);
       callback(message);
+    });
+  }
+
+  /// Escucha notificaciones de propuesta recibida (app-wide)
+  void onNewNotification(Function(Map<String, dynamic>) callback) {
+    _socket?.off('proposal_received');
+    _socket?.on('proposal_received', (data) {
+      callback(data as Map<String, dynamic>);
     });
   }
 

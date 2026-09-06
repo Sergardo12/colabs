@@ -50,7 +50,7 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
         ),
-      );
+      ).timeout(const Duration(seconds: 15));
     } catch (_) {
       return null;
     }
@@ -60,27 +60,40 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
     if (_publishingLocation) return;
     setState(() => _publishingLocation = true);
 
-    final position = await _getCurrentPosition();
-    if (!mounted) return;
+    try {
+      final position = await _getCurrentPosition();
+      if (!mounted) return;
 
-    if (position == null) {
-      setState(() => _publishingLocation = false);
+      if (position == null) {
+        _stopPublishing();
+        context
+            .read<ServiceRequestBloc>()
+            .add(const NearbyRequestsLocationUnavailable());
+        return;
+      }
+
+      _lastPosition = position;
+      await _republishLocation();
+    } catch (_) {
+      if (!mounted) return;
+      _stopPublishing();
       context
           .read<ServiceRequestBloc>()
           .add(const NearbyRequestsLocationUnavailable());
       return;
     }
 
-    _lastPosition = position;
-    await _republishLocation();
-
     if (!mounted) return;
-    setState(() => _publishingLocation = false);
+    _stopPublishing();
     context.read<ServiceRequestBloc>().add(const NearbyRequestsLoadRequested());
     _publishTimer?.cancel();
     _publishTimer = Timer.periodic(_publishInterval, (_) {
       _republishLocation();
     });
+  }
+
+  void _stopPublishing() {
+    if (mounted) setState(() => _publishingLocation = false);
   }
 
   Future<void> _republishLocation() async {
@@ -259,10 +272,10 @@ class _SpecialtyRequestCard extends StatelessWidget {
               CircleAvatar(
                 radius: 26,
                 backgroundColor: context.colors.primary.withOpacity(0.1),
-                backgroundImage: requester?.imageProfile != null
+                backgroundImage: requester?.imageProfile?.isNotEmpty == true
                     ? NetworkImage(requester!.imageProfile!)
                     : null,
-                child: requester?.imageProfile == null
+                child: requester?.imageProfile?.isNotEmpty != true
                     ? Icon(
                         Icons.person,
                         color: context.colors.primary,
@@ -632,10 +645,10 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                   CircleAvatar(
                     radius: 36,
                     backgroundColor: context.colors.primary.withOpacity(0.1),
-                    backgroundImage: requester?.imageProfile != null
+                    backgroundImage: requester?.imageProfile?.isNotEmpty == true
                         ? NetworkImage(requester!.imageProfile!)
                         : null,
-                    child: requester?.imageProfile == null
+                    child: requester?.imageProfile?.isNotEmpty != true
                         ? Icon(
                             Icons.person,
                             color: context.colors.primary,

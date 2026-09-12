@@ -37,10 +37,11 @@ export class ServiceRequestService {
     // Crear la solicitud con PostGIS
     const serviceRequest = this.serviceRequestRepository.create({
       userId,
-      occupationId: dto.occupationId,
-      direction: dto.direction,
-      description: dto.description,
-      status: ServiceRequestStatus.PENDING,
+      occupationId:   dto.occupationId,
+      direction:      dto.direction,
+      description:    dto.description,
+      profileColabId: dto.profileColabId,
+      status:         ServiceRequestStatus.PENDING,
     });
 
     const saved = await this.serviceRequestRepository.save(serviceRequest) as ServiceRequest;
@@ -55,7 +56,50 @@ export class ServiceRequestService {
     .where('id = :id', { id: saved.id })
     .execute();
 
-    // Buscar colaboradores disponibles en Redis con esa occupation
+    // Flujo C — solicitud directa a un colaborador específico
+    if (dto.profileColabId) {
+      // Notificar solo a ese colaborador via WebSocket
+      this.collabsGateway.emitNewServiceRequest(
+        [dto.profileColabId],
+        {
+          id:          saved.id,
+          occupationId: saved.occupationId,
+          direction:   saved.direction,
+          description: saved.description,
+          lat:         dto.lat,
+          lng:         dto.lng,
+        },
+      );
+
+      // Notificación persistente solo a ese colaborador
+      const occupation = await this.occupationRepository.findOne({
+        where: { id: dto.occupationId },
+      });
+      const occupationName = occupation?.name ?? 'Servicio';
+
+      // Obtener el userId del profileColab
+      const profileColab = await this.profileColabRepository.findOne({
+        where: { id: dto.profileColabId },
+      });
+
+      if (profileColab) {
+        await this.notificationService.notify({
+          userId:     profileColab.userId,
+          type:       'service_request_new',
+          title:      `Solicitud directa: ${occupationName}`,
+          body:       saved.description ?? saved.direction ?? '',
+          entityType: 'service_request',
+          entityId:   saved.id,
+        });
+      }
+
+      return this.serviceRequestRepository.findOne({
+        where:     { id: saved.id },
+        relations: ['occupation'],
+      });
+    }
+
+    // Flujo A — solicitud a colaboradores cercanos (código existente sin cambios)
     const nearbyCollaborators = await this.redisService
       .findNearbyCollaborators(dto.occupationId);
 

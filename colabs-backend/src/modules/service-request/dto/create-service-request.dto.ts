@@ -33,4 +33,9 @@ export class CreateServiceRequestDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiProperty({ example: 'uuid-del-colaborador', required: false })
+  @IsUUID()
+  @IsOptional()
+  profileColabId?: string;
 }

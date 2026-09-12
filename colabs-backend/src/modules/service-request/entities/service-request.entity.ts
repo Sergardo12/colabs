@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Occupation } from '../../occupation/entities/occupation.entity';
+import { ProfileColab } from '../../profile-colab/entities/profile-colab.entity';
 import { Proposal } from 'src/modules/proposal/entities/proposal.entity';
 import { CommentRequest } from './comment-request.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
@@ -33,6 +34,9 @@ export class ServiceRequest extends BaseEntity {
   @Column({ nullable: true })
   description?: string;
 
+  @Column({ name: 'profile_colab_id', nullable: true })
+  profileColabId?: string;
+
   @CreateDateColumn({ name: 'creation_date' })
   creationDate!: Date;
 
@@ -49,6 +53,10 @@ export class ServiceRequest extends BaseEntity {
   @ManyToOne(() => Occupation, (occupation) => occupation.serviceRequests)
   @JoinColumn({ name: 'occupation_id' })
   occupation!: Occupation;
+
+  @ManyToOne(() => ProfileColab, { nullable: true })
+  @JoinColumn({ name: 'profile_colab_id' })
+  profileColab?: ProfileColab;
 
   @OneToMany(() => Proposal, (proposal) => proposal.serviceRequest)
   proposals!: Proposal[];

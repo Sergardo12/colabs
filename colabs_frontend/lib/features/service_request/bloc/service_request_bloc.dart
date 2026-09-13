@@ -84,11 +84,12 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     emit(ServiceRequestCreating());
     try {
       final request = await _repository.createRequest(
-        lat:          event.lat,
-        lng:          event.lng,
-        direction:    event.direction,
-        occupationId: event.occupationId,
-        description:  event.description,
+        lat:            event.lat,
+        lng:            event.lng,
+        direction:      event.direction,
+        occupationId:   event.occupationId,
+        description:    event.description,
+        profileColabId: event.profileColabId,
       );
       emit(ServiceRequestCreated(request: request));
       add(const MyRequestsLoadRequested());

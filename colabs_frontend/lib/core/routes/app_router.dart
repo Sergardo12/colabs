@@ -25,6 +25,10 @@ import '../../features/profile/pages/support_request_page.dart';
 import '../../features/profile/pages/report_colab_page.dart';
 import '../../features/profile/pages/suggestion_service_page.dart';
 import '../../features/profile/pages/contact_us_page.dart';
+import '../../features/profile/models/occupation_model.dart';
+import '../../features/service_request/pages/my_request_detail_page.dart';
+import '../../features/service_request/pages/my_requests_page.dart';
+import '../../features/service_request/models/service_request_model.dart';
 
 class AppRouter {
   AppRouter._();
@@ -44,6 +48,7 @@ class AppRouter {
   static const String favorites = '/favorites';
   static const String notifications = '/notifications';
   static const String serviceRequestDetail = '/service-request-detail';
+  static const String myRequestDetail      = '/my-request-detail';
   static const String helpCenter       = '/help-center';
   static const String supportRequest   = '/support-request';
   static const String reportColab      = '/report-colab';
@@ -77,8 +82,18 @@ class AppRouter {
       case conversations:
         return MaterialPageRoute(builder: (_) => const ConversationsPage());
       case requestMap:
+        final args = settings.arguments;
+        OccupationItem? preOccupation;
+        String?         preDirection;
+        if (args is Map) {
+          preOccupation = args['occupation'] as OccupationItem?;
+          preDirection  = args['direction']  as String?;
+        }
         return MaterialPageRoute(
-          builder: (_) => const RequestMapPage(),
+          builder: (_) => RequestMapPage(
+            preselectedOccupation: preOccupation,
+            prefilledDirection:    preDirection,
+          ),
         );
       case favorites:
         return MaterialPageRoute(
@@ -92,6 +107,14 @@ class AppRouter {
             notification: settings.arguments as NotificationModel,
           ),
         );
+      case myRequestDetail:
+        final args = settings.arguments;
+        if (args is ServiceRequestModel) {
+          return MaterialPageRoute(
+            builder: (_) => MyRequestDetailPage(request: args),
+          );
+        }
+        return MaterialPageRoute(builder: (_) => const MyRequestsPage());
       case helpCenter:
         return MaterialPageRoute(builder: (_) => const HelpCenterPage());
       case supportRequest:

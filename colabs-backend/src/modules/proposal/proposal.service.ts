@@ -6,6 +6,7 @@ import { ServiceRequest } from '../service-request/entities/service-request.enti
 import { CommentRequest } from '../service-request/entities/comment-request.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { User } from '../users/entities/user.entity';
+import { Conversation } from '../conversation/entities/conversation.entity';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { ProposalStatus } from 'src/common/enums/proposal-status.enum';
 import { ServiceRequestStatus } from 'src/common/enums/service-request-status.enum';
@@ -27,6 +28,9 @@ export class ProposalService {
 
     @InjectRepository(User)
     private userRepository: Repository<User>,
+
+    @InjectRepository(Conversation)
+    private conversationRepository: Repository<Conversation>,
 
     private notificationService: NotificationService,
     private redisService: RedisService,
@@ -283,6 +287,25 @@ export class ProposalService {
       entityType: 'service_request',
       entityId: proposal.serviceRequestId,
     });
+
+    // Crear conversación automáticamente entre solicitante y colaborador
+    const existingConversation = await this.conversationRepository.findOne({
+      where: {
+        userId:           proposal.serviceRequest.userId,
+        profileColabId:   proposal.profileColabId,
+        serviceRequestId: proposal.serviceRequestId,
+      },
+    });
+
+    if (!existingConversation) {
+      const conversation = this.conversationRepository.create({
+        userId:           proposal.serviceRequest.userId,
+        profileColabId:   proposal.profileColabId,
+        serviceRequestId: proposal.serviceRequestId,
+        status:           'open',
+      });
+      await this.conversationRepository.save(conversation);
+    }
 
     return this.proposalRepository.findOne({
       where: { id: proposal.id },

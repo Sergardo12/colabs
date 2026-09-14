@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/routes/app_router.dart';
+import '../../../chat/bloc/chat_bloc.dart';
+import '../../../chat/bloc/chat_event.dart';
 import '../../bloc/service_request_bloc.dart';
 import '../../bloc/service_request_event.dart';
 import '../../bloc/service_request_state.dart';
@@ -84,6 +86,9 @@ class _ProposalsDialogState extends State<ProposalsDialog> {
                         );
                     }
                     if (state is ProposalAccepted) {
+                      context.read<ChatBloc>().add(
+                        const ConversationsLoadRequested(),
+                      );
                       Navigator.of(context).pop();
                     }
                   },

@@ -14,15 +14,15 @@ Aplicación móvil SaaS que conecta usuarios que ofrecen servicios empíricos (c
 `13 de 15 módulos completados`
 
 ### Frontend (Flutter)
-![Frontend Progress](https://progress-bar.xyz/76/?title=Flutter&width=500&color=017DB0)
-`20 de 27 funcionalidades completadas`
+![Frontend Progress](https://progress-bar.xyz/82/?title=Flutter&width=500&color=017DB0)
+`22 de 27 funcionalidades completadas`
 
 ### Flujos principales
 | Flujo | Estado | Descripción |
 |---|---|---|
-| Flujo A — Solicitud InDriver | 🔴 Pendiente | Usuario solicita por ubicación, colaboradores proponen |
+| Flujo A — Solicitud InDriver | 🟡 Parcial | Mapa + solicitud + propuestas funcionan. Falta pantalla "Mis servicios" del colaborador |
 | Flujo B — Consulta desde post | 🟢 Completo | Usuario consulta desde feed, chat con oferta y aceptación |
-| Flujo C — Re-solicitar desde historial | 🔴 Pendiente | Re-solicitar servicio anterior |
+| Flujo C — Re-solicitar desde historial | 🟢 Completo | Re-solicitar al mismo colaborador desde historial |
 
 ---
 
@@ -758,6 +758,10 @@ google_sign_in: ^6.2.2
 - [x] Pantalla "Mis solicitudes" con estados y link a chat
 - [x] Chat en tiempo real (WebSocket + Socket.io)
 - [x] Flujo B completo — consulta desde post, oferta y aceptación
+- [x] Flujo A — pantalla de mapa con solicitud por ubicación
+- [x] Flujo C — re-solicitar desde historial con mapa y geocoding
+- [x] Pantallas de soporte (help center, reporte, sugerencia, contacto)
+- [x] Detalle de solicitud con mapa de fondo
 - [x] Lista de conversaciones con interlocutor correcto
 - [x] Burbujas de mensaje estilo WhatsApp
 - [ ] Botón central — solicitud tipo InDriver
@@ -779,6 +783,9 @@ google_sign_in: ^6.2.2
 | WebSocket persistente en chat | Performance — reconecta por cada conversación | Media |
 | currentUserId via ProfileBloc en router | Frágil si perfil no cargado | Baja |
 | withOpacity deprecado (~45 usos) | Warning de lint | Baja |
+| Cruce de datos en Flutter para ícono de mensaje | Performance — backend debería devolver conversationId en my-requests | Media |
+| Pantalla "Mis servicios" del colaborador | Pendiente — la implementa el equipo | Alta |
+| Google Maps — migrar desde OpenStreetMap | Mejor cobertura en Perú para producción | Alta |
 
 ---
 

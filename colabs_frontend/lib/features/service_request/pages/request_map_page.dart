@@ -13,7 +13,14 @@ import '../bloc/service_request_event.dart';
 import '../bloc/service_request_state.dart';
 
 class RequestMapPage extends StatefulWidget {
-  const RequestMapPage({super.key});
+  final OccupationItem? preselectedOccupation;
+  final String?         prefilledDirection;
+
+  const RequestMapPage({
+    super.key,
+    this.preselectedOccupation,
+    this.prefilledDirection,
+  });
 
   @override
   State<RequestMapPage> createState() => _RequestMapPageState();
@@ -38,6 +45,26 @@ class _RequestMapPageState extends State<RequestMapPage> {
     super.initState();
     context.read<RequestMapBloc>().add(const OccupationsLoadRequested());
     _getCurrentLocation();
+    // Pre-relleno desde Flujo C
+    if (widget.prefilledDirection != null) {
+      _directionCtrl.text = widget.prefilledDirection!;
+    }
+    _preselectFromWidget();
+  }
+
+  void _preselectFromWidget() {
+    final pre = widget.preselectedOccupation;
+    if (pre == null || _selectedOccupation != null) return;
+    final state = context.read<RequestMapBloc>().state;
+    if (state is! RequestMapOccupationsLoaded || state.occupations.isEmpty) {
+      return;
+    }
+    setState(() {
+      _selectedOccupation = state.occupations.firstWhere(
+        (o) => o.id == pre.id,
+        orElse: () => state.occupations.first,
+      );
+    });
   }
 
   @override
@@ -251,27 +278,42 @@ class _RequestMapPageState extends State<RequestMapPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ServiceRequestBloc, ServiceRequestState>(
+    return BlocListener<RequestMapBloc, RequestMapState>(
+      listenWhen: (previous, current) =>
+          current is RequestMapOccupationsLoaded,
       listener: (context, state) {
-        if (state is ServiceRequestCreated) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content:         Text('¡Solicitud enviada! Buscando colaboradores...'),
-              backgroundColor: Color(0xFF4CAF50),
-            ),
-          );
-        }
-        if (state is ServiceRequestError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:         Text(state.message),
-              backgroundColor: Colors.red,
-            ),
-          );
+        final pre = widget.preselectedOccupation;
+        if (pre != null && _selectedOccupation == null) {
+          final loaded = state as RequestMapOccupationsLoaded;
+          setState(() {
+            _selectedOccupation = loaded.occupations.firstWhere(
+              (o) => o.id == pre.id,
+              orElse: () => loaded.occupations.first,
+            );
+          });
         }
       },
-      child: Scaffold(
+      child: BlocListener<ServiceRequestBloc, ServiceRequestState>(
+        listener: (context, state) {
+          if (state is ServiceRequestCreated) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content:         Text('¡Solicitud enviada! Buscando colaboradores...'),
+                backgroundColor: Color(0xFF4CAF50),
+              ),
+            );
+          }
+          if (state is ServiceRequestError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content:         Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: Scaffold(
         appBar: AppBar(
           title: const Text('¿Dónde necesitas el servicio?'),
         ),
@@ -554,6 +596,7 @@ class _RequestMapPageState extends State<RequestMapPage> {
               ),
           ],
         ),
+      ),
       ),
     );
   }

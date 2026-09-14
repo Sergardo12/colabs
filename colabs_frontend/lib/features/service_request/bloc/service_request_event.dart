@@ -19,11 +19,12 @@ class NearbyRequestsLocationUnavailable extends ServiceRequestEvent {
 }
 
 class CreateRequestRequested extends ServiceRequestEvent {
-  final double lat;
-  final double lng;
-  final String direction;
-  final String occupationId;
-  final String description;
+  final double  lat;
+  final double  lng;
+  final String  direction;
+  final String  occupationId;
+  final String  description;
+  final String? profileColabId;
 
   const CreateRequestRequested({
     required this.lat,
@@ -31,10 +32,13 @@ class CreateRequestRequested extends ServiceRequestEvent {
     required this.direction,
     required this.occupationId,
     required this.description,
+    this.profileColabId,
   });
 
   @override
-  List<Object?> get props => [lat, lng, direction, occupationId, description];
+  List<Object?> get props => [
+    lat, lng, direction, occupationId, description, profileColabId
+  ];
 }
 
 class ProposalSendRequested extends ServiceRequestEvent {

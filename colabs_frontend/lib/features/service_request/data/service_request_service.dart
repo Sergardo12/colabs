@@ -42,6 +42,7 @@ class ServiceRequestService {
     required String direction,
     required String occupationId,
     required String description,
+    String? profileColabId,
   }) async {
     final response = await _dio.post(
       '/service-requests',
@@ -51,6 +52,7 @@ class ServiceRequestService {
         'direction':    direction,
         'occupationId': occupationId,
         'description':  description,
+        if (profileColabId != null) 'profileColabId': profileColabId,
       },
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );

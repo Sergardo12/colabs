@@ -33,16 +33,18 @@ class ServiceRequestRepository {
     required String direction,
     required String occupationId,
     required String description,
+    String? profileColabId,
   }) async {
     final token = await _secureStorage.read(key: _tokenKey);
     if (token == null) throw Exception('No hay sesión activa');
     return _service.createRequest(
-      token:        token,
-      lat:          lat,
-      lng:          lng,
-      direction:    direction,
-      occupationId: occupationId,
-      description:  description,
+      token:          token,
+      lat:            lat,
+      lng:            lng,
+      direction:      direction,
+      occupationId:   occupationId,
+      description:    description,
+      profileColabId: profileColabId,
     );
   }
 

@@ -169,8 +169,14 @@ class _ServiceRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onQuotesTap,
+    return InkWell(
+      onTap: onQuotesTap ??
+          () => Navigator.pushNamed(
+                context,
+                AppRouter.myRequestDetail,
+                arguments: request,
+              ),
+      borderRadius: BorderRadius.circular(AppSizes.radiusM),
       child: Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
       decoration: BoxDecoration(

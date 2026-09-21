@@ -16,6 +16,7 @@ import {
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { SendQuoteDto } from './dto/send-quote.dto';
 import { AcceptOfferDto } from './dto/accept-offer.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
@@ -70,5 +71,42 @@ export class ConversationController {
     @Body() dto: AcceptOfferDto,
   ) {
     return this.conversationService.acceptOffer(id, user.id, dto);
+  }
+
+  @Post(':id/quote')
+  @ApiOperation({ summary: 'Enviar cotización final en el chat (colaborador)' })
+  sendQuote(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: SendQuoteDto,
+  ) {
+    return this.conversationService.sendQuote(id, user.id, dto.amount);
+  }
+
+  @Get(':id/quote')
+  @ApiOperation({ summary: 'Estado de la cotización de una conversación Flow A' })
+  getQuoteStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.conversationService.getQuoteStatus(id, user.id);
+  }
+
+  @Patch(':id/quote/accept')
+  @ApiOperation({ summary: 'Aceptar cotización del chat (demandante)' })
+  acceptQuote(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.conversationService.acceptQuote(id, user.id);
+  }
+
+  @Patch(':id/quote/reject')
+  @ApiOperation({ summary: 'Rechazar cotización del chat (demandante)' })
+  rejectQuote(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.conversationService.rejectQuote(id, user.id);
   }
 }

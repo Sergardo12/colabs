@@ -90,3 +90,41 @@ class AcceptOfferRequested extends ChatEvent {
   @override
   List<Object?> get props => [conversationId, direction];
 }
+
+class SendQuoteRequested extends ChatEvent {
+  final String conversationId;
+  final double amount;
+
+  const SendQuoteRequested({
+    required this.conversationId,
+    required this.amount,
+  });
+
+  @override
+  List<Object?> get props => [conversationId, amount];
+}
+
+class QuoteStatusLoadRequested extends ChatEvent {
+  final String conversationId;
+  const QuoteStatusLoadRequested({required this.conversationId});
+  @override
+  List<Object?> get props => [conversationId];
+}
+
+class QuoteAcceptRequested extends ChatEvent {
+  final String conversationId;
+  const QuoteAcceptRequested({required this.conversationId});
+  @override
+  List<Object?> get props => [conversationId];
+}
+
+class QuoteRejectRequested extends ChatEvent {
+  final String conversationId;
+  const QuoteRejectRequested({required this.conversationId});
+  @override
+  List<Object?> get props => [conversationId];
+}
+
+class ChatNoticeDismissed extends ChatEvent {
+  const ChatNoticeDismissed();
+}

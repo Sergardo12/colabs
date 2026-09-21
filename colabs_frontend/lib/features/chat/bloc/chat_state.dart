@@ -27,15 +27,32 @@ class MessagesLoaded extends ChatState {
   final String             conversationId;
   final String             currentUserId;
   final String             conversationStatus;
+  final String             quoteStatus;
+  final String             serviceStatus;
+  final double?            acceptedAmount;
+  final String?            floatingMessage;
+
   const MessagesLoaded({
     required this.messages,
     required this.conversationId,
     required this.currentUserId,
     required this.conversationStatus,
+    this.quoteStatus = 'none',
+    this.serviceStatus = '',
+    this.acceptedAmount,
+    this.floatingMessage,
   });
   @override
-  List<Object?> get props =>
-      [messages, conversationId, currentUserId, conversationStatus];
+  List<Object?> get props => [
+        messages,
+        conversationId,
+        currentUserId,
+        conversationStatus,
+        quoteStatus,
+        serviceStatus,
+        acceptedAmount,
+        floatingMessage,
+      ];
 }
 
 class ChatError extends ChatState {
@@ -65,4 +82,18 @@ class OfferAccepted extends ChatState {
 
   @override
   List<Object?> get props => [serviceRequestId];
+}
+
+class QuoteAccepted extends ChatState {
+  final String conversationId;
+  const QuoteAccepted({required this.conversationId});
+  @override
+  List<Object?> get props => [conversationId];
+}
+
+class QuoteRejected extends ChatState {
+  final String conversationId;
+  const QuoteRejected({required this.conversationId});
+  @override
+  List<Object?> get props => [conversationId];
 }

@@ -16,6 +16,7 @@ import { SendMessageDto, MessageType } from './dto/send-message.dto';
 import { AcceptOfferDto } from './dto/accept-offer.dto';
 import { ServiceRequestStatus } from '../../common/enums/service-request-status.enum';
 import { CollabsGateway } from '../gateway/colabs.gateway';
+import { ProposalService } from '../proposal/proposal.service';
 
 @Injectable()
 export class ConversationService {
@@ -36,6 +37,7 @@ export class ConversationService {
     private occupationRepository: Repository<Occupation>,
 
     private collabsGateway: CollabsGateway,
+    private proposalService: ProposalService,
   ) {}
 
   async create(userId: string, dto: CreateConversationDto) {
@@ -153,6 +155,15 @@ export class ConversationService {
 
     // Si es una oferta — solo el colaborador puede enviarla
     if (dto.type === MessageType.OFFER) {
+      // Flow A: las cotizaciones de una solicitud de servicio se envían con el
+      // endpoint dedicado (POST /conversations/:id/quote). Esto protege el
+      // estado de la conversación frente al flujo de ofertas (Flow B).
+      if (conversation.serviceRequestId && !conversation.postId) {
+        throw new ForbiddenException(
+          'Usa la opción "Enviar cotización" para solicitudes de servicio',
+        );
+      }
+
       if (conversation.profileColab.userId !== userId) {
         throw new ForbiddenException('Solo el colaborador puede enviar ofertas');
       }
@@ -265,5 +276,106 @@ export class ConversationService {
       conversation,
       serviceRequest: saved,
     };
+  }
+
+  async sendQuote(conversationId: string, userId: string, amount: number) {
+    const conversation = await this.findOne(conversationId, userId);
+
+    // Flow A: el chat está vinculado a una solicitud de servicio (no a un post)
+    if (!conversation.serviceRequestId || conversation.postId) {
+      throw new ForbiddenException(
+        'Esta conversación no corresponde a una solicitud de servicio',
+      );
+    }
+
+    // Solo el colaborador puede enviar cotizaciones
+    if (conversation.profileColab.userId !== userId) {
+      throw new ForbiddenException('Solo el colaborador puede enviar cotizaciones');
+    }
+
+    if (!amount || amount <= 0) {
+      throw new ForbiddenException('La cotización debe incluir un monto válido');
+    }
+
+    // Si la cotización del chat ya fue aceptada por el demandante, la
+    // conversación queda 'accepted' y no se permiten nuevas cotizaciones.
+    if (conversation.status === 'accepted') {
+      throw new ForbiddenException(
+        'La cotización ya fue aceptada, no puedes enviar otra.',
+      );
+    }
+
+    const serviceRequest = await this.serviceRequestRepository.findOne({
+      where: { id: conversation.serviceRequestId },
+    });
+
+    if (!serviceRequest) {
+      throw new NotFoundException('Solicitud no encontrada');
+    }
+
+    if (
+      serviceRequest.status !== ServiceRequestStatus.PENDING &&
+      serviceRequest.status !== ServiceRequestStatus.ACCEPTED
+    ) {
+      throw new ForbiddenException('Esta solicitud ya no está disponible');
+    }
+
+    // Crea/reemplaza la cotización (propuesta) con el módulo existente.
+    // Crea el canal automáticamente si aún no existe (no-op aquí) y
+    // notifica al demandante vía proposal_received.
+    await this.proposalService.createChatQuote(
+      userId,
+      conversation.serviceRequestId,
+      amount,
+    );
+
+    const message = this.messageRepository.create({
+      conversationId,
+      senderId: userId,
+      content: `Cotización por S/. ${amount.toFixed(2)}`,
+      type: MessageType.OFFER,
+      amount,
+      isRead: false,
+    });
+
+    const saved = await this.messageRepository.save(message);
+    this.collabsGateway.emitNewMessage(conversationId, saved);
+    return saved;
+  }
+
+  async acceptQuote(conversationId: string, userId: string) {
+    const conversation = await this.findOne(conversationId, userId);
+
+    if (!conversation.serviceRequestId || conversation.postId) {
+      throw new ForbiddenException(
+        'Esta conversación no corresponde a una solicitud de servicio',
+      );
+    }
+
+    if (conversation.userId !== userId) {
+      throw new ForbiddenException('Solo el demandante puede aceptar la cotización');
+    }
+
+    return this.proposalService.acceptQuote(conversationId, userId);
+  }
+
+  async rejectQuote(conversationId: string, userId: string) {
+    const conversation = await this.findOne(conversationId, userId);
+
+    if (!conversation.serviceRequestId || conversation.postId) {
+      throw new ForbiddenException(
+        'Esta conversación no corresponde a una solicitud de servicio',
+      );
+    }
+
+    if (conversation.userId !== userId) {
+      throw new ForbiddenException('Solo el demandante puede rechazar la cotización');
+    }
+
+    return this.proposalService.rejectQuote(conversationId, userId);
+  }
+
+  async getQuoteStatus(conversationId: string, userId: string) {
+    return this.proposalService.getQuoteStatus(conversationId, userId);
   }
 }

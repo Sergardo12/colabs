@@ -6,14 +6,24 @@ import '../../models/message_model.dart';
 class MessageBubble extends StatelessWidget {
   final MessageModel  message;
   final bool          isMe;
+  final bool          isFlowA;
+  final String        quoteStatus;
+  final bool          isLatestQuote;
   final VoidCallback? onAcceptOffer;
+  final VoidCallback? onAcceptQuote;
+  final VoidCallback? onRejectQuote;
   final bool          isOfferAccepted;
 
   const MessageBubble({
     super.key,
     required this.message,
     required this.isMe,
+    this.isFlowA = false,
+    this.quoteStatus = 'none',
+    this.isLatestQuote = false,
     this.onAcceptOffer,
+    this.onAcceptQuote,
+    this.onRejectQuote,
     this.isOfferAccepted = false,
   });
 
@@ -58,7 +68,16 @@ class MessageBubble extends StatelessWidget {
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            if (message.type == 'offer' && message.amount != null) ...[
+            if (message.type == 'offer' && message.amount != null)
+              if (isFlowA)
+                _QuoteCard(
+                  amount:   message.amount!,
+                  isMe:     isMe,
+                  status:   isLatestQuote ? quoteStatus : 'replaced',
+                  onAccept: onAcceptQuote,
+                  onReject: onRejectQuote,
+                )
+              else ...[
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.paddingS,
@@ -160,4 +179,142 @@ class MessageBubble extends StatelessWidget {
     final m = date.minute.toString().padLeft(2, '0');
     return '$h:$m';
   }
+}
+
+class _QuoteCard extends StatelessWidget {
+  final double        amount;
+  final bool          isMe;
+  final String        status;
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
+
+  const _QuoteCard({
+    required this.amount,
+    required this.isMe,
+    required this.status,
+    this.onAccept,
+    this.onReject,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accepted    = status == 'accepted';
+    final rejected    = status == 'rejected';
+    final replaced    = status == 'replaced';
+    final pending     = status == 'pending';
+    final showActions = !isMe && pending && onAccept != null && onReject != null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingS,
+        vertical:   AppSizes.paddingXS,
+      ),
+      margin: const EdgeInsets.only(bottom: AppSizes.paddingXS),
+      decoration: BoxDecoration(
+        color:        context.colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(AppSizes.radiusS),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.request_quote_outlined,
+                size:  14,
+                color: isMe ? context.colors.white : context.colors.primary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Cotización: S/ ${amount.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color:      isMe ? context.colors.white : context.colors.primary,
+                  fontSize:   AppSizes.fontS,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          if (showActions) ...[
+            const SizedBox(height: AppSizes.paddingXS),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _quoteActionButton(
+                  context,
+                  label: 'Aceptar',
+                  color: const Color(0xFF4CAF50),
+                  onTap: onAccept,
+                ),
+                const SizedBox(width: AppSizes.paddingXS),
+                _quoteActionButton(
+                  context,
+                  label: 'Rechazar',
+                  color: context.colors.error,
+                  onTap: onReject,
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'La solicitud pasará a "En proceso" al aceptar.',
+              style: TextStyle(
+                color:    isMe
+                    ? context.colors.white.withOpacity(0.7)
+                    : context.colors.textSecondary,
+                fontSize: 10,
+              ),
+            ),
+          ] else if (accepted || rejected || replaced)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                accepted
+                    ? 'Cotización aceptada ✓'
+                    : rejected
+                        ? 'Cotización rechazada'
+                        : 'Cotización reemplazada',
+                style: TextStyle(
+                  color:    accepted
+                      ? const Color(0xFF4CAF50)
+                      : context.colors.textSecondary,
+                  fontSize: AppSizes.fontS,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+Widget _quoteActionButton(
+  BuildContext context, {
+  required String        label,
+  required Color         color,
+  required VoidCallback? onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingM,
+        vertical:   AppSizes.paddingXS,
+      ),
+      decoration: BoxDecoration(
+        color:        color,
+        borderRadius: BorderRadius.circular(AppSizes.radiusS),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color:      Colors.white,
+          fontSize:   AppSizes.fontS,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  );
 }

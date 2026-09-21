@@ -61,14 +61,20 @@ class ServiceRequestProposal {
   });
 
   factory ServiceRequestProposal.fromJson(Map<String, dynamic> json) {
-    final profileColab = json['profileColab'] as Map<String, dynamic>;
+    final profileColab = json['profileColab'] as Map<String, dynamic>? ?? {};
     return ServiceRequestProposal(
-      id:             json['id']             as String,
-      status:         json['status']         as String,
-      amount:         json['amount']         as String,
-      profileColabId: json['profileColabId'] as String,
+      id:             json['id']             as String? ?? '',
+      status:         (json['status'] as String?) ?? '',
+      amount:         _parseAmount(json['amount']),
+      profileColabId: (json['profileColabId'] as String?) ?? '',
       colab:          ProposalColab.fromJson(profileColab),
     );
+  }
+
+  static String _parseAmount(dynamic value) {
+    if (value is num) return value.toString();
+    if (value is String) return value;
+    return '';
   }
 }
 

@@ -109,4 +109,54 @@ class ChatService {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  /// Envía una cotización final en el chat (Flujo A — solo colaborador)
+  Future<MessageModel> sendQuote({
+    required String token,
+    required String conversationId,
+    required double amount,
+  }) async {
+    final response = await _dio.post(
+      '/conversations/$conversationId/quote',
+      data: {'amount': amount},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return MessageModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Estado de la cotización de la conversación
+  Future<Map<String, dynamic>> getQuote({
+    required String token,
+    required String conversationId,
+  }) async {
+    final response = await _dio.get(
+      '/conversations/$conversationId/quote',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Acepta una cotización del chat (Flujo A — demandante)
+  Future<Map<String, dynamic>> acceptQuote({
+    required String token,
+    required String conversationId,
+  }) async {
+    final response = await _dio.patch(
+      '/conversations/$conversationId/quote/accept',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Rechaza una cotización del chat (Flujo A — demandante)
+  Future<Map<String, dynamic>> rejectQuote({
+    required String token,
+    required String conversationId,
+  }) async {
+    final response = await _dio.patch(
+      '/conversations/$conversationId/quote/reject',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return response.data as Map<String, dynamic>;
+  }
 }

@@ -141,4 +141,44 @@ class ChatRepository {
       direction:      direction,
     );
   }
+
+  /// Envía una cotización final en el chat (Flujo A)
+  Future<MessageModel> sendQuote({
+    required String conversationId,
+    required double amount,
+  }) async {
+    final token = await _getToken();
+    return _chatService.sendQuote(
+      token:          token,
+      conversationId: conversationId,
+      amount:         amount,
+    );
+  }
+
+  /// Estado de la cotización de la conversación
+  Future<Map<String, dynamic>> getQuote(String conversationId) async {
+    final token = await _getToken();
+    return _chatService.getQuote(
+      token:          token,
+      conversationId: conversationId,
+    );
+  }
+
+  /// Acepta una cotización del chat (Flujo A)
+  Future<Map<String, dynamic>> acceptQuote(String conversationId) async {
+    final token = await _getToken();
+    return _chatService.acceptQuote(
+      token:          token,
+      conversationId: conversationId,
+    );
+  }
+
+  /// Rechaza una cotización del chat (Flujo A)
+  Future<Map<String, dynamic>> rejectQuote(String conversationId) async {
+    final token = await _getToken();
+    return _chatService.rejectQuote(
+      token:          token,
+      conversationId: conversationId,
+    );
+  }
 }

@@ -20,6 +20,8 @@ import 'widgets/bottom_nav_bar.dart';
 import '../../../features/profile/pages/widgets/app_drawer.dart';
 import '../../../core/routes/app_router.dart';
 import '../../chat/data/chat_repository.dart';
+import '../../chat/bloc/chat_bloc.dart';
+import '../../chat/bloc/chat_event.dart';
 import '../../notifications/bloc/notification_bloc.dart';
 import '../../notifications/bloc/notification_event.dart';
 import '../../notifications/models/notification_model.dart';
@@ -64,6 +66,20 @@ class _HomeShellState extends State<HomeShell> {
           );
       // Actualiza el contador de propuestas en My Requests
       context.read<ServiceRequestBloc>().add(const MyRequestsLoadRequested());
+      // Si el colaborador fue aceptado, refresca sus solicitudes de especialidad
+      if (data['type'] == 'proposal_accepted') {
+        context
+            .read<ServiceRequestBloc>()
+            .add(const NearbyRequestsLoadRequested());
+        // Refresca las conversaciones para que el canal y el ícono de chat
+        // estén disponibles en la tarjeta aceptada
+        context.read<ChatBloc>().add(const ConversationsLoadRequested());
+      }
+      // Si rechazaron una cotización, refresca las conversaciones para que el
+      // colaborador pueda enviar una nueva desde el chat
+      if (data['type'] == 'proposal_rejected') {
+        context.read<ChatBloc>().add(const ConversationsLoadRequested());
+      }
     });
 
     // Ciclo de vida: reconectar si la app vuelve de background

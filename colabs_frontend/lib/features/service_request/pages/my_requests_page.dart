@@ -217,6 +217,10 @@ class _ServiceRequestCard extends StatelessWidget {
                     _ProposalsBadge(count: request.proposalsCount!),
                   const SizedBox(width: AppSizes.paddingXS),
                   _StatusBadge(status: request.status),
+                  if (request.acceptedProposal != null) ...[
+                    const SizedBox(width: AppSizes.paddingXS),
+                    _PriceBadge(amount: request.acceptedProposal!.amount),
+                  ],
                 ],
               ),
               const SizedBox(height: AppSizes.paddingS),
@@ -272,7 +276,7 @@ class _ServiceRequestCard extends StatelessWidget {
               ),
               const Spacer(),
 
-              if (conversation != null)
+              if (conversation != null && request.acceptedProposal != null)
                 GestureDetector(
                   onTap: () => onChatTap(conversation!),
                   child: Container(
@@ -390,5 +394,50 @@ class _ProposalsBadge extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _PriceBadge extends StatelessWidget {
+  final String amount;
+
+  const _PriceBadge({required this.amount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingS,
+        vertical:   AppSizes.paddingXS,
+      ),
+      decoration: BoxDecoration(
+        color:        context.colors.primary.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXL),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.payments_outlined,
+            size:  14,
+            color: context.colors.primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'S/ ${_parseCurrency(amount)}',
+            style: TextStyle(
+              color:      context.colors.primary,
+              fontSize:   AppSizes.fontS,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _parseCurrency(String amount) {
+    final value = double.tryParse(amount);
+    if (value == null) return amount;
+    return value.toStringAsFixed(2);
   }
 }

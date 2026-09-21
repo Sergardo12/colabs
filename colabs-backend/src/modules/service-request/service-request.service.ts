@@ -258,10 +258,53 @@ export class ServiceRequestService {
       .orderBy('sr.creationDate', 'DESC')
       .getRawAndEntities();
 
-    return requests.entities.map((request, index) => ({
-      ...request,
-      distanceKm: Number(requests.raw[index].distance) / 1000,
-    }));
+    // Solicitudes accepted/en proceso en las que este colaborador fue elegido
+    // (radio/ocupación libre). Solo apps con propuesta aceptada: tanto Flow A
+    // (aceptada vía card o vía chat) — el Flow B crea SR sin propuesta, así que
+    // queda correctamente excluido.
+    const acceptedRaw = await this.serviceRequestRepository
+      .createQueryBuilder('sr')
+      .andWhere('sr.status IN (:...statuses)', {
+        statuses: [
+          ServiceRequestStatus.ACCEPTED,
+          ServiceRequestStatus.IN_PROGRESS,
+        ],
+      })
+      .andWhere(
+        `EXISTS (
+          SELECT 1
+          FROM proposals p
+          WHERE p.service_request_id = sr.id
+            AND p.profile_colab_id = :profileColabId
+            AND p.status = 'accepted'
+        )`,
+        { profileColabId: profile.id },
+      )
+      .addSelect(
+        `ST_Distance(
+          sr.location,
+          ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+        )`,
+        'distance',
+      )
+      .leftJoinAndSelect('sr.occupation', 'occupation')
+      .leftJoinAndSelect('sr.user', 'user')
+      .leftJoinAndSelect(
+        'sr.proposals',
+        'proposals',
+        'proposals.status = :acceptedStatus',
+        { acceptedStatus: ProposalStatus.ACCEPTED },
+      )
+      .leftJoinAndSelect('proposals.profileColab', 'proposalColab')
+      .leftJoinAndSelect('proposalColab.user', 'proposalUser')
+      .orderBy('sr.acceptanceDate', 'DESC')
+      .setParameters({ lat: location.lat, lng: location.lng })
+      .getRawAndEntities();
+
+    const pending  = requests.entities.map((r, i) => ({ ...r, distanceKm: Number(requests.raw[i].distance) / 1000 }));
+    const accepted = acceptedRaw.entities.map((r, i) => ({ ...r, distanceKm: Number(acceptedRaw.raw[i].distance) / 1000 }));
+
+    return [...accepted, ...pending];
   }
 
   async updateStatus(

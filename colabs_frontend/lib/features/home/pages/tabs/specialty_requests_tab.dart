@@ -10,6 +10,11 @@ import '../../../service_request/bloc/service_request_bloc.dart';
 import '../../../service_request/bloc/service_request_event.dart';
 import '../../../service_request/bloc/service_request_state.dart';
 import '../../../service_request/models/service_request_model.dart';
+import '../../../chat/bloc/chat_bloc.dart';
+import '../../../chat/bloc/chat_event.dart';
+import '../../../chat/bloc/chat_state.dart';
+import '../../../chat/models/conversation_model.dart';
+import '../../../../core/routes/app_router.dart';
 
 class SpecialtyRequestsTab extends StatefulWidget {
   const SpecialtyRequestsTab({super.key});
@@ -86,6 +91,13 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
     if (!mounted) return;
     _stopPublishing();
     context.read<ServiceRequestBloc>().add(const NearbyRequestsLoadRequested());
+    // Carga las conversaciones solo si aún no las trajo (MyRequestsPage ya lo
+    // hace al montar, evitar duplicar peticiones al arrancar)
+    final chatState = context.read<ChatBloc>().state;
+    if (chatState is! ConversationsLoaded &&
+        chatState is! ConversationsLoading) {
+      context.read<ChatBloc>().add(const ConversationsLoadRequested());
+    }
     _publishTimer?.cancel();
     _publishTimer = Timer.periodic(_publishInterval, (_) {
       _republishLocation();
@@ -132,7 +144,15 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
           ),
         ),
       ),
-      body: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
+      body: BlocListener<ChatBloc, ChatState>(
+        listenWhen: (previous, current) =>
+            current is ChatInitial && previous is! ChatInitial,
+        listener: (context, state) {
+          if (context.mounted) {
+            context.read<ChatBloc>().add(const ConversationsLoadRequested());
+          }
+        },
+        child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
         buildWhen: (previous, current) =>
             current is NearbyRequestsLoading ||
             current is NearbyRequestsSuccess ||
@@ -201,30 +221,77 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
               );
             }
 
-            return ListView.separated(
-              padding: const EdgeInsets.all(AppSizes.paddingL),
-              itemCount: state.requests.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: AppSizes.paddingM),
-              itemBuilder: (context, index) {
-                final nearbyRequest = state.requests[index];
-                final dialogContext = context;
-                return GestureDetector(
-                  onTap: () => showDialog(
-                    context: dialogContext,
-                    builder: (dialogCtx) => _ServiceRequestDetailDialog(
-                      request: nearbyRequest,
-                      onAccept: () {
-                        Navigator.of(dialogCtx).pop();
-                        _openProposalDialog(dialogContext, nearbyRequest);
-                      },
-                    ),
-                  ),
-                  child: _SpecialtyRequestCard(
-                    request: nearbyRequest,
-                    onAccept: () =>
-                        _openProposalDialog(dialogContext, nearbyRequest),
-                  ),
+            return BlocBuilder<ChatBloc, ChatState>(
+              builder: (context, chatState) {
+                final conversations = chatState is ConversationsLoaded
+                    ? chatState.conversations
+                    : <ConversationModel>[];
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(AppSizes.paddingL),
+                  itemCount: state.requests.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSizes.paddingM),
+                  itemBuilder: (context, index) {
+                    final nearbyRequest = state.requests[index];
+                    final dialogContext = context;
+
+                    final convList = conversations
+                        .where((c) => c.serviceRequestId == nearbyRequest.id)
+                        .toList();
+                    final conv = convList.isNotEmpty ? convList.first : null;
+
+                    return GestureDetector(
+                      onTap: () => showDialog(
+                        context: dialogContext,
+                        builder: (dialogCtx) => _ServiceRequestDetailDialog(
+                          request: nearbyRequest,
+                          conversation: conv,
+                          onAccept: conv != null
+                              ? () {
+                                  Navigator.of(dialogCtx).pop();
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRouter.chat,
+                                    arguments: {
+                                      'conversation': conv,
+                                      'post': null,
+                                    },
+                                  );
+                                }
+                              : () {
+                                  Navigator.of(dialogCtx).pop();
+                                  _openProposalDialog(
+                                      dialogContext, nearbyRequest);
+                                },
+                        ),
+                      ),
+                      child: _SpecialtyRequestCard(
+                        request:  nearbyRequest,
+                        onAccept: conv != null
+                            ? () => Navigator.pushNamed(
+                                  context,
+                                  AppRouter.chat,
+                                  arguments: {
+                                    'conversation': conv,
+                                    'post': null,
+                                  },
+                                )
+                            : () => _openProposalDialog(
+                                  dialogContext, nearbyRequest),
+                        onChatTap: conv != null
+                            ? () => Navigator.pushNamed(
+                                  context,
+                                  AppRouter.chat,
+                                  arguments: {
+                                    'conversation': conv,
+                                    'post': null,
+                                  },
+                                )
+                            : null,
+                      ),
+                    );
+                  },
                 );
               },
             );
@@ -232,6 +299,7 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
 
           return const SizedBox.shrink();
         },
+        ),
       ),
     );
   }
@@ -239,16 +307,21 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
 
 class _SpecialtyRequestCard extends StatelessWidget {
   final ServiceRequestModel request;
-  final VoidCallback onAccept;
+  final VoidCallback        onAccept;
+  final VoidCallback?       onChatTap;
 
   const _SpecialtyRequestCard({
     required this.request,
     required this.onAccept,
+    this.onChatTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final requester = request.requester;
+    final isAcceptedLike =
+        request.status == 'accepted' || request.status == 'in_progress';
+    final agreedPrice = request.acceptedProposal?.amount;
 
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
@@ -317,23 +390,49 @@ class _SpecialtyRequestCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSizes.paddingS),
-              Column(
-                children: [
-                  _ActionIcon(
-                    icon:     Icons.check,
-                    color:    Colors.green,
-                    tooltip:  'Cotizar',
-                    onPressed: onAccept,
-                  ),
-                  const SizedBox(height: AppSizes.paddingXS),
-                  _ActionIcon(
-                    icon:     Icons.close,
-                    color:    context.colors.error,
-                    tooltip:  'Rechazar',
-                    onPressed: () {},
-                  ),
-                ],
-              ),
+              if (isAcceptedLike)
+                Column(
+                  children: [
+                    if (agreedPrice != null) ...[
+                      _QuotePriceBadge(amount: agreedPrice),
+                      const SizedBox(height: AppSizes.paddingXS),
+                    ],
+                    if (onChatTap != null)
+                      _ActionIcon(
+                        icon:      Icons.chat_bubble_outline,
+                        color:     context.colors.primary,
+                        tooltip:   'Abrir chat',
+                        onPressed: onChatTap!,
+                      ),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    if (onChatTap != null) ...[
+                      _ActionIcon(
+                        icon:      Icons.chat_bubble_outline,
+                        color:     context.colors.primary,
+                        tooltip:   'Negociar en el chat',
+                        onPressed: onChatTap!,
+                      ),
+                      const SizedBox(height: AppSizes.paddingXS),
+                    ],
+                    _ActionIcon(
+                      icon:     Icons.check,
+                      color:    Colors.green,
+                      tooltip:  'Cotizar',
+                      onPressed: onAccept,
+                    ),
+                    const SizedBox(height: AppSizes.paddingXS),
+                    _ActionIcon(
+                      icon:     Icons.close,
+                      color:    context.colors.error,
+                      tooltip:  'Rechazar',
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
             ],
           ),
           const SizedBox(height: AppSizes.paddingM),
@@ -598,11 +697,13 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
 
 class _ServiceRequestDetailDialog extends StatelessWidget {
   final ServiceRequestModel request;
-  final VoidCallback onAccept;
+  final ConversationModel?  conversation;
+  final VoidCallback        onAccept;
 
   const _ServiceRequestDetailDialog({
     required this.request,
     required this.onAccept,
+    this.conversation,
   });
 
   @override
@@ -773,7 +874,19 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: onAccept,
+                onPressed: request.status == 'accepted' && conversation == null
+                ? () {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'El canal de chat aún no está disponible',
+                          ),
+                        ),
+                      );
+                  }
+                : onAccept,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
                   foregroundColor: Colors.white,
@@ -782,9 +895,11 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppSizes.radiusM),
                   ),
                 ),
-                child: const Text(
-                  'ACEPTAR',
-                  style: TextStyle(
+                child: Text(
+                  request.status == 'accepted'
+                      ? 'ABRIR CHAT'
+                      : 'ACEPTAR',
+                  style: const TextStyle(
                     fontSize:     AppSizes.fontL,
                     fontWeight:   FontWeight.bold,
                     letterSpacing: 0.5,
@@ -933,5 +1048,45 @@ class _SpecialtyStatusBadge extends StatelessWidget {
       case 'disputed':    return Colors.red.shade700;
       default:            return context.colors.textSecondary;
     }
+  }
+}
+
+class _QuotePriceBadge extends StatelessWidget {
+  final String amount;
+
+  const _QuotePriceBadge({required this.amount});
+
+  @override
+  Widget build(BuildContext context) {
+    final value = double.tryParse(amount);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingS,
+        vertical:   AppSizes.paddingXS,
+      ),
+      decoration: BoxDecoration(
+        color:        context.colors.primary.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.payments_outlined,
+            size:  14,
+            color: context.colors.primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'S/ ${value?.toStringAsFixed(2) ?? amount}',
+            style: TextStyle(
+              color:      context.colors.primary,
+              fontSize:   AppSizes.fontS,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

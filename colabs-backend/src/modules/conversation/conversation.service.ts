@@ -51,16 +51,20 @@ export class ConversationService {
       throw new NotFoundException('Colaborador no encontrado');
     }
 
-    // Verificar que no existe ya una conversación activa entre ellos
+    // Verificar que no existe ya una conversación activa en este mismo canal
+    // (por post si viene postId; legacy sin postId solo por colaborador)
     const existing = await this.conversationRepository.findOne({
       where: {
         userId,
         profileColabId: dto.profileColabId,
         status: 'open',
+        ...(dto.postId ? { postId: dto.postId } : {}),
       },
     });
 
     if (existing) {
+      // Canal del mismo post ya abierto → devolverlo (ensure)
+      if (dto.postId) return this.findOne(existing.id, userId);
       throw new ConflictException('Ya tienes una conversación activa con este colaborador');
     }
 
@@ -70,8 +74,10 @@ export class ConversationService {
       postId: dto.postId,
       status: 'open',
     });
+    await this.conversationRepository.save(conversation);
 
-    return this.conversationRepository.save(conversation);
+    // Devolver con relaciones (profileColab es obligatorio en el modelo del frontend)
+    return this.findOne(conversation.id, userId);
   }
 
   async findMyConversations(userId: string) {
@@ -129,6 +135,7 @@ export class ConversationService {
         'profileColab',
         'profileColab.user',
         'profileColab.occupations',
+        'user',
       ],
     });
 

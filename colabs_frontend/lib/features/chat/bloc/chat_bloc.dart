@@ -149,7 +149,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         try {
           final conversations = await _chatRepository.getConversations();
           final existing = conversations.firstWhere(
-            (c) => c.profileColabId == event.profileColabId,
+            (c) =>
+                c.profileColabId == event.profileColabId &&
+                c.postId == event.postId,
           );
           emit(ConversationCreated(
             conversation: existing,

@@ -243,7 +243,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         acceptedAmount:     current.acceptedAmount,
       ));
     } catch (e) {
-      final message = _sendQuoteError(e);
+      final message = _apiErrorMessage(e, 'Error al enviar la cotización');
       if (message == 'Error al enviar la cotización') {
         emit(ChatError(message: message));
       } else {
@@ -281,7 +281,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
   }
 
-  String _sendQuoteError(Object error) {
+  String _apiErrorMessage(Object error, String fallback) {
     if (error is DioException) {
       final data = error.response?.data;
       if (data is Map<String, dynamic>) {
@@ -292,7 +292,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         }
       }
     }
-    return 'Error al enviar la cotización';
+    return fallback;
   }
 
   Future<void> _onQuoteStatusLoadRequested(
@@ -338,7 +338,28 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
       emit(QuoteAccepted(conversationId: event.conversationId));
     } catch (e) {
-      emit(const ChatError(message: 'Error al aceptar la cotización'));
+      final message = _apiErrorMessage(e, 'Error al aceptar la cotización');
+      if (message == 'Error al aceptar la cotización') {
+        emit(ChatError(message: message));
+      } else {
+        // Error de negocio (p. ej. ya existe una cotización aceptada):
+        // se muestra como aviso flotante sin romper la conversación.
+        final current = state;
+        if (current is MessagesLoaded) {
+          emit(MessagesLoaded(
+            messages:           current.messages,
+            conversationId:     current.conversationId,
+            currentUserId:      current.currentUserId,
+            conversationStatus: current.conversationStatus,
+            quoteStatus:        current.quoteStatus,
+            serviceStatus:      current.serviceStatus,
+            acceptedAmount:     current.acceptedAmount,
+            floatingMessage:    message,
+          ));
+        } else {
+          emit(ChatError(message: message));
+        }
+      }
     }
   }
 

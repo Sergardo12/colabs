@@ -308,7 +308,21 @@ export class ConversationService {
     // conversación queda 'accepted' y no se permiten nuevas cotizaciones.
     if (conversation.status === 'accepted') {
       throw new ForbiddenException(
-        'La cotización ya fue aceptada, no puedes enviar otra.',
+        'Ya ha sido aceptada una cotización, no se puede enviar otra',
+      );
+    }
+
+    // Una sola cotización a la vez: si el colaborador ya tiene una
+    // cotización sin respuesta (aceptar/rechazar), no puede enviar otra
+    // hasta que el demandante decida.
+    const hasPending = await this.proposalService.hasPendingProposal(
+      conversation.profileColabId,
+      conversation.serviceRequestId,
+    );
+
+    if (hasPending) {
+      throw new ForbiddenException(
+        'Ya tienes una cotización pendiente de respuesta. Espera la decisión del demandante.',
       );
     }
 

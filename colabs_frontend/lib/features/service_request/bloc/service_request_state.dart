@@ -99,3 +99,19 @@ class ProposalActionError extends ServiceRequestState {
   @override
   List<Object?> get props => [message];
 }
+
+class StartWorkInProgress extends ServiceRequestState {}
+
+class StartWorkSuccess extends ServiceRequestState {
+  final String requestId;
+  const StartWorkSuccess({required this.requestId});
+  @override
+  List<Object?> get props => [requestId];
+}
+
+class StartWorkError extends ServiceRequestState {
+  final String message;
+  const StartWorkError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}

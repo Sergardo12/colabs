@@ -78,4 +78,13 @@ class ServiceRequestRepository {
     if (token == null) throw Exception('No hay sesión activa');
     return _service.rejectProposal(token: token, proposalId: proposalId);
   }
+
+  Future<void> startWork(String serviceRequestId) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.startWork(
+      token:            token,
+      serviceRequestId: serviceRequestId,
+    );
+  }
 }

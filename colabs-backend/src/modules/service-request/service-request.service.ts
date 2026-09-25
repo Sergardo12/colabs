@@ -336,6 +336,56 @@ export class ServiceRequestService {
     return this.serviceRequestRepository.save(request);
   }
 
+  // Inicia el trabajo (accepted → in_progress) — exclusivo del colaborador
+  // cuya propuesta fue aceptada por el demandante.
+  async startWork(id: string, userId: string) {
+    const profile = await this.profileColabRepository.findOne({
+      where: { userId },
+    });
+
+    if (!profile) {
+      throw new ForbiddenException('Solo los colaboradores pueden iniciar el trabajo');
+    }
+
+    const request = await this.serviceRequestRepository.findOne({
+      where: { id },
+    });
+
+    if (!request) throw new NotFoundException('Solicitud no encontrada');
+
+    if (request.status !== ServiceRequestStatus.ACCEPTED) {
+      throw new ForbiddenException('Esta solicitud no está en estado aceptado');
+    }
+
+    // Solo el colaborador cuya propuesta fue aceptada puede iniciar el trabajo
+    const winner = await this.serviceRequestRepository
+      .createQueryBuilder('sr')
+      .where('sr.id = :id', { id })
+      .andWhere(
+        `EXISTS (
+          SELECT 1
+          FROM proposals p
+          WHERE p.service_request_id = sr.id
+            AND p.profile_colab_id = :profileColabId
+            AND p.status = :acceptedStatus
+        )`,
+        {
+          profileColabId: profile.id,
+          acceptedStatus: ProposalStatus.ACCEPTED,
+        },
+      )
+      .getOne();
+
+    if (!winner) {
+      throw new ForbiddenException(
+        'Solo el colaborador cuya propuesta fue aceptada puede iniciar el trabajo',
+      );
+    }
+
+    request.status = ServiceRequestStatus.IN_PROGRESS;
+    return this.serviceRequestRepository.save(request);
+  }
+
   // Fórmula Haversine — distancia entre dos puntos en km
   private haversineDistance(
     lat1: number, lng1: number,

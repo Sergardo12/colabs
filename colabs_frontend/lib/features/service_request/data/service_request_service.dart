@@ -110,4 +110,15 @@ class ServiceRequestService {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
+
+  /// Inicia el trabajo (colaborador ganador: accepted → in_progress)
+  Future<void> startWork({
+    required String token,
+    required String serviceRequestId,
+  }) async {
+    await _dio.patch(
+      '/service-requests/$serviceRequestId/start',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
 }

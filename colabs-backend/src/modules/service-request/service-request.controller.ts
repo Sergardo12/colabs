@@ -60,4 +60,15 @@ export class ServiceRequestController {
   ) {
     return this.serviceRequestService.updateStatus(id, user.id, dto);
   }
+
+  @Patch(':id/start')
+  @ApiOperation({
+    summary: 'Iniciar trabajo (colaborador ganador: accepted → in_progress)',
+  })
+  startWork(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.serviceRequestService.startWork(id, user.id);
+  }
 }

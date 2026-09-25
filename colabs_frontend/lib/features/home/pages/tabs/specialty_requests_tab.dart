@@ -152,8 +152,28 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
             context.read<ChatBloc>().add(const ConversationsLoadRequested());
           }
         },
-        child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
-        buildWhen: (previous, current) =>
+        child: BlocListener<ServiceRequestBloc, ServiceRequestState>(
+          listenWhen: (previous, current) =>
+              current is StartWorkSuccess || current is StartWorkError,
+          listener: (context, state) {
+            if (state is StartWorkSuccess) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  const SnackBar(
+                    content: Text('Trabajo iniciado — servicio en progreso'),
+                  ),
+                );
+            } else if (state is StartWorkError) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
+            }
+          },
+          child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
+          buildWhen: (previous, current) =>
             current is NearbyRequestsLoading ||
             current is NearbyRequestsSuccess ||
             current is NearbyRequestsError,
@@ -247,6 +267,14 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
                         builder: (dialogCtx) => _ServiceRequestDetailDialog(
                           request: nearbyRequest,
                           conversation: conv,
+                          onStartWork: () {
+                            Navigator.of(dialogCtx).pop();
+                            context.read<ServiceRequestBloc>().add(
+                              StartWorkRequested(
+                                serviceRequestId: nearbyRequest.id,
+                              ),
+                            );
+                          },
                           onAccept: conv != null
                               ? () {
                                   Navigator.of(dialogCtx).pop();
@@ -298,7 +326,8 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
           }
 
           return const SizedBox.shrink();
-        },
+          },
+          ),
         ),
       ),
     );
@@ -699,10 +728,12 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
   final ServiceRequestModel request;
   final ConversationModel?  conversation;
   final VoidCallback        onAccept;
+  final VoidCallback        onStartWork;
 
   const _ServiceRequestDetailDialog({
     required this.request,
     required this.onAccept,
+    required this.onStartWork,
     this.conversation,
   });
 
@@ -870,22 +901,12 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.paddingL),
 
-            // Acción principal — abre el dialog de cotización
+            // Acción principal — cotizar (pending) o iniciar trabajo (accepted)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: request.status == 'accepted' && conversation == null
-                ? () {
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'El canal de chat aún no está disponible',
-                          ),
-                        ),
-                      );
-                  }
+                onPressed: request.status == 'accepted'
+                ? onStartWork
                 : onAccept,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
@@ -897,7 +918,7 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                 ),
                 child: Text(
                   request.status == 'accepted'
-                      ? 'ABRIR CHAT'
+                      ? 'COMENZAR TRABAJO'
                       : 'ACEPTAR',
                   style: const TextStyle(
                     fontSize:     AppSizes.fontL,

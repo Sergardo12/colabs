@@ -18,6 +18,7 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     on<ProposalsLoadRequested>(_onProposalsLoadRequested);
     on<ProposalAcceptRequested>(_onProposalAcceptRequested);
     on<ProposalRejectRequested>(_onProposalRejectRequested);
+    on<StartWorkRequested>(_onStartWorkRequested);
   }
 
   Future<void> _onMyRequestsLoadRequested(
@@ -111,11 +112,11 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       );
       emit(ProposalSent(serviceRequestId: event.serviceRequestId));
     } catch (e) {
-      emit(ProposalSendError(message: _proposalErrorMessage(e)));
+      emit(ProposalSendError(message: _apiErrorMessage(e, 'No se pudo enviar la propuesta')));
     }
   }
 
-  String _proposalErrorMessage(Object error) {
+  String _apiErrorMessage(Object error, String fallback) {
     if (error is DioException) {
       final data = error.response?.data;
       if (data is Map<String, dynamic>) {
@@ -130,7 +131,7 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
         return statusMessage;
       }
     }
-    return 'No se pudo enviar la propuesta';
+    return fallback;
   }
 
   Future<void> _onProposalsLoadRequested(
@@ -171,7 +172,7 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       add(const MyRequestsLoadRequested());
       add(ProposalsLoadRequested(requestId: event.requestId));
     } catch (e) {
-      emit(ProposalActionError(message: _proposalErrorMessage(e)));
+      emit(ProposalActionError(message: _apiErrorMessage(e, 'No se pudo enviar la propuesta')));
     }
   }
 
@@ -184,7 +185,23 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       add(ProposalsLoadRequested(requestId: event.requestId));
       add(const MyRequestsLoadRequested());
     } catch (e) {
-      emit(ProposalActionError(message: _proposalErrorMessage(e)));
+      emit(ProposalActionError(message: _apiErrorMessage(e, 'No se pudo enviar la propuesta')));
+    }
+  }
+
+  Future<void> _onStartWorkRequested(
+    StartWorkRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    emit(StartWorkInProgress());
+    try {
+      await _repository.startWork(event.serviceRequestId);
+      emit(StartWorkSuccess(requestId: event.serviceRequestId));
+      add(const NearbyRequestsLoadRequested());
+    } catch (e) {
+      emit(StartWorkError(
+        message: _apiErrorMessage(e, 'No se pudo iniciar el trabajo'),
+      ));
     }
   }
 }

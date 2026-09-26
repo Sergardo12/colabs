@@ -71,4 +71,15 @@ export class ServiceRequestController {
   ) {
     return this.serviceRequestService.startWork(id, user.id);
   }
+
+  @Patch(':id/complete')
+  @ApiOperation({
+    summary: 'Finalizar servicio (colaborador ganador: in_progress → completed)',
+  })
+  completeWork(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.serviceRequestService.completeWork(id, user.id);
+  }
 }

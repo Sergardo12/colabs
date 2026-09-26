@@ -1,10 +1,13 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { ServiceRequest } from './entities/service-request.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { User } from '../users/entities/user.entity';
 import { Occupation } from '../occupation/entities/occupation.entity';
+import { Conversation } from '../conversation/entities/conversation.entity';
+import { Message } from '../message/entities/message.entity';
+import { MessageType } from '../conversation/dto/send-message.dto';
 import { RedisService } from '../../common/services/redis.service';
 import { CollabsGateway } from '../gateway/colabs.gateway';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
@@ -27,6 +30,12 @@ export class ServiceRequestService {
 
     @InjectRepository(Occupation)
     private occupationRepository: Repository<Occupation>,
+
+    @InjectRepository(Conversation)
+    private conversationRepository: Repository<Conversation>,
+
+    @InjectRepository(Message)
+    private messageRepository: Repository<Message>,
 
     private notificationService: NotificationService,
     private redisService: RedisService,
@@ -384,6 +393,115 @@ export class ServiceRequestService {
 
     request.status = ServiceRequestStatus.IN_PROGRESS;
     return this.serviceRequestRepository.save(request);
+  }
+
+  // Completa el trabajo (in_progress → completed) — exclusivo del mismo
+  // colaborador ganador que inició el trabajo (mismo guard que startWork;
+  // el estado in_progress garantiza que la secuencia del Flujo A ya pasó
+  // por pending → accepted).
+  async completeWork(id: string, userId: string) {
+    const profile = await this.profileColabRepository.findOne({
+      where: { userId },
+    });
+
+    if (!profile) {
+      throw new ForbiddenException(
+        'Solo los colaboradores pueden finalizar el servicio',
+      );
+    }
+
+    const request = await this.serviceRequestRepository.findOne({
+      where: { id },
+    });
+
+    if (!request) throw new NotFoundException('Solicitud no encontrada');
+
+    if (request.status !== ServiceRequestStatus.IN_PROGRESS) {
+      throw new ForbiddenException('Esta solicitud no está en estado en proceso');
+    }
+
+    // Solo el colaborador cuya propuesta fue aceptada puede finalizar
+    const winner = await this.serviceRequestRepository
+      .createQueryBuilder('sr')
+      .where('sr.id = :id', { id })
+      .andWhere(
+        `EXISTS (
+          SELECT 1
+          FROM proposals p
+          WHERE p.service_request_id = sr.id
+            AND p.profile_colab_id = :profileColabId
+            AND p.status = :acceptedStatus
+        )`,
+        {
+          profileColabId: profile.id,
+          acceptedStatus: ProposalStatus.ACCEPTED,
+        },
+      )
+      .getOne();
+
+    if (!winner) {
+      throw new ForbiddenException(
+        'Solo el colaborador cuya propuesta fue aceptada puede finalizar el servicio',
+      );
+    }
+
+    request.status = ServiceRequestStatus.COMPLETED;
+    request.completionDate = new Date();
+    const saved = await this.serviceRequestRepository.save(request);
+
+    // Mensaje de sistema + cierre del canal de la solicitud (Flow A):
+    // la conversación se listada igual (sin filtro de estado en el chat),
+    // solo se bloquean nuevos envíos con un 403 'conversación cerrada'.
+    const conversation = await this.conversationRepository.findOne({
+      where: { serviceRequestId: saved.id, postId: IsNull() },
+    });
+
+    if (conversation) {
+      const systemMessage = this.messageRepository.create({
+        conversationId: conversation.id,
+        senderId: userId,
+        content: 'Servicio completado. El trabajo ha finalizado.',
+        type: MessageType.TEXT,
+        isRead: false,
+      });
+      const savedMessage = await this.messageRepository.save(systemMessage);
+
+      conversation.status = 'closed';
+      await this.conversationRepository.save(conversation);
+
+      this.collabsGateway.emitNewMessage(conversation.id, savedMessage);
+    }
+
+    // Notifica al demandante (patrón igual a proposal.service)
+    const colabUser = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    const colabName = colabUser
+      ? `${colabUser.name} ${colabUser.lastName}`.trim()
+      : 'Tu colaborador';
+
+    const notification = await this.notificationService.notify({
+      userId: request.userId,
+      type: 'service_completed',
+      title: 'Servicio completado',
+      body: `${colabName} completó tu solicitud. Ya puedes calificar el servicio.`,
+      entityType: 'service_request',
+      entityId: saved.id,
+    });
+
+    this.collabsGateway.emitNewNotification(request.userId, {
+      id: notification.id,
+      userId: notification.userId,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      entityType: notification.entityType,
+      entityId: notification.entityId,
+      isRead: notification.isRead,
+      creationDate: notification.creationDate,
+    });
+
+    return saved;
   }
 
   // Fórmula Haversine — distancia entre dos puntos en km

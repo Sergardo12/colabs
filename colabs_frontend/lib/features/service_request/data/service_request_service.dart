@@ -121,4 +121,15 @@ class ServiceRequestService {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
+
+  /// Finaliza el servicio (colaborador ganador: in_progress → completed)
+  Future<void> completeWork({
+    required String token,
+    required String serviceRequestId,
+  }) async {
+    await _dio.patch(
+      '/service-requests/$serviceRequestId/complete',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
 }

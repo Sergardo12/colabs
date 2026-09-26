@@ -115,3 +115,19 @@ class StartWorkError extends ServiceRequestState {
   @override
   List<Object?> get props => [message];
 }
+
+class CompleteWorkInProgress extends ServiceRequestState {}
+
+class CompleteWorkSuccess extends ServiceRequestState {
+  final String requestId;
+  const CompleteWorkSuccess({required this.requestId});
+  @override
+  List<Object?> get props => [requestId];
+}
+
+class CompleteWorkError extends ServiceRequestState {
+  final String message;
+  const CompleteWorkError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}

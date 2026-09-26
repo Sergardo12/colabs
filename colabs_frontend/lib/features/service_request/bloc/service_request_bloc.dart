@@ -19,6 +19,7 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     on<ProposalAcceptRequested>(_onProposalAcceptRequested);
     on<ProposalRejectRequested>(_onProposalRejectRequested);
     on<StartWorkRequested>(_onStartWorkRequested);
+    on<CompleteWorkRequested>(_onCompleteWorkRequested);
   }
 
   Future<void> _onMyRequestsLoadRequested(
@@ -201,6 +202,26 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     } catch (e) {
       emit(StartWorkError(
         message: _apiErrorMessage(e, 'No se pudo iniciar el trabajo'),
+      ));
+    }
+  }
+
+  Future<void> _onCompleteWorkRequested(
+    CompleteWorkRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    emit(CompleteWorkInProgress());
+    try {
+      await _repository.completeWork(event.serviceRequestId);
+      emit(CompleteWorkSuccess(requestId: event.serviceRequestId));
+      // Refleja el cambio reactivamente en ambas vistas:
+      // HEAD 4 (Solicitudes según tu especialidad) y
+      // HEAD 3 (Mis solicitudes del demandante).
+      add(const MyRequestsLoadRequested());
+      add(const NearbyRequestsLoadRequested());
+    } catch (e) {
+      emit(CompleteWorkError(
+        message: _apiErrorMessage(e, 'No se pudo completar el servicio'),
       ));
     }
   }

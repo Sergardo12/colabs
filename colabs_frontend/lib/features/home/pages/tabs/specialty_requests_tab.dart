@@ -15,6 +15,7 @@ import '../../../chat/bloc/chat_event.dart';
 import '../../../chat/bloc/chat_state.dart';
 import '../../../chat/models/conversation_model.dart';
 import '../../../../core/routes/app_router.dart';
+import '../../../../shared/widgets/swipe_to_complete_slider.dart';
 
 class SpecialtyRequestsTab extends StatefulWidget {
   const SpecialtyRequestsTab({super.key});
@@ -127,6 +128,16 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
     } catch (_) {}
   }
 
+  /// Diálogo de éxito con check animado tras finalizar un servicio.
+  /// Se cierra solo después de 1.5 s (o al tocar fuera).
+  void _showCompletionSuccessDialog() {
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      builder: (_) => const _CompletionSuccessDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -154,7 +165,10 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
         },
         child: BlocListener<ServiceRequestBloc, ServiceRequestState>(
           listenWhen: (previous, current) =>
-              current is StartWorkSuccess || current is StartWorkError,
+              current is StartWorkSuccess ||
+              current is StartWorkError ||
+              current is CompleteWorkSuccess ||
+              current is CompleteWorkError,
           listener: (context, state) {
             if (state is StartWorkSuccess) {
               ScaffoldMessenger.of(context)
@@ -165,6 +179,23 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
                   ),
                 );
             } else if (state is StartWorkError) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
+            } else if (state is CompleteWorkSuccess) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  const SnackBar(content: Text('Servicio completado')),
+                );
+              // Tras cerrar el popup de detalle (listener interno), muestra
+              // el diálogo de éxito con el check animado.
+              Future.delayed(const Duration(milliseconds: 1200), () {
+                if (mounted) _showCompletionSuccessDialog();
+              });
+            } else if (state is CompleteWorkError) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
@@ -328,6 +359,131 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
           return const SizedBox.shrink();
           },
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Acción del popup de detalle cuando el servicio está `in_progress`:
+/// slider "Finalizar Servicio" que dispara CompleteWorkRequested y gestiona
+/// loader → check (éxito) → cierre del popup, o reintento (error).
+class _CompleteServiceAction extends StatelessWidget {
+  const _CompleteServiceAction({required this.requestId});
+
+  final String requestId;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<ServiceRequestBloc, ServiceRequestState>(
+      listenWhen: (_, current) =>
+          current is CompleteWorkSuccess || current is CompleteWorkError,
+      listener: (context, state) async {
+        if (state is CompleteWorkSuccess) {
+          // Deja el check animado visible dentro del slider antes de cerrar.
+          await Future.delayed(const Duration(milliseconds: 700));
+          if (!context.mounted) return;
+          final route = ModalRoute.of(context);
+          if (route != null && route.isCurrent) {
+            Navigator.of(context).pop();
+          }
+        }
+        // Los errores se muestran en el listener de la página (SnackBar).
+      },
+      buildWhen: (_, current) =>
+          current is CompleteWorkInProgress ||
+          current is CompleteWorkSuccess ||
+          current is CompleteWorkError,
+      builder: (context, state) {
+        final status = state is CompleteWorkInProgress
+            ? SwipeToCompleteStatus.loading
+            : state is CompleteWorkSuccess
+                ? SwipeToCompleteStatus.success
+                : state is CompleteWorkError
+                    ? SwipeToCompleteStatus.error
+                    : SwipeToCompleteStatus.idle;
+
+        return SwipeToCompleteSlider(
+          status: status,
+          onCompleted: () => context.read<ServiceRequestBloc>().add(
+                CompleteWorkRequested(serviceRequestId: requestId),
+              ),
+        );
+      },
+    );
+  }
+}
+
+/// Diálogo de éxito: check animado + mensaje, se cierra solo a los 1.5 s.
+class _CompletionSuccessDialog extends StatefulWidget {
+  const _CompletionSuccessDialog();
+
+  @override
+  State<_CompletionSuccessDialog> createState() =>
+      _CompletionSuccessDialogState();
+}
+
+class _CompletionSuccessDialogState extends State<_CompletionSuccessDialog> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      final route = ModalRoute.of(context);
+      if (route != null && route.isCurrent) Navigator.of(context).pop();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: context.colors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
+      ),
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.paddingXL,
+        vertical: AppSizes.paddingXL,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.paddingXL,
+          vertical: AppSizes.paddingL,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeOutBack,
+              builder: (_, scale, child) =>
+                  Transform.scale(scale: scale, child: child),
+              child: const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 72,
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingM),
+            Text(
+              'Servicio completado',
+              style: TextStyle(
+                color:      context.colors.textPrimary,
+                fontSize:   AppSizes.fontXL,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSizes.paddingXS),
+            Text(
+              'El trabajo ha finalizado correctamente.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color:    context.colors.textSecondary,
+                fontSize: AppSizes.fontM,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -901,33 +1057,37 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.paddingL),
 
-            // Acción principal — cotizar (pending) o iniciar trabajo (accepted)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: request.status == 'accepted'
-                ? onStartWork
-                : onAccept,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colors.primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            // Acción principal — cotizar (pending), iniciar trabajo
+            // (accepted) o deslizar para finalizar (in_progress).
+            if (request.status == 'in_progress')
+              _CompleteServiceAction(requestId: request.id)
+            else
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: request.status == 'accepted'
+                  ? onStartWork
+                  : onAccept,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.colors.primary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                    ),
                   ),
-                ),
-                child: Text(
-                  request.status == 'accepted'
-                      ? 'COMENZAR TRABAJO'
-                      : 'ACEPTAR',
-                  style: const TextStyle(
-                    fontSize:     AppSizes.fontL,
-                    fontWeight:   FontWeight.bold,
-                    letterSpacing: 0.5,
+                  child: Text(
+                    request.status == 'accepted'
+                        ? 'COMENZAR TRABAJO'
+                        : 'ACEPTAR',
+                    style: const TextStyle(
+                      fontSize:     AppSizes.fontL,
+                      fontWeight:   FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

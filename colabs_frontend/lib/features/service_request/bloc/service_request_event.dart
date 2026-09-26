@@ -89,3 +89,10 @@ class StartWorkRequested extends ServiceRequestEvent {
   @override
   List<Object?> get props => [serviceRequestId];
 }
+
+class CompleteWorkRequested extends ServiceRequestEvent {
+  final String serviceRequestId;
+  const CompleteWorkRequested({required this.serviceRequestId});
+  @override
+  List<Object?> get props => [serviceRequestId];
+}

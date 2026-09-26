@@ -87,4 +87,13 @@ class ServiceRequestRepository {
       serviceRequestId: serviceRequestId,
     );
   }
+
+  Future<void> completeWork(String serviceRequestId) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.completeWork(
+      token:            token,
+      serviceRequestId: serviceRequestId,
+    );
+  }
 }

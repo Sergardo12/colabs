@@ -13,9 +13,17 @@ class ServiceRequestLoading extends ServiceRequestState {}
 
 class ServiceRequestSuccess extends ServiceRequestState {
   final List<ServiceRequestModel> requests;
-  const ServiceRequestSuccess({required this.requests});
+
+  /// Ids de solicitudes ya calificadas por el demandante
+  /// (cargados desde GET /comment-requests/my-reviews).
+  final Set<String> ratedIds;
+
+  const ServiceRequestSuccess({
+    required this.requests,
+    this.ratedIds = const {},
+  });
   @override
-  List<Object?> get props => [requests];
+  List<Object?> get props => [requests, ratedIds];
 }
 
 class ServiceRequestCreating extends ServiceRequestState {}
@@ -128,6 +136,22 @@ class CompleteWorkSuccess extends ServiceRequestState {
 class CompleteWorkError extends ServiceRequestState {
   final String message;
   const CompleteWorkError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}
+
+class ReviewSubmitting extends ServiceRequestState {}
+
+class ReviewSubmitted extends ServiceRequestState {
+  final String serviceRequestId;
+  const ReviewSubmitted({required this.serviceRequestId});
+  @override
+  List<Object?> get props => [serviceRequestId];
+}
+
+class ReviewSubmitError extends ServiceRequestState {
+  final String message;
+  const ReviewSubmitError({required this.message});
   @override
   List<Object?> get props => [message];
 }

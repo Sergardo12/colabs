@@ -20,6 +20,7 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     on<ProposalRejectRequested>(_onProposalRejectRequested);
     on<StartWorkRequested>(_onStartWorkRequested);
     on<CompleteWorkRequested>(_onCompleteWorkRequested);
+    on<SubmitReviewRequested>(_onSubmitReviewRequested);
   }
 
   Future<void> _onMyRequestsLoadRequested(
@@ -29,7 +30,14 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     emit(ServiceRequestLoading());
     try {
       final requests = await _repository.getMyRequests();
-      emit(ServiceRequestSuccess(requests: requests));
+      // Ids ya calificados: si falla no debe romper la carga de la lista.
+      var ratedIds = <String>{};
+      try {
+        ratedIds = await _repository.getRatedRequestIds();
+      } catch (_) {
+        ratedIds = <String>{};
+      }
+      emit(ServiceRequestSuccess(requests: requests, ratedIds: ratedIds));
     } catch (e) {
       emit(const ServiceRequestError(
         message: 'Error al cargar tus solicitudes'));
@@ -222,6 +230,27 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     } catch (e) {
       emit(CompleteWorkError(
         message: _apiErrorMessage(e, 'No se pudo completar el servicio'),
+      ));
+    }
+  }
+
+  Future<void> _onSubmitReviewRequested(
+    SubmitReviewRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    emit(ReviewSubmitting());
+    try {
+      await _repository.submitReview(
+        serviceRequestId: event.serviceRequestId,
+        rating:           event.rating,
+        comment:          event.comment,
+      );
+      emit(ReviewSubmitted(serviceRequestId: event.serviceRequestId));
+      // Recarga reactiva: el set de ratedIds oculta la estrella en la card.
+      add(const MyRequestsLoadRequested());
+    } catch (e) {
+      emit(ReviewSubmitError(
+        message: _apiErrorMessage(e, 'No se pudo enviar la calificación'),
       ));
     }
   }

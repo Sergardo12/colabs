@@ -96,3 +96,18 @@ class CompleteWorkRequested extends ServiceRequestEvent {
   @override
   List<Object?> get props => [serviceRequestId];
 }
+
+class SubmitReviewRequested extends ServiceRequestEvent {
+  final String serviceRequestId;
+  final int    rating;
+  final String? comment;
+
+  const SubmitReviewRequested({
+    required this.serviceRequestId,
+    required this.rating,
+    this.comment,
+  });
+
+  @override
+  List<Object?> get props => [serviceRequestId, rating, comment];
+}

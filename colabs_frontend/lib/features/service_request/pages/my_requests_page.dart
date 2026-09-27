@@ -12,6 +12,7 @@ import '../bloc/service_request_event.dart';
 import '../bloc/service_request_state.dart';
 import '../models/service_request_model.dart';
 import 'widgets/proposals_dialog.dart';
+import 'widgets/rating_bottom_sheet.dart';
 
 class MyRequestsPage extends StatefulWidget {
   const MyRequestsPage({super.key});
@@ -114,6 +115,7 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
                       request:      request,
                       conversation: _findConversation(
                                       conversations, request.id),
+                      rated:        state.ratedIds.contains(request.id),
                       onChatTap: (conv) => Navigator.pushNamed(
                         context,
                         AppRouter.chat,
@@ -160,11 +162,16 @@ class _ServiceRequestCard extends StatelessWidget {
   final void Function(ConversationModel) onChatTap;
   final VoidCallback?        onQuotesTap;
 
+  /// true si el demandante ya calificó este servicio completado
+  /// (si es true no se muestra el ícono de calificación).
+  final bool                 rated;
+
   const _ServiceRequestCard({
     required this.request,
     required this.conversation,
     required this.onChatTap,
     this.onQuotesTap,
+    this.rated = false,
   });
 
   @override
@@ -276,7 +283,28 @@ class _ServiceRequestCard extends StatelessWidget {
               ),
               const Spacer(),
 
-              if (conversation != null && request.acceptedProposal != null)
+              // Completada sin calificar: estrella que abre el BottomSheet
+              // de calificación. Canal de chat cerrado en completadas.
+              // Completada ya calificada: sin ícono (estado reactivo vía BLoC).
+              if (request.status == 'completed' && !rated)
+                GestureDetector(
+                  onTap: () => showRatingBottomSheet(context, request),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSizes.paddingS),
+                    decoration: BoxDecoration(
+                      color:        Colors.amber.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                    ),
+                    child: const Icon(
+                      Icons.star_outline,
+                      color: Colors.amber,
+                      size:  18,
+                    ),
+                  ),
+                )
+              else if (request.status != 'completed' &&
+                  conversation != null &&
+                  request.acceptedProposal != null)
                 GestureDetector(
                   onTap: () => onChatTap(conversation!),
                   child: Container(

@@ -96,4 +96,25 @@ class ServiceRequestRepository {
       serviceRequestId: serviceRequestId,
     );
   }
+
+  Future<void> submitReview({
+    required String serviceRequestId,
+    required int rating,
+    String? comment,
+  }) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.submitReview(
+      token:            token,
+      serviceRequestId: serviceRequestId,
+      rating:           rating,
+      comment:          comment,
+    );
+  }
+
+  Future<Set<String>> getRatedRequestIds() async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.getRatedRequestIds(token: token);
+  }
 }

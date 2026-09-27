@@ -78,4 +78,43 @@ class ServiceRequestRepository {
     if (token == null) throw Exception('No hay sesión activa');
     return _service.rejectProposal(token: token, proposalId: proposalId);
   }
+
+  Future<void> startWork(String serviceRequestId) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.startWork(
+      token:            token,
+      serviceRequestId: serviceRequestId,
+    );
+  }
+
+  Future<void> completeWork(String serviceRequestId) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.completeWork(
+      token:            token,
+      serviceRequestId: serviceRequestId,
+    );
+  }
+
+  Future<void> submitReview({
+    required String serviceRequestId,
+    required int rating,
+    String? comment,
+  }) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.submitReview(
+      token:            token,
+      serviceRequestId: serviceRequestId,
+      rating:           rating,
+      comment:          comment,
+    );
+  }
+
+  Future<Set<String>> getRatedRequestIds() async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.getRatedRequestIds(token: token);
+  }
 }

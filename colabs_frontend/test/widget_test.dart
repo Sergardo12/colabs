@@ -4,11 +4,16 @@ import 'package:colabs_frontend/core/bloc/theme/theme_state.dart';
 import 'package:colabs_frontend/core/network/api_client.dart';
 import 'package:colabs_frontend/core/storage/theme_repository.dart';
 import 'package:colabs_frontend/core/theme/app_theme.dart';
+import 'package:colabs_frontend/features/notifications/bloc/notification_bloc.dart';
+import 'package:colabs_frontend/features/notifications/data/notification_repository.dart';
+import 'package:colabs_frontend/features/notifications/data/notification_service.dart';
+import 'package:colabs_frontend/features/notifications/models/notification_model.dart';
 import 'package:colabs_frontend/features/profile/bloc/profile_bloc.dart';
 import 'package:colabs_frontend/features/profile/data/profile_repository.dart';
 import 'package:colabs_frontend/features/profile/data/profile_service.dart';
 import 'package:colabs_frontend/features/profile/models/profile_model.dart';
 import 'package:colabs_frontend/features/profile/pages/widgets/app_drawer.dart';
+import 'package:colabs_frontend/shared/widgets/theme_toggle_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -40,6 +45,19 @@ class _FakeProfileRepository extends ProfileRepository {
   }
 }
 
+/// Repositorio fake — el drawer despacha NotificationsLoadRequested en
+/// initState; sin este fake haría una llamada de red real.
+class _FakeNotificationRepository extends NotificationRepository {
+  _FakeNotificationRepository()
+      : super(
+          notificationService: NotificationService(ApiClient.create()),
+          secureStorage:       const FlutterSecureStorage(),
+        );
+
+  @override
+  Future<List<NotificationModel>> getEnriched() async => [];
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -69,6 +87,10 @@ void main() {
       providers: [
         BlocProvider<ThemeBloc>.value(value: themeBloc),
         BlocProvider<ProfileBloc>.value(value: profileBloc),
+        BlocProvider<NotificationBloc>(
+          create: (_) =>
+              NotificationBloc(notificationRepository: _FakeNotificationRepository()),
+        ),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, state) {
@@ -111,14 +133,15 @@ void main() {
     await tester.pump();
 
     expect(find.text('Cambiar tema'), findsOneWidget);
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+    final toggle = find.byType(ThemeToggleSwitch);
+    expect(tester.widget<ThemeToggleSwitch>(toggle).isDarkMode, isFalse);
 
-    await tester.tap(find.byType(Switch));
+    await tester.tap(toggle);
     await tester.pump();
     await tester.pump();
 
     expect(app().themeMode, ThemeMode.dark);
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+    expect(tester.widget<ThemeToggleSwitch>(toggle).isDarkMode, isTrue);
 
     final savedPrefs = await SharedPreferences.getInstance();
     expect(savedPrefs.getBool('theme_dark'), isTrue);

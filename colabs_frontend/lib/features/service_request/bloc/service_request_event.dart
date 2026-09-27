@@ -82,3 +82,32 @@ class ProposalRejectRequested extends ServiceRequestEvent {
   @override
   List<Object?> get props => [proposalId, requestId];
 }
+
+class StartWorkRequested extends ServiceRequestEvent {
+  final String serviceRequestId;
+  const StartWorkRequested({required this.serviceRequestId});
+  @override
+  List<Object?> get props => [serviceRequestId];
+}
+
+class CompleteWorkRequested extends ServiceRequestEvent {
+  final String serviceRequestId;
+  const CompleteWorkRequested({required this.serviceRequestId});
+  @override
+  List<Object?> get props => [serviceRequestId];
+}
+
+class SubmitReviewRequested extends ServiceRequestEvent {
+  final String serviceRequestId;
+  final int    rating;
+  final String? comment;
+
+  const SubmitReviewRequested({
+    required this.serviceRequestId,
+    required this.rating,
+    this.comment,
+  });
+
+  @override
+  List<Object?> get props => [serviceRequestId, rating, comment];
+}

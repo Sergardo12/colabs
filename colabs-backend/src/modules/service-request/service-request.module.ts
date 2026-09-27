@@ -6,13 +6,22 @@ import { ServiceRequest } from './entities/service-request.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { User } from '../users/entities/user.entity';
 import { Occupation } from '../occupation/entities/occupation.entity';
+import { Conversation } from '../conversation/entities/conversation.entity';
+import { Message } from '../message/entities/message.entity';
 import { GatewayModule } from '../gateway/gateway.module';
 import { RedisModule } from 'src/common/redis.module';
 import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ServiceRequest, ProfileColab, User, Occupation]),
+    TypeOrmModule.forFeature([
+      ServiceRequest,
+      ProfileColab,
+      User,
+      Occupation,
+      Conversation,
+      Message,
+    ]),
     GatewayModule,
     RedisModule,
     NotificationModule,

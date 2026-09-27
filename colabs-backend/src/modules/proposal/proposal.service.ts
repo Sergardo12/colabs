@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Proposal } from './entities/proposal.entity';
 import { ServiceRequest } from '../service-request/entities/service-request.entity';
 import { CommentRequest } from '../service-request/entities/comment-request.entity';
@@ -180,6 +180,22 @@ export class ProposalService {
     );
 
     return saved;
+  }
+
+  /**
+   * Indica si el colaborador ya tiene una cotización sin respuesta
+   * (pendiente de aceptar/rechazar) para la solicitud indicada.
+   * Se usa para limitar a UNA cotización a la vez por colaborador.
+   */
+  async hasPendingProposal(profileColabId: string, serviceRequestId: string) {
+    const count = await this.proposalRepository.count({
+      where: {
+        profileColabId,
+        serviceRequestId,
+        status: ProposalStatus.PENDING,
+      },
+    });
+    return count > 0;
   }
 
   private async notifyProposalReceived(
@@ -516,6 +532,22 @@ export class ProposalService {
       throw new ForbiddenException('Solo el demandante puede aceptar la cotización');
     }
 
+    // Solo se puede aceptar UNA cotización de chat por solicitud (precio
+    // final fijo). El límite se basa en las conversaciones de la solicitud:
+    // solo el accept de chat marca la conversación como 'accepted'. La
+    // cotización inicial de la card no cuenta para este límite.
+    const alreadyAcceptedChat = await this.conversationRepository.findOne({
+      where: {
+        serviceRequestId: conversation.serviceRequestId,
+        postId:           IsNull(),
+        status:           'accepted',
+      },
+    });
+
+    if (alreadyAcceptedChat) {
+      throw new ForbiddenException('Ya existe una cotización aceptada para esta solicitud');
+    }
+
     const proposal = await this.proposalRepository.findOne({
       where: {
         serviceRequestId: conversation.serviceRequestId,
@@ -553,10 +585,12 @@ export class ProposalService {
       .andWhere('id != :id', { id: proposal.id })
       .execute();
 
-    // La solicitud pasa a "en proceso" con el precio acordado en la propuesta
+// La solicitud queda "aceptada" con el precio acordado; la transición a
+    // "en proceso" la realiza únicamente el colaborador ganador desde su card
+    // (PATCH /service-requests/:id/start).
     await this.serviceRequestRepository.update(
       { id: proposal.serviceRequestId },
-      { status: ServiceRequestStatus.IN_PROGRESS, acceptanceDate: new Date() },
+      { status: ServiceRequestStatus.ACCEPTED, acceptanceDate: new Date() },
     );
 
     // La conversación queda cerrada para nuevas cotizaciones
@@ -567,50 +601,12 @@ export class ProposalService {
     const systemMessage = this.messageRepository.create({
       conversationId,
       senderId: userId,
-      content: `Cotización aceptada por S/. ${proposal.amount}. El servicio está en proceso.`,
+      content: `Cotización aceptada por S/. ${proposal.amount}. El servicio ha sido aceptado.`,
       type: MessageType.TEXT,
       isRead: false,
     });
     const savedMessage = await this.messageRepository.save(systemMessage);
     this.gateway.emitNewMessage(conversationId, savedMessage);
-
-    // Notificar al colaborador
-    const collabNotification = await this.notificationService.notify({
-      userId: proposal.profileColab.userId,
-      type: 'proposal_accepted',
-      title: 'Cotización aceptada',
-      body: `Tu cotización de S/. ${proposal.amount} fue aceptada. El servicio está en proceso`,
-      entityType: 'service_request',
-      entityId: proposal.serviceRequestId,
-    });
-
-    this.gateway.emitNewNotification(proposal.profileColab.userId, {
-      id:           collabNotification.id,
-      userId:       proposal.profileColab.userId,
-      type:         collabNotification.type,
-      title:        collabNotification.title,
-      body:         collabNotification.body,
-      entityType:   collabNotification.entityType,
-      entityId:     collabNotification.entityId,
-      isRead:       false,
-      creationDate: collabNotification.creationDate,
-    });
-
-    // Notificar al solicitante — "Aceptado por {nombre del colaborador}"
-    const collabUser = conversation.profileColab.user;
-
-    const collabName = collabUser
-      ? `${collabUser.name} ${collabUser.lastName}`
-      : 'un colaborador';
-
-    await this.notificationService.notify({
-      userId: serviceRequest.userId,
-      type: 'service_request_accepted',
-      title: `Aceptado por ${collabName}`,
-      body: serviceRequest.description ?? '',
-      entityType: 'service_request',
-      entityId: serviceRequest.id,
-    });
 
     return this.proposalRepository.findOne({
       where: { id: proposal.id },

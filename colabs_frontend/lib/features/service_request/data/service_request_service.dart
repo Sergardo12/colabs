@@ -110,4 +110,63 @@ class ServiceRequestService {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
+
+  /// Inicia el trabajo (colaborador ganador: accepted → in_progress)
+  Future<void> startWork({
+    required String token,
+    required String serviceRequestId,
+  }) async {
+    await _dio.patch(
+      '/service-requests/$serviceRequestId/start',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  /// Finaliza el servicio (colaborador ganador: in_progress → completed)
+  Future<void> completeWork({
+    required String token,
+    required String serviceRequestId,
+  }) async {
+    await _dio.patch(
+      '/service-requests/$serviceRequestId/complete',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  /// Califica un servicio completado (el comentario es opcional)
+  Future<void> submitReview({
+    required String token,
+    required String serviceRequestId,
+    required int rating,
+    String? comment,
+  }) async {
+    await _dio.post(
+      '/comment-requests',
+      data: {
+        'serviceRequestId': serviceRequestId,
+        'rating':           rating,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  /// Ids de solicitudes que ya califiqué como demandante
+  /// (GET /comment-requests/my-reviews — persiste tras reiniciar la app)
+  Future<Set<String>> getRatedRequestIds({required String token}) async {
+    final response = await _dio.get(
+      '/comment-requests/my-reviews',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    final ids = <String>{};
+    for (final item in response.data as List<dynamic>) {
+      final serviceRequest =
+          (item as Map<String, dynamic>)['serviceRequest'];
+      if (serviceRequest is Map<String, dynamic> &&
+          serviceRequest['id'] is String) {
+        ids.add(serviceRequest['id'] as String);
+      }
+    }
+    return ids;
+  }
 }

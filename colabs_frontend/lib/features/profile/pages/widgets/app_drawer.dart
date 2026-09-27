@@ -13,6 +13,7 @@ import '../../bloc/profile_state.dart';
 import '../../../notifications/bloc/notification_bloc.dart';
 import '../../../notifications/bloc/notification_event.dart';
 import '../../../notifications/bloc/notification_state.dart';
+import '../../../../shared/widgets/theme_toggle_switch.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -276,10 +277,11 @@ class _AppDrawerState extends State<AppDrawer> {
                             fontSize: AppSizes.fontL,
                           ),
                         ),
-                        trailing: Switch(
-                          value: state.isDark,
-                          onChanged: (_) =>
-                              context.read<ThemeBloc>().add(const ToggleTheme()),
+                        trailing: ThemeToggleSwitch(
+                          isDarkMode: state.isDark,
+                          onChanged: (_) => context
+                              .read<ThemeBloc>()
+                              .add(const ToggleTheme()),
                         ),
                       );
                     },

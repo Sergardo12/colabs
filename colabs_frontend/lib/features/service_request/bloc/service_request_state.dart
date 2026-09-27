@@ -13,9 +13,17 @@ class ServiceRequestLoading extends ServiceRequestState {}
 
 class ServiceRequestSuccess extends ServiceRequestState {
   final List<ServiceRequestModel> requests;
-  const ServiceRequestSuccess({required this.requests});
+
+  /// Ids de solicitudes ya calificadas por el demandante
+  /// (cargados desde GET /comment-requests/my-reviews).
+  final Set<String> ratedIds;
+
+  const ServiceRequestSuccess({
+    required this.requests,
+    this.ratedIds = const {},
+  });
   @override
-  List<Object?> get props => [requests];
+  List<Object?> get props => [requests, ratedIds];
 }
 
 class ServiceRequestCreating extends ServiceRequestState {}
@@ -96,6 +104,54 @@ class ProposalAccepted extends ServiceRequestState {
 class ProposalActionError extends ServiceRequestState {
   final String message;
   const ProposalActionError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}
+
+class StartWorkInProgress extends ServiceRequestState {}
+
+class StartWorkSuccess extends ServiceRequestState {
+  final String requestId;
+  const StartWorkSuccess({required this.requestId});
+  @override
+  List<Object?> get props => [requestId];
+}
+
+class StartWorkError extends ServiceRequestState {
+  final String message;
+  const StartWorkError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}
+
+class CompleteWorkInProgress extends ServiceRequestState {}
+
+class CompleteWorkSuccess extends ServiceRequestState {
+  final String requestId;
+  const CompleteWorkSuccess({required this.requestId});
+  @override
+  List<Object?> get props => [requestId];
+}
+
+class CompleteWorkError extends ServiceRequestState {
+  final String message;
+  const CompleteWorkError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}
+
+class ReviewSubmitting extends ServiceRequestState {}
+
+class ReviewSubmitted extends ServiceRequestState {
+  final String serviceRequestId;
+  const ReviewSubmitted({required this.serviceRequestId});
+  @override
+  List<Object?> get props => [serviceRequestId];
+}
+
+class ReviewSubmitError extends ServiceRequestState {
+  final String message;
+  const ReviewSubmitError({required this.message});
   @override
   List<Object?> get props => [message];
 }

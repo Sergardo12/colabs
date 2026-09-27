@@ -568,12 +568,33 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
 
-          // Input de mensaje
+          // Input de mensaje — reemplazado por un aviso si la conversación
+          // está cerrada (servicio finalizado: solo lectura).
           Container(
             padding: const EdgeInsets.all(AppSizes.paddingM),
             color:   context.colors.surface,
             child: SafeArea(
-              child: Row(
+              child: widget.conversation.status == 'closed'
+                  ? Row(
+                      children: [
+                        Icon(
+                          Icons.lock_outline,
+                          color: context.colors.textSecondary,
+                          size:  18,
+                        ),
+                        const SizedBox(width: AppSizes.paddingS),
+                        Expanded(
+                          child: Text(
+                            'Conversación cerrada — el servicio finalizó',
+                            style: TextStyle(
+                              color:    context.colors.textSecondary,
+                              fontSize: AppSizes.fontM,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
                 children: [
                   // Botón de oferta/cotización — solo para el colaborador
                   if (widget.currentUserId ==

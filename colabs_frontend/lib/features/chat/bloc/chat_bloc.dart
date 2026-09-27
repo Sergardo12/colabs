@@ -106,7 +106,23 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         acceptedAmount:     current.acceptedAmount,
       ));
     } catch (e) {
-      emit(const ChatError(message: 'Error al enviar el mensaje'));
+      final message = _apiErrorMessage(e, 'Error al enviar el mensaje');
+      if (message == 'Error al enviar el mensaje') {
+        emit(ChatError(message: message));
+      } else {
+        // Error de negocio (p. ej. conversación cerrada): se muestra como
+        // mensaje flotante sin destruir la lista de mensajes.
+        emit(MessagesLoaded(
+          messages:           current.messages,
+          conversationId:     current.conversationId,
+          currentUserId:      current.currentUserId,
+          conversationStatus: current.conversationStatus,
+          quoteStatus:        current.quoteStatus,
+          serviceStatus:      current.serviceStatus,
+          acceptedAmount:     current.acceptedAmount,
+          floatingMessage:    message,
+        ));
+      }
     }
   }
 

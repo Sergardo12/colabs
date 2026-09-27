@@ -267,16 +267,19 @@ export class ServiceRequestService {
       .orderBy('sr.creationDate', 'DESC')
       .getRawAndEntities();
 
-    // Solicitudes accepted/en proceso en las que este colaborador fue elegido
-    // (radio/ocupación libre). Solo apps con propuesta aceptada: tanto Flow A
-    // (aceptada vía card o vía chat) — el Flow B crea SR sin propuesta, así que
-    // queda correctamente excluido.
+    // Solicitudes accepted/en proceso/completadas en las que este
+    // colaborador fue elegido (radio/ocupación libre). Solo apps con
+    // propuesta aceptada: tanto Flow A (aceptada vía card o vía chat) —
+    // el Flow B crea SR sin propuesta, así que queda correctamente
+    // excluido. Las completadas quedan visibles como historial del
+    // ganador y se hunden al final del tablero (ver return).
     const acceptedRaw = await this.serviceRequestRepository
       .createQueryBuilder('sr')
       .andWhere('sr.status IN (:...statuses)', {
         statuses: [
           ServiceRequestStatus.ACCEPTED,
           ServiceRequestStatus.IN_PROGRESS,
+          ServiceRequestStatus.COMPLETED,
         ],
       })
       .andWhere(
@@ -313,7 +316,16 @@ export class ServiceRequestService {
     const pending  = requests.entities.map((r, i) => ({ ...r, distanceKm: Number(requests.raw[i].distance) / 1000 }));
     const accepted = acceptedRaw.entities.map((r, i) => ({ ...r, distanceKm: Number(acceptedRaw.raw[i].distance) / 1000 }));
 
-    return [...accepted, ...pending];
+    // Trabajo activo primero, pendientes después y completadas al fondo
+    // del tablero (historial del colaborador, sin ocupar el foco).
+    const active = accepted.filter(
+      (r) => r.status !== ServiceRequestStatus.COMPLETED,
+    );
+    const completed = accepted.filter(
+      (r) => r.status === ServiceRequestStatus.COMPLETED,
+    );
+
+    return [...active, ...pending, ...completed];
   }
 
   async updateStatus(

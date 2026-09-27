@@ -292,39 +292,45 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
                         .toList();
                     final conv = convList.isNotEmpty ? convList.first : null;
 
+                    final isCompleted = nearbyRequest.status == 'completed';
+
                     return GestureDetector(
-                      onTap: () => showDialog(
-                        context: dialogContext,
-                        builder: (dialogCtx) => _ServiceRequestDetailDialog(
-                          request: nearbyRequest,
-                          conversation: conv,
-                          onStartWork: () {
-                            Navigator.of(dialogCtx).pop();
-                            context.read<ServiceRequestBloc>().add(
-                              StartWorkRequested(
-                                serviceRequestId: nearbyRequest.id,
+                      // Las completadas son solo informativas: sin popup.
+                      onTap: isCompleted
+                          ? null
+                          : () => showDialog(
+                                context: dialogContext,
+                                builder: (dialogCtx) =>
+                                    _ServiceRequestDetailDialog(
+                                  request: nearbyRequest,
+                                  conversation: conv,
+                                  onStartWork: () {
+                                    Navigator.of(dialogCtx).pop();
+                                    context.read<ServiceRequestBloc>().add(
+                                          StartWorkRequested(
+                                            serviceRequestId: nearbyRequest.id,
+                                          ),
+                                        );
+                                  },
+                                  onAccept: conv != null
+                                      ? () {
+                                          Navigator.of(dialogCtx).pop();
+                                          Navigator.pushNamed(
+                                            context,
+                                            AppRouter.chat,
+                                            arguments: {
+                                              'conversation': conv,
+                                              'post': null,
+                                            },
+                                          );
+                                        }
+                                      : () {
+                                          Navigator.of(dialogCtx).pop();
+                                          _openProposalDialog(
+                                              dialogContext, nearbyRequest);
+                                        },
+                                ),
                               ),
-                            );
-                          },
-                          onAccept: conv != null
-                              ? () {
-                                  Navigator.of(dialogCtx).pop();
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRouter.chat,
-                                    arguments: {
-                                      'conversation': conv,
-                                      'post': null,
-                                    },
-                                  );
-                                }
-                              : () {
-                                  Navigator.of(dialogCtx).pop();
-                                  _openProposalDialog(
-                                      dialogContext, nearbyRequest);
-                                },
-                        ),
-                      ),
                       child: _SpecialtyRequestCard(
                         request:  nearbyRequest,
                         onAccept: conv != null
@@ -338,16 +344,16 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
                                 )
                             : () => _openProposalDialog(
                                   dialogContext, nearbyRequest),
-                        onChatTap: conv != null
-                            ? () => Navigator.pushNamed(
+                        onChatTap: isCompleted || conv == null
+                            ? null
+                            : () => Navigator.pushNamed(
                                   context,
                                   AppRouter.chat,
                                   arguments: {
                                     'conversation': conv,
                                     'post': null,
                                   },
-                                )
-                            : null,
+                                ),
                       ),
                     );
                   },
@@ -506,6 +512,7 @@ class _SpecialtyRequestCard extends StatelessWidget {
     final requester = request.requester;
     final isAcceptedLike =
         request.status == 'accepted' || request.status == 'in_progress';
+    final isCompleted = request.status == 'completed';
     final agreedPrice = request.acceptedProposal?.amount;
 
     return Container(
@@ -575,14 +582,16 @@ class _SpecialtyRequestCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSizes.paddingS),
-              if (isAcceptedLike)
+              if (isAcceptedLike || isCompleted)
                 Column(
                   children: [
                     if (agreedPrice != null) ...[
                       _QuotePriceBadge(amount: agreedPrice),
                       const SizedBox(height: AppSizes.paddingXS),
                     ],
-                    if (onChatTap != null)
+                    // Completada: sin ícono de chat — el canal está
+                    // cerrado y no hay acceso desde la card.
+                    if (!isCompleted && onChatTap != null)
                       _ActionIcon(
                         icon:      Icons.chat_bubble_outline,
                         color:     context.colors.primary,
@@ -1058,9 +1067,19 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
             const SizedBox(height: AppSizes.paddingL),
 
             // Acción principal — cotizar (pending), iniciar trabajo
-            // (accepted) o deslizar para finalizar (in_progress).
+            // (accepted) o deslizar para finalizar (in_progress). En
+            // completadas no hay acción: la card no abre el popup, esto
+            // es solo defensa ante data vieja.
             if (request.status == 'in_progress')
               _CompleteServiceAction(requestId: request.id)
+            else if (request.status == 'completed')
+              _InfoBox(
+                label: 'Finalizado',
+                value: request.completionDate != null
+                    ? _formatDateTime(request.completionDate!)
+                    : '—',
+                icon: Icons.check_circle_outline,
+              )
             else
               SizedBox(
                 width: double.infinity,

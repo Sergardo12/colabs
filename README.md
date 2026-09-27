@@ -14,13 +14,13 @@ Aplicación móvil SaaS que conecta usuarios que ofrecen servicios empíricos (c
 `13 de 15 módulos completados`
 
 ### Frontend (Flutter)
-![Frontend Progress](https://progress-bar.xyz/82/?title=Flutter&width=500&color=017DB0)
-`22 de 27 funcionalidades completadas`
+![Frontend Progress](https://progress-bar.xyz/93/?title=Flutter&width=500&color=017DB0)
+`25 de 27 funcionalidades completadas`
 
 ### Flujos principales
 | Flujo | Estado | Descripción |
 |---|---|---|
-| Flujo A — Solicitud InDriver | 🟡 Parcial | Mapa + solicitud + propuestas funcionan. Falta pantalla "Mis servicios" del colaborador |
+| Flujo A — Solicitud InDriver | 🟢 Completo | Solicitud + propuestas + finalización + calificación funcionan. Completadas visibles en HEAD 3/4, chat cerrado en solo-lectura |
 | Flujo B — Consulta desde post | 🟢 Completo | Usuario consulta desde feed, chat con oferta y aceptación |
 | Flujo C — Re-solicitar desde historial | 🟢 Completo | Re-solicitar al mismo colaborador desde historial |
 
@@ -756,6 +756,10 @@ google_sign_in: ^6.2.2
 - [x] Edición de perfil de colaborador
 - [x] Búsqueda de colaboradores con paginación y filtro query
 - [x] Pantalla "Mis solicitudes" con estados y link a chat
+- [x] Finalizar servicio con slider (colaborador ganador)
+- [x] Servicios completados visibles (HEAD 3 demandante + HEAD 4 colaborador)
+- [x] Chat cerrado en solo-lectura tras completar
+- [x] Calificación del servicio por el demandante (estrellas + comentario opcional)
 - [x] Chat en tiempo real (WebSocket + Socket.io)
 - [x] Flujo B completo — consulta desde post, oferta y aceptación
 - [x] Flujo A — pantalla de mapa con solicitud por ubicación
@@ -784,8 +788,9 @@ google_sign_in: ^6.2.2
 | currentUserId via ProfileBloc en router | Frágil si perfil no cargado | Baja |
 | withOpacity deprecado (~45 usos) | Warning de lint | Baja |
 | Cruce de datos en Flutter para ícono de mensaje | Performance — backend debería devolver conversationId en my-requests | Media |
-| Pantalla "Mis servicios" del colaborador | Pendiente — la implementa el equipo | Alta |
 | Google Maps — migrar desde OpenStreetMap | Mejor cobertura en Perú para producción | Alta |
+
+> Nota: la pantalla "Mis servicios" del colaborador (a cargo de otro equipo) quedó cubierta por la vista HEAD 4 con completadas visibles; por eso el Flujo A se marca Completo.
 
 ---
 

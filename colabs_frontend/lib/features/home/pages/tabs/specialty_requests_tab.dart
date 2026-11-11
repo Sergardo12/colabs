@@ -9,7 +9,9 @@ import '../../../profile/data/profile_repository.dart';
 import '../../../service_request/bloc/service_request_bloc.dart';
 import '../../../service_request/bloc/service_request_event.dart';
 import '../../../service_request/bloc/service_request_state.dart';
+import '../../../service_request/models/request_status_filter.dart';
 import '../../../service_request/models/service_request_model.dart';
+import '../../../service_request/pages/widgets/request_status_filter_bar.dart';
 import '../../../chat/bloc/chat_bloc.dart';
 import '../../../chat/bloc/chat_event.dart';
 import '../../../chat/bloc/chat_state.dart';
@@ -27,14 +29,17 @@ class SpecialtyRequestsTab extends StatefulWidget {
 class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
   static const Duration _publishInterval = Duration(seconds: 45);
 
-  Timer?                 _publishTimer;
-  Position?              _lastPosition;
-  bool                   _publishingLocation = false;
+  Timer? _publishTimer;
+  Position? _lastPosition;
+  bool _publishingLocation = false;
+  RequestStatusFilter _selectedFilter = RequestStatusFilter.pending;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _activateAvailability());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _activateAvailability(),
+    );
   }
 
   @override
@@ -72,9 +77,9 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
 
       if (position == null) {
         _stopPublishing();
-        context
-            .read<ServiceRequestBloc>()
-            .add(const NearbyRequestsLocationUnavailable());
+        context.read<ServiceRequestBloc>().add(
+          const NearbyRequestsLocationUnavailable(),
+        );
         return;
       }
 
@@ -83,9 +88,9 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
     } catch (_) {
       if (!mounted) return;
       _stopPublishing();
-      context
-          .read<ServiceRequestBloc>()
-          .add(const NearbyRequestsLocationUnavailable());
+      context.read<ServiceRequestBloc>().add(
+        const NearbyRequestsLocationUnavailable(),
+      );
       return;
     }
 
@@ -145,227 +150,289 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: context.colors.surface,
-        elevation:       0,
+        elevation: 0,
         title: Text(
           'Servicios según tu especialidad',
           style: TextStyle(
-            color:      context.colors.textPrimary,
-            fontSize:   AppSizes.fontXL,
+            color: context.colors.textPrimary,
+            fontSize: AppSizes.fontXL,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      body: BlocListener<ChatBloc, ChatState>(
-        listenWhen: (previous, current) =>
-            current is ChatInitial && previous is! ChatInitial,
-        listener: (context, state) {
-          if (context.mounted) {
-            context.read<ChatBloc>().add(const ConversationsLoadRequested());
-          }
-        },
-        child: BlocListener<ServiceRequestBloc, ServiceRequestState>(
-          listenWhen: (previous, current) =>
-              current is StartWorkSuccess ||
-              current is StartWorkError ||
-              current is CompleteWorkSuccess ||
-              current is CompleteWorkError,
-          listener: (context, state) {
-            if (state is StartWorkSuccess) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text('Trabajo iniciado — servicio en progreso'),
-                  ),
-                );
-            } else if (state is StartWorkError) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(content: Text(state.message)),
-                );
-            } else if (state is CompleteWorkSuccess) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(content: Text('Servicio completado')),
-                );
-              // Tras cerrar el popup de detalle (listener interno), muestra
-              // el diálogo de éxito con el check animado.
-              Future.delayed(const Duration(milliseconds: 1200), () {
-                if (mounted) _showCompletionSuccessDialog();
-              });
-            } else if (state is CompleteWorkError) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(content: Text(state.message)),
-                );
-            }
-          },
-          child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
-          buildWhen: (previous, current) =>
-            current is NearbyRequestsLoading ||
-            current is NearbyRequestsSuccess ||
-            current is NearbyRequestsError,
-        builder: (context, state) {
-          if (_publishingLocation) {
-            return Center(
-              child: CircularProgressIndicator(color: context.colors.primary),
-            );
-          }
+      body: Column(
+        children: [
+          RequestStatusFilterBar(
+            selected: _selectedFilter,
+            onSelected: (filter) => setState(() => _selectedFilter = filter),
+          ),
+          Expanded(
+            child: BlocListener<ChatBloc, ChatState>(
+              listenWhen: (previous, current) =>
+                  current is ChatInitial && previous is! ChatInitial,
+              listener: (context, state) {
+                if (context.mounted) {
+                  context.read<ChatBloc>().add(
+                    const ConversationsLoadRequested(),
+                  );
+                }
+              },
+              child: BlocListener<ServiceRequestBloc, ServiceRequestState>(
+                listenWhen: (previous, current) =>
+                    current is StartWorkSuccess ||
+                    current is StartWorkError ||
+                    current is CompleteWorkSuccess ||
+                    current is CompleteWorkError,
+                listener: (context, state) {
+                  if (state is StartWorkSuccess) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Trabajo iniciado — servicio en progreso',
+                          ),
+                        ),
+                      );
+                  } else if (state is StartWorkError) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(SnackBar(content: Text(state.message)));
+                  } else if (state is CompleteWorkSuccess) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        const SnackBar(content: Text('Servicio completado')),
+                      );
+                    // Tras cerrar el popup de detalle (listener interno), muestra
+                    // el diálogo de éxito con el check animado.
+                    Future.delayed(const Duration(milliseconds: 1200), () {
+                      if (mounted) _showCompletionSuccessDialog();
+                    });
+                  } else if (state is CompleteWorkError) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(SnackBar(content: Text(state.message)));
+                  }
+                },
+                child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
+                  buildWhen: (previous, current) =>
+                      current is NearbyRequestsLoading ||
+                      current is NearbyRequestsSuccess ||
+                      current is NearbyRequestsError,
+                  builder: (context, state) {
+                    if (_publishingLocation) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: context.colors.primary,
+                        ),
+                      );
+                    }
 
-          if (state is NearbyRequestsLoading) {
-            return Center(
-              child: CircularProgressIndicator(color: context.colors.primary),
-            );
-          }
+                    if (state is NearbyRequestsLoading) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: context.colors.primary,
+                        ),
+                      );
+                    }
 
-          if (state is NearbyRequestsError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSizes.paddingL),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.location_off_outlined,
-                      color: context.colors.textSecondary,
-                      size:  48,
-                    ),
-                    const SizedBox(height: AppSizes.paddingM),
-                    Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: context.colors.textSecondary),
-                    ),
-                    const SizedBox(height: AppSizes.paddingL),
-                    OutlinedButton.icon(
-                      onPressed: () => _activateAvailability(),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          if (state is NearbyRequestsSuccess) {
-            if (state.requests.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.assignment_outlined,
-                      color: context.colors.textSecondary,
-                      size:  48,
-                    ),
-                    const SizedBox(height: AppSizes.paddingM),
-                    Text(
-                      'No hay solicitudes en tu área',
-                      style: TextStyle(color: context.colors.textSecondary),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, chatState) {
-                final conversations = chatState is ConversationsLoaded
-                    ? chatState.conversations
-                    : <ConversationModel>[];
-
-                return ListView.separated(
-                  padding: const EdgeInsets.all(AppSizes.paddingL),
-                  itemCount: state.requests.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSizes.paddingM),
-                  itemBuilder: (context, index) {
-                    final nearbyRequest = state.requests[index];
-                    final dialogContext = context;
-
-                    final convList = conversations
-                        .where((c) => c.serviceRequestId == nearbyRequest.id)
-                        .toList();
-                    final conv = convList.isNotEmpty ? convList.first : null;
-
-                    final isCompleted = nearbyRequest.status == 'completed';
-
-                    return GestureDetector(
-                      // Las completadas son solo informativas: sin popup.
-                      onTap: isCompleted
-                          ? null
-                          : () => showDialog(
-                                context: dialogContext,
-                                builder: (dialogCtx) =>
-                                    _ServiceRequestDetailDialog(
-                                  request: nearbyRequest,
-                                  conversation: conv,
-                                  onStartWork: () {
-                                    Navigator.of(dialogCtx).pop();
-                                    context.read<ServiceRequestBloc>().add(
-                                          StartWorkRequested(
-                                            serviceRequestId: nearbyRequest.id,
-                                          ),
-                                        );
-                                  },
-                                  onAccept: conv != null
-                                      ? () {
-                                          Navigator.of(dialogCtx).pop();
-                                          Navigator.pushNamed(
-                                            context,
-                                            AppRouter.chat,
-                                            arguments: {
-                                              'conversation': conv,
-                                              'post': null,
-                                            },
-                                          );
-                                        }
-                                      : () {
-                                          Navigator.of(dialogCtx).pop();
-                                          _openProposalDialog(
-                                              dialogContext, nearbyRequest);
-                                        },
+                    if (state is NearbyRequestsError) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSizes.paddingL),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.location_off_outlined,
+                                color: context.colors.textSecondary,
+                                size: 48,
+                              ),
+                              const SizedBox(height: AppSizes.paddingM),
+                              Text(
+                                state.message,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: context.colors.textSecondary,
                                 ),
                               ),
-                      child: _SpecialtyRequestCard(
-                        request:  nearbyRequest,
-                        onAccept: conv != null
-                            ? () => Navigator.pushNamed(
-                                  context,
-                                  AppRouter.chat,
-                                  arguments: {
-                                    'conversation': conv,
-                                    'post': null,
-                                  },
-                                )
-                            : () => _openProposalDialog(
-                                  dialogContext, nearbyRequest),
-                        onChatTap: isCompleted || conv == null
-                            ? null
-                            : () => Navigator.pushNamed(
-                                  context,
-                                  AppRouter.chat,
-                                  arguments: {
-                                    'conversation': conv,
-                                    'post': null,
-                                  },
-                                ),
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          }
+                              const SizedBox(height: AppSizes.paddingL),
+                              OutlinedButton.icon(
+                                onPressed: () => _activateAvailability(),
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Reintentar'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
 
-          return const SizedBox.shrink();
-          },
+                    if (state is NearbyRequestsSuccess) {
+                      if (state.requests.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.assignment_outlined,
+                                color: context.colors.textSecondary,
+                                size: 48,
+                              ),
+                              const SizedBox(height: AppSizes.paddingM),
+                              Text(
+                                'No hay solicitudes en tu área',
+                                style: TextStyle(
+                                  color: context.colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      final filteredRequests = state.requests
+                          .where((r) => _selectedFilter.matches(r.status))
+                          .toList();
+
+                      if (filteredRequests.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.filter_alt_off_outlined,
+                                color: context.colors.textSecondary,
+                                size: 48,
+                              ),
+                              const SizedBox(height: AppSizes.paddingM),
+                              Text(
+                                'No hay solicitudes en estado ${_selectedFilter.label}',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: context.colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return BlocBuilder<ChatBloc, ChatState>(
+                        builder: (context, chatState) {
+                          final conversations = chatState is ConversationsLoaded
+                              ? chatState.conversations
+                              : <ConversationModel>[];
+
+                          return ListView.separated(
+                            padding: const EdgeInsets.all(AppSizes.paddingL),
+                            itemCount: filteredRequests.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: AppSizes.paddingM),
+                            itemBuilder: (context, index) {
+                              final nearbyRequest = filteredRequests[index];
+                              final dialogContext = context;
+
+                              final convList = conversations
+                                  .where(
+                                    (c) =>
+                                        c.serviceRequestId == nearbyRequest.id,
+                                  )
+                                  .toList();
+                              final conv = convList.isNotEmpty
+                                  ? convList.first
+                                  : null;
+
+                              final isCompleted =
+                                  nearbyRequest.status == 'completed';
+
+                              return GestureDetector(
+                                // Las completadas son solo informativas: sin popup.
+                                onTap: isCompleted
+                                    ? null
+                                    : () => showDialog(
+                                        context: dialogContext,
+                                        builder: (dialogCtx) =>
+                                            _ServiceRequestDetailDialog(
+                                              request: nearbyRequest,
+                                              conversation: conv,
+                                              onStartWork: () {
+                                                Navigator.of(dialogCtx).pop();
+                                                context
+                                                    .read<ServiceRequestBloc>()
+                                                    .add(
+                                                      StartWorkRequested(
+                                                        serviceRequestId:
+                                                            nearbyRequest.id,
+                                                      ),
+                                                    );
+                                              },
+                                              onAccept: conv != null
+                                                  ? () {
+                                                      Navigator.of(
+                                                        dialogCtx,
+                                                      ).pop();
+                                                      Navigator.pushNamed(
+                                                        context,
+                                                        AppRouter.chat,
+                                                        arguments: {
+                                                          'conversation': conv,
+                                                          'post': null,
+                                                        },
+                                                      );
+                                                    }
+                                                  : () {
+                                                      Navigator.of(
+                                                        dialogCtx,
+                                                      ).pop();
+                                                      _openProposalDialog(
+                                                        dialogContext,
+                                                        nearbyRequest,
+                                                      );
+                                                    },
+                                            ),
+                                      ),
+                                child: _SpecialtyRequestCard(
+                                  request: nearbyRequest,
+                                  onAccept: conv != null
+                                      ? () => Navigator.pushNamed(
+                                          context,
+                                          AppRouter.chat,
+                                          arguments: {
+                                            'conversation': conv,
+                                            'post': null,
+                                          },
+                                        )
+                                      : () => _openProposalDialog(
+                                          dialogContext,
+                                          nearbyRequest,
+                                        ),
+                                  onChatTap: isCompleted || conv == null
+                                      ? null
+                                      : () => Navigator.pushNamed(
+                                          context,
+                                          AppRouter.chat,
+                                          arguments: {
+                                            'conversation': conv,
+                                            'post': null,
+                                          },
+                                        ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    }
+
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -404,16 +471,16 @@ class _CompleteServiceAction extends StatelessWidget {
         final status = state is CompleteWorkInProgress
             ? SwipeToCompleteStatus.loading
             : state is CompleteWorkSuccess
-                ? SwipeToCompleteStatus.success
-                : state is CompleteWorkError
-                    ? SwipeToCompleteStatus.error
-                    : SwipeToCompleteStatus.idle;
+            ? SwipeToCompleteStatus.success
+            : state is CompleteWorkError
+            ? SwipeToCompleteStatus.error
+            : SwipeToCompleteStatus.idle;
 
         return SwipeToCompleteSlider(
           status: status,
           onCompleted: () => context.read<ServiceRequestBloc>().add(
-                CompleteWorkRequested(serviceRequestId: requestId),
-              ),
+            CompleteWorkRequested(serviceRequestId: requestId),
+          ),
         );
       },
     );
@@ -475,8 +542,8 @@ class _CompletionSuccessDialogState extends State<_CompletionSuccessDialog> {
             Text(
               'Servicio completado',
               style: TextStyle(
-                color:      context.colors.textPrimary,
-                fontSize:   AppSizes.fontXL,
+                color: context.colors.textPrimary,
+                fontSize: AppSizes.fontXL,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -485,7 +552,7 @@ class _CompletionSuccessDialogState extends State<_CompletionSuccessDialog> {
               'El trabajo ha finalizado correctamente.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color:    context.colors.textSecondary,
+                color: context.colors.textSecondary,
                 fontSize: AppSizes.fontM,
               ),
             ),
@@ -498,8 +565,8 @@ class _CompletionSuccessDialogState extends State<_CompletionSuccessDialog> {
 
 class _SpecialtyRequestCard extends StatelessWidget {
   final ServiceRequestModel request;
-  final VoidCallback        onAccept;
-  final VoidCallback?       onChatTap;
+  final VoidCallback onAccept;
+  final VoidCallback? onChatTap;
 
   const _SpecialtyRequestCard({
     required this.request,
@@ -518,13 +585,13 @@ class _SpecialtyRequestCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingL),
       decoration: BoxDecoration(
-        color:        context.colors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
         boxShadow: [
           BoxShadow(
-            color:      context.colors.textSecondary.withOpacity(0.08),
+            color: context.colors.textSecondary.withOpacity(0.08),
             blurRadius: 8,
-            offset:     const Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -544,7 +611,7 @@ class _SpecialtyRequestCard extends StatelessWidget {
                     ? Icon(
                         Icons.person,
                         color: context.colors.primary,
-                        size:  26,
+                        size: 26,
                       )
                     : null,
               ),
@@ -558,8 +625,8 @@ class _SpecialtyRequestCard extends StatelessWidget {
                           ? requester!.fullName
                           : 'Solicitante',
                       style: TextStyle(
-                        color:      context.colors.textPrimary,
-                        fontSize:   AppSizes.fontL,
+                        color: context.colors.textPrimary,
+                        fontSize: AppSizes.fontL,
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
@@ -569,8 +636,8 @@ class _SpecialtyRequestCard extends StatelessWidget {
                     Text(
                       request.occupation.name,
                       style: TextStyle(
-                        color:      context.colors.primary,
-                        fontSize:   AppSizes.fontM,
+                        color: context.colors.primary,
+                        fontSize: AppSizes.fontM,
                         fontWeight: FontWeight.w500,
                       ),
                       maxLines: 1,
@@ -593,9 +660,9 @@ class _SpecialtyRequestCard extends StatelessWidget {
                     // cerrado y no hay acceso desde la card.
                     if (!isCompleted && onChatTap != null)
                       _ActionIcon(
-                        icon:      Icons.chat_bubble_outline,
-                        color:     context.colors.primary,
-                        tooltip:   'Abrir chat',
+                        icon: Icons.chat_bubble_outline,
+                        color: context.colors.primary,
+                        tooltip: 'Abrir chat',
                         onPressed: onChatTap!,
                       ),
                   ],
@@ -605,24 +672,24 @@ class _SpecialtyRequestCard extends StatelessWidget {
                   children: [
                     if (onChatTap != null) ...[
                       _ActionIcon(
-                        icon:      Icons.chat_bubble_outline,
-                        color:     context.colors.primary,
-                        tooltip:   'Negociar en el chat',
+                        icon: Icons.chat_bubble_outline,
+                        color: context.colors.primary,
+                        tooltip: 'Negociar en el chat',
                         onPressed: onChatTap!,
                       ),
                       const SizedBox(height: AppSizes.paddingXS),
                     ],
                     _ActionIcon(
-                      icon:     Icons.check,
-                      color:    Colors.green,
-                      tooltip:  'Cotizar',
+                      icon: Icons.check,
+                      color: Colors.green,
+                      tooltip: 'Cotizar',
                       onPressed: onAccept,
                     ),
                     const SizedBox(height: AppSizes.paddingXS),
                     _ActionIcon(
-                      icon:     Icons.close,
-                      color:    context.colors.error,
-                      tooltip:  'Rechazar',
+                      icon: Icons.close,
+                      color: context.colors.error,
+                      tooltip: 'Rechazar',
                       onPressed: () {},
                     ),
                   ],
@@ -636,7 +703,7 @@ class _SpecialtyRequestCard extends StatelessWidget {
                 ? 'Sin descripción'
                 : request.description,
             style: TextStyle(
-              color:    context.colors.textPrimary,
+              color: context.colors.textPrimary,
               fontSize: AppSizes.fontM,
             ),
             maxLines: 1,
@@ -649,14 +716,14 @@ class _SpecialtyRequestCard extends StatelessWidget {
               Icon(
                 Icons.location_on_outlined,
                 color: context.colors.textSecondary,
-                size:  16,
+                size: 16,
               ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   request.direction,
                   style: TextStyle(
-                    color:    context.colors.textSecondary,
+                    color: context.colors.textSecondary,
                     fontSize: AppSizes.fontM,
                   ),
                   maxLines: 1,
@@ -671,7 +738,7 @@ class _SpecialtyRequestCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.schedule,
-                size:  14,
+                size: 14,
                 color: context.colors.textSecondary,
               ),
               const SizedBox(width: 4),
@@ -679,7 +746,7 @@ class _SpecialtyRequestCard extends StatelessWidget {
                 child: Text(
                   _formatElapsed(request.createdAt),
                   style: TextStyle(
-                    color:    context.colors.textSecondary,
+                    color: context.colors.textSecondary,
                     fontSize: AppSizes.fontS,
                   ),
                   maxLines: 1,
@@ -752,11 +819,11 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
     if (!_formKey.currentState!.validate()) return;
     final amount = double.parse(_amountController.text.trim());
     context.read<ServiceRequestBloc>().add(
-          ProposalSendRequested(
-            serviceRequestId: widget.request.id,
-            amount:           amount,
-          ),
-        );
+      ProposalSendRequested(
+        serviceRequestId: widget.request.id,
+        amount: amount,
+      ),
+    );
   }
 
   @override
@@ -770,14 +837,16 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
           Navigator.of(context).pop();
           messenger.showSnackBar(
             SnackBar(
-              content: Text('Propuesta enviada por S/. ${_amountController.text.trim()}'),
+              content: Text(
+                'Propuesta enviada por S/. ${_amountController.text.trim()}',
+              ),
             ),
           );
-          context.read<ServiceRequestBloc>().add(const NearbyRequestsLoadRequested());
-        } else if (state is ProposalSendError) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(state.message)),
+          context.read<ServiceRequestBloc>().add(
+            const NearbyRequestsLoadRequested(),
           );
+        } else if (state is ProposalSendError) {
+          messenger.showSnackBar(SnackBar(content: Text(state.message)));
         }
       },
       child: Dialog(
@@ -787,7 +856,7 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
         ),
         insetPadding: const EdgeInsets.symmetric(
           horizontal: AppSizes.paddingL,
-          vertical:   AppSizes.paddingXL,
+          vertical: AppSizes.paddingXL,
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.paddingL),
@@ -804,7 +873,7 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
                     child: Icon(
                       Icons.close,
                       color: context.colors.textSecondary,
-                      size:  24,
+                      size: 24,
                     ),
                   ),
                 ),
@@ -812,8 +881,8 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
                 Text(
                   'Ingresa el precio de tu servicio',
                   style: TextStyle(
-                    color:      context.colors.textPrimary,
-                    fontSize:   AppSizes.fontL,
+                    color: context.colors.textPrimary,
+                    fontSize: AppSizes.fontL,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -826,12 +895,12 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
                   autofocus: true,
                   decoration: InputDecoration(
                     prefixText: 'S/. ',
-                    hintText:   '0.00',
-                    filled:     true,
-                    fillColor:  context.colors.primary.withOpacity(0.06),
+                    hintText: '0.00',
+                    filled: true,
+                    fillColor: context.colors.primary.withOpacity(0.06),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                      borderSide:   BorderSide.none,
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   validator: (value) {
@@ -854,25 +923,28 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: context.colors.primary,
                           foregroundColor: Colors.white,
-                          minimumSize:
-                              const Size.fromHeight(AppSizes.buttonHeight),
+                          minimumSize: const Size.fromHeight(
+                            AppSizes.buttonHeight,
+                          ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusM,
+                            ),
                           ),
                         ),
                         child: sending
                             ? const SizedBox(
-                                width:  20,
+                                width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color:       Colors.white,
+                                  color: Colors.white,
                                 ),
                               )
                             : const Text(
                                 'Enviar',
                                 style: TextStyle(
-                                  fontSize:   AppSizes.fontL,
+                                  fontSize: AppSizes.fontL,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -891,9 +963,9 @@ class _PriceProposalDialogState extends State<_PriceProposalDialog> {
 
 class _ServiceRequestDetailDialog extends StatelessWidget {
   final ServiceRequestModel request;
-  final ConversationModel?  conversation;
-  final VoidCallback        onAccept;
-  final VoidCallback        onStartWork;
+  final ConversationModel? conversation;
+  final VoidCallback onAccept;
+  final VoidCallback onStartWork;
 
   const _ServiceRequestDetailDialog({
     required this.request,
@@ -913,7 +985,7 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
       ),
       insetPadding: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingL,
-        vertical:   AppSizes.paddingXL,
+        vertical: AppSizes.paddingXL,
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.paddingL),
@@ -929,7 +1001,7 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                 child: Icon(
                   Icons.close,
                   color: context.colors.textSecondary,
-                  size:  24,
+                  size: 24,
                 ),
               ),
             ),
@@ -960,8 +1032,8 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                         : 'Solicitante',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color:      context.colors.textPrimary,
-                      fontSize:   AppSizes.fontL,
+                      color: context.colors.textPrimary,
+                      fontSize: AppSizes.fontL,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -974,8 +1046,8 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
             Text(
               'Solicita:',
               style: TextStyle(
-                color:      context.colors.textSecondary,
-                fontSize:   AppSizes.fontS,
+                color: context.colors.textSecondary,
+                fontSize: AppSizes.fontS,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -985,9 +1057,9 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                   ? 'Sin descripción'
                   : request.description,
               style: TextStyle(
-                color:    context.colors.textPrimary,
+                color: context.colors.textPrimary,
                 fontSize: AppSizes.fontM,
-                height:   1.4,
+                height: 1.4,
               ),
             ),
             const SizedBox(height: AppSizes.paddingL),
@@ -996,8 +1068,8 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
             Text(
               'Ubicación:',
               style: TextStyle(
-                color:      context.colors.textSecondary,
-                fontSize:   AppSizes.fontS,
+                color: context.colors.textSecondary,
+                fontSize: AppSizes.fontS,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1008,14 +1080,14 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                 Icon(
                   Icons.location_on_outlined,
                   color: context.colors.primary,
-                  size:  20,
+                  size: 20,
                 ),
                 const SizedBox(width: AppSizes.paddingS),
                 Expanded(
                   child: Text(
                     request.direction,
                     style: TextStyle(
-                      color:    context.colors.textPrimary,
+                      color: context.colors.textPrimary,
                       fontSize: AppSizes.fontM,
                     ),
                   ),
@@ -1027,13 +1099,13 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                   label: const Text('Ver ubicación'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: context.colors.primary,
-                    side:             BorderSide(color: context.colors.primary),
+                    side: BorderSide(color: context.colors.primary),
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSizes.paddingS,
-                      vertical:   AppSizes.paddingXS,
+                      vertical: AppSizes.paddingXS,
                     ),
                     textStyle: TextStyle(
-                      fontSize:   AppSizes.fontS,
+                      fontSize: AppSizes.fontS,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1085,8 +1157,8 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: request.status == 'accepted'
-                  ? onStartWork
-                  : onAccept,
+                      ? onStartWork
+                      : onAccept,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colors.primary,
                     foregroundColor: Colors.white,
@@ -1100,8 +1172,8 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
                         ? 'COMENZAR TRABAJO'
                         : 'ACEPTAR',
                     style: const TextStyle(
-                      fontSize:     AppSizes.fontL,
-                      fontWeight:   FontWeight.bold,
+                      fontSize: AppSizes.fontL,
+                      fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -1115,8 +1187,8 @@ class _ServiceRequestDetailDialog extends StatelessWidget {
 }
 
 class _InfoBox extends StatelessWidget {
-  final String   label;
-  final String   value;
+  final String label;
+  final String value;
   final IconData icon;
 
   const _InfoBox({
@@ -1130,7 +1202,7 @@ class _InfoBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingS),
       decoration: BoxDecoration(
-        color:        context.colors.primary.withOpacity(0.06),
+        color: context.colors.primary.withOpacity(0.06),
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
       ),
       child: Column(
@@ -1143,7 +1215,7 @@ class _InfoBox extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color:    context.colors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: AppSizes.fontS,
                 ),
               ),
@@ -1153,8 +1225,8 @@ class _InfoBox extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color:      context.colors.textPrimary,
-              fontSize:   AppSizes.fontM,
+              color: context.colors.textPrimary,
+              fontSize: AppSizes.fontM,
               fontWeight: FontWeight.w600,
             ),
             maxLines: 1,
@@ -1167,9 +1239,9 @@ class _InfoBox extends StatelessWidget {
 }
 
 class _ActionIcon extends StatelessWidget {
-  final IconData  icon;
-  final Color     color;
-  final String    tooltip;
+  final IconData icon;
+  final Color color;
+  final String tooltip;
   final VoidCallback onPressed;
 
   const _ActionIcon({
@@ -1184,11 +1256,11 @@ class _ActionIcon extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        width:  40,
+        width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color:        color.withOpacity(0.1),
-          shape:        BoxShape.circle,
+          color: color.withOpacity(0.1),
+          shape: BoxShape.circle,
         ),
         child: Tooltip(
           message: tooltip,
@@ -1209,17 +1281,17 @@ class _SpecialtyStatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingS,
-        vertical:   AppSizes.paddingXS,
+        vertical: AppSizes.paddingXS,
       ),
       decoration: BoxDecoration(
-        color:        _statusColor(context).withOpacity(0.15),
+        color: _statusColor(context).withOpacity(0.15),
         borderRadius: BorderRadius.circular(AppSizes.radiusXL),
       ),
       child: Text(
         _statusLabel(),
         style: TextStyle(
-          color:      _statusColor(context),
-          fontSize:   AppSizes.fontS,
+          color: _statusColor(context),
+          fontSize: AppSizes.fontS,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -1228,25 +1300,39 @@ class _SpecialtyStatusBadge extends StatelessWidget {
 
   String _statusLabel() {
     switch (status) {
-      case 'pending':     return 'Pendiente';
-      case 'accepted':    return 'Aceptado';
-      case 'in_progress': return 'En progreso';
-      case 'completed':   return 'Completado';
-      case 'cancelled':   return 'Cancelado';
-      case 'disputed':    return 'En disputa';
-      default:            return status;
+      case 'pending':
+        return 'Pendiente';
+      case 'accepted':
+        return 'Aceptado';
+      case 'in_progress':
+        return 'En progreso';
+      case 'completed':
+        return 'Completado';
+      case 'cancelled':
+        return 'Cancelado';
+      case 'disputed':
+        return 'En disputa';
+      default:
+        return status;
     }
   }
 
   Color _statusColor(BuildContext context) {
     switch (status) {
-      case 'pending':     return Colors.orange;
-      case 'accepted':    return context.colors.primary;
-      case 'in_progress': return Colors.deepOrange;
-      case 'completed':   return Colors.green;
-      case 'cancelled':   return context.colors.error;
-      case 'disputed':    return Colors.red.shade700;
-      default:            return context.colors.textSecondary;
+      case 'pending':
+        return Colors.orange;
+      case 'accepted':
+        return context.colors.primary;
+      case 'in_progress':
+        return Colors.deepOrange;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return context.colors.error;
+      case 'disputed':
+        return Colors.red.shade700;
+      default:
+        return context.colors.textSecondary;
     }
   }
 }
@@ -1262,10 +1348,10 @@ class _QuotePriceBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingS,
-        vertical:   AppSizes.paddingXS,
+        vertical: AppSizes.paddingXS,
       ),
       decoration: BoxDecoration(
-        color:        context.colors.primary.withOpacity(0.15),
+        color: context.colors.primary.withOpacity(0.15),
         borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
       child: Row(
@@ -1273,15 +1359,15 @@ class _QuotePriceBadge extends StatelessWidget {
         children: [
           Icon(
             Icons.payments_outlined,
-            size:  14,
+            size: 14,
             color: context.colors.primary,
           ),
           const SizedBox(width: 4),
           Text(
             'S/ ${value?.toStringAsFixed(2) ?? amount}',
             style: TextStyle(
-              color:      context.colors.primary,
-              fontSize:   AppSizes.fontS,
+              color: context.colors.primary,
+              fontSize: AppSizes.fontS,
               fontWeight: FontWeight.w700,
             ),
           ),

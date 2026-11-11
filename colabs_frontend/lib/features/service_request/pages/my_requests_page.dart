@@ -10,9 +10,11 @@ import '../../chat/models/conversation_model.dart';
 import '../bloc/service_request_bloc.dart';
 import '../bloc/service_request_event.dart';
 import '../bloc/service_request_state.dart';
+import '../models/request_status_filter.dart';
 import '../models/service_request_model.dart';
 import 'widgets/proposals_dialog.dart';
 import 'widgets/rating_bottom_sheet.dart';
+import 'widgets/request_status_filter_bar.dart';
 
 class MyRequestsPage extends StatefulWidget {
   const MyRequestsPage({super.key});
@@ -22,12 +24,12 @@ class MyRequestsPage extends StatefulWidget {
 }
 
 class _MyRequestsPageState extends State<MyRequestsPage> {
+  RequestStatusFilter _selectedFilter = RequestStatusFilter.pending;
+
   @override
   void initState() {
     super.initState();
-    context.read<ServiceRequestBloc>().add(
-      const MyRequestsLoadRequested(),
-    );
+    context.read<ServiceRequestBloc>().add(const MyRequestsLoadRequested());
     context.read<ChatBloc>().add(const ConversationsLoadRequested());
   }
 
@@ -38,106 +40,150 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: context.colors.surface,
-        elevation:       0,
+        elevation: 0,
         title: Text(
           'Mis solicitudes',
           style: TextStyle(
-            color:      context.colors.textPrimary,
-            fontSize:   AppSizes.fontXL,
+            color: context.colors.textPrimary,
+            fontSize: AppSizes.fontXL,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      body: BlocListener<ChatBloc, ChatState>(
-        listenWhen: (previous, current) =>
-            current is ChatInitial && previous is! ChatInitial,
-        listener: (context, state) {
-          if (context.mounted) {
-            context.read<ChatBloc>().add(const ConversationsLoadRequested());
-          }
-        },
-        child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
-          buildWhen: (previous, current) =>
-              current is ServiceRequestLoading ||
-              current is ServiceRequestSuccess ||
-              current is ServiceRequestError,
-          builder: (context, state) {
-          if (state is ServiceRequestLoading) {
-            return Center(
-              child: CircularProgressIndicator(color: context.colors.primary),
-            );
-          }
-
-          if (state is ServiceRequestError) {
-            return Center(
-              child: Text(
-                state.message,
-                style: TextStyle(color: context.colors.error),
-              ),
-            );
-          }
-
-          if (state is ServiceRequestSuccess) {
-            if (state.requests.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.assignment_outlined,
-                      color: context.colors.textSecondary,
-                      size:  48,
-                    ),
-                    const SizedBox(height: AppSizes.paddingM),
-                    Text(
-                      'No tienes solicitudes aún',
-                      style: TextStyle(color: context.colors.textSecondary),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, chatState) {
-                final conversations = chatState is ConversationsLoaded
-                    ? chatState.conversations
-                    : <ConversationModel>[];
-
-                return ListView.separated(
-                  padding: const EdgeInsets.all(AppSizes.paddingL),
-                  itemCount: state.requests.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSizes.paddingM),
-                  itemBuilder: (context, index) {
-                    final request = state.requests[index];
-                    return _ServiceRequestCard(
-                      request:      request,
-                      conversation: _findConversation(
-                                      conversations, request.id),
-                      rated:        state.ratedIds.contains(request.id),
-                      onChatTap: (conv) => Navigator.pushNamed(
-                        context,
-                        AppRouter.chat,
-                        arguments: {
-                          'conversation': conv,
-                          'post':         null,
-                        },
-                      ),
-                      onQuotesTap: request.status == 'pending' &&
-                              (request.proposalsCount ?? 0) > 0
-                          ? () => showProposalsDialog(context, request)
-                          : null,
-                    );
-                  },
-                );
+      body: Column(
+        children: [
+          RequestStatusFilterBar(
+            selected: _selectedFilter,
+            onSelected: (filter) => setState(() => _selectedFilter = filter),
+          ),
+          Expanded(
+            child: BlocListener<ChatBloc, ChatState>(
+              listenWhen: (previous, current) =>
+                  current is ChatInitial && previous is! ChatInitial,
+              listener: (context, state) {
+                if (context.mounted) {
+                  context.read<ChatBloc>().add(
+                    const ConversationsLoadRequested(),
+                  );
+                }
               },
-            );
-          }
+              child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
+                buildWhen: (previous, current) =>
+                    current is ServiceRequestLoading ||
+                    current is ServiceRequestSuccess ||
+                    current is ServiceRequestError,
+                builder: (context, state) {
+                  if (state is ServiceRequestLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: context.colors.primary,
+                      ),
+                    );
+                  }
 
-          return const SizedBox.shrink();
-        },
-        ),
+                  if (state is ServiceRequestError) {
+                    return Center(
+                      child: Text(
+                        state.message,
+                        style: TextStyle(color: context.colors.error),
+                      ),
+                    );
+                  }
+
+                  if (state is ServiceRequestSuccess) {
+                    if (state.requests.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.assignment_outlined,
+                              color: context.colors.textSecondary,
+                              size: 48,
+                            ),
+                            const SizedBox(height: AppSizes.paddingM),
+                            Text(
+                              'No tienes solicitudes aún',
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final filteredRequests = state.requests
+                        .where((r) => _selectedFilter.matches(r.status))
+                        .toList();
+
+                    if (filteredRequests.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.filter_alt_off_outlined,
+                              color: context.colors.textSecondary,
+                              size: 48,
+                            ),
+                            const SizedBox(height: AppSizes.paddingM),
+                            Text(
+                              'No tienes solicitudes en estado '
+                              '${_selectedFilter.label}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return BlocBuilder<ChatBloc, ChatState>(
+                      builder: (context, chatState) {
+                        final conversations = chatState is ConversationsLoaded
+                            ? chatState.conversations
+                            : <ConversationModel>[];
+
+                        return ListView.separated(
+                          padding: const EdgeInsets.all(AppSizes.paddingL),
+                          itemCount: filteredRequests.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: AppSizes.paddingM),
+                          itemBuilder: (context, index) {
+                            final request = filteredRequests[index];
+                            return _ServiceRequestCard(
+                              request: request,
+                              conversation: _findConversation(
+                                conversations,
+                                request.id,
+                              ),
+                              rated: state.ratedIds.contains(request.id),
+                              onChatTap: (conv) => Navigator.pushNamed(
+                                context,
+                                AppRouter.chat,
+                                arguments: {'conversation': conv, 'post': null},
+                              ),
+                              onQuotesTap:
+                                  request.status == 'pending' &&
+                                      (request.proposalsCount ?? 0) > 0
+                                  ? () => showProposalsDialog(context, request)
+                                  : null,
+                            );
+                          },
+                        );
+                      },
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -157,14 +203,14 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
 }
 
 class _ServiceRequestCard extends StatelessWidget {
-  final ServiceRequestModel  request;
-  final ConversationModel?   conversation;
+  final ServiceRequestModel request;
+  final ConversationModel? conversation;
   final void Function(ConversationModel) onChatTap;
-  final VoidCallback?        onQuotesTap;
+  final VoidCallback? onQuotesTap;
 
   /// true si el demandante ya calificó este servicio completado
   /// (si es true no se muestra el ícono de calificación).
-  final bool                 rated;
+  final bool rated;
 
   const _ServiceRequestCard({
     required this.request,
@@ -177,153 +223,154 @@ class _ServiceRequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onQuotesTap ??
+      onTap:
+          onQuotesTap ??
           () => Navigator.pushNamed(
-                context,
-                AppRouter.myRequestDetail,
-                arguments: request,
-              ),
+            context,
+            AppRouter.myRequestDetail,
+            arguments: request,
+          ),
       borderRadius: BorderRadius.circular(AppSizes.radiusM),
       child: Container(
-      padding: const EdgeInsets.all(AppSizes.paddingL),
-      decoration: BoxDecoration(
-        color:        context.colors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-        boxShadow: [
-          BoxShadow(
-            color:      context.colors.textSecondary.withOpacity(0.08),
-            blurRadius: 8,
-            offset:     const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.build_outlined,
-                color: context.colors.primary,
-                size:  20,
+        padding: const EdgeInsets.all(AppSizes.paddingL),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          boxShadow: [
+            BoxShadow(
+              color: context.colors.textSecondary.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.build_outlined,
+                  color: context.colors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSizes.paddingS),
+                Expanded(
+                  child: Text(
+                    request.occupation.name,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
+                      fontSize: AppSizes.fontL,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (request.status == 'pending' &&
+                    request.proposalsCount != null &&
+                    request.proposalsCount! > 0)
+                  _ProposalsBadge(count: request.proposalsCount!),
+                const SizedBox(width: AppSizes.paddingXS),
+                _StatusBadge(status: request.status),
+                if (request.acceptedProposal != null) ...[
+                  const SizedBox(width: AppSizes.paddingXS),
+                  _PriceBadge(amount: request.acceptedProposal!.amount),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppSizes.paddingS),
+
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  color: context.colors.textSecondary,
+                  size: 16,
+                ),
+                const SizedBox(width: AppSizes.paddingXS),
+                Expanded(
+                  child: Text(
+                    request.direction,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
+                      fontSize: AppSizes.fontM,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSizes.paddingXS),
+
+            Text(
+              request.description,
+              style: TextStyle(
+                color: context.colors.textPrimary,
+                fontSize: AppSizes.fontM,
               ),
-              const SizedBox(width: AppSizes.paddingS),
-                  Expanded(
-                    child: Text(
-                      request.occupation.name,
-                      style: TextStyle(
-                        color:      context.colors.textPrimary,
-                        fontSize:   AppSizes.fontL,
-                        fontWeight: FontWeight.w600,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: AppSizes.paddingM),
+
+            Row(
+              children: [
+                Icon(
+                  Icons.access_time,
+                  color: context.colors.textSecondary,
+                  size: 14,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDate(request.createdAt),
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
+                    fontSize: AppSizes.fontS,
+                  ),
+                ),
+                const Spacer(),
+
+                // Completada sin calificar: estrella que abre el BottomSheet
+                // de calificación. Canal de chat cerrado en completadas.
+                // Completada ya calificada: sin ícono (estado reactivo vía BLoC).
+                if (request.status == 'completed' && !rated)
+                  GestureDetector(
+                    onTap: () => showRatingBottomSheet(context, request),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSizes.paddingS),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                      ),
+                      child: const Icon(
+                        Icons.star_outline,
+                        color: Colors.amber,
+                        size: 18,
+                      ),
+                    ),
+                  )
+                else if (request.status != 'completed' &&
+                    conversation != null &&
+                    request.acceptedProposal != null)
+                  GestureDetector(
+                    onTap: () => onChatTap(conversation!),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSizes.paddingS),
+                      decoration: BoxDecoration(
+                        color: context.colors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                      ),
+                      child: Icon(
+                        Icons.chat_bubble_outline,
+                        color: context.colors.primary,
+                        size: 18,
                       ),
                     ),
                   ),
-                  if (request.status == 'pending' &&
-                      request.proposalsCount != null &&
-                      request.proposalsCount! > 0)
-                    _ProposalsBadge(count: request.proposalsCount!),
-                  const SizedBox(width: AppSizes.paddingXS),
-                  _StatusBadge(status: request.status),
-                  if (request.acceptedProposal != null) ...[
-                    const SizedBox(width: AppSizes.paddingXS),
-                    _PriceBadge(amount: request.acceptedProposal!.amount),
-                  ],
-                ],
-              ),
-              const SizedBox(height: AppSizes.paddingS),
-
-          Row(
-            children: [
-              Icon(
-                Icons.location_on_outlined,
-                color: context.colors.textSecondary,
-                size:  16,
-              ),
-              const SizedBox(width: AppSizes.paddingXS),
-              Expanded(
-                child: Text(
-                  request.direction,
-                  style: TextStyle(
-                    color:    context.colors.textSecondary,
-                    fontSize: AppSizes.fontM,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.paddingXS),
-
-          Text(
-            request.description,
-            style: TextStyle(
-              color:    context.colors.textPrimary,
-              fontSize: AppSizes.fontM,
+              ],
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: AppSizes.paddingM),
-
-          Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                color: context.colors.textSecondary,
-                size:  14,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                _formatDate(request.createdAt),
-                style: TextStyle(
-                  color:    context.colors.textSecondary,
-                  fontSize: AppSizes.fontS,
-                ),
-              ),
-              const Spacer(),
-
-              // Completada sin calificar: estrella que abre el BottomSheet
-              // de calificación. Canal de chat cerrado en completadas.
-              // Completada ya calificada: sin ícono (estado reactivo vía BLoC).
-              if (request.status == 'completed' && !rated)
-                GestureDetector(
-                  onTap: () => showRatingBottomSheet(context, request),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSizes.paddingS),
-                    decoration: BoxDecoration(
-                      color:        Colors.amber.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppSizes.radiusS),
-                    ),
-                    child: const Icon(
-                      Icons.star_outline,
-                      color: Colors.amber,
-                      size:  18,
-                    ),
-                  ),
-                )
-              else if (request.status != 'completed' &&
-                  conversation != null &&
-                  request.acceptedProposal != null)
-                GestureDetector(
-                  onTap: () => onChatTap(conversation!),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSizes.paddingS),
-                    decoration: BoxDecoration(
-                      color:        context.colors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppSizes.radiusS),
-                    ),
-                    child: Icon(
-                      Icons.chat_bubble_outline,
-                      color: context.colors.primary,
-                      size:  18,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -346,17 +393,17 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingS,
-        vertical:   AppSizes.paddingXS,
+        vertical: AppSizes.paddingXS,
       ),
       decoration: BoxDecoration(
-        color:        _statusColor(context).withOpacity(0.15),
+        color: _statusColor(context).withOpacity(0.15),
         borderRadius: BorderRadius.circular(AppSizes.radiusXL),
       ),
       child: Text(
         _statusLabel(),
         style: TextStyle(
-          color:      _statusColor(context),
-          fontSize:   AppSizes.fontS,
+          color: _statusColor(context),
+          fontSize: AppSizes.fontS,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -365,23 +412,35 @@ class _StatusBadge extends StatelessWidget {
 
   String _statusLabel() {
     switch (status) {
-      case 'pending':     return 'Pendiente';
-      case 'accepted':    return 'Aceptado';
-      case 'in_progress': return 'En progreso';
-      case 'completed':   return 'Completado';
-      case 'cancelled':   return 'Cancelado';
-      default:            return status;
+      case 'pending':
+        return 'Pendiente';
+      case 'accepted':
+        return 'Aceptado';
+      case 'in_progress':
+        return 'En progreso';
+      case 'completed':
+        return 'Completado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return status;
     }
   }
 
   Color _statusColor(BuildContext context) {
     switch (status) {
-      case 'pending':     return Colors.orange;
-      case 'accepted':    return Colors.green;
-      case 'in_progress': return Colors.deepOrange;
-      case 'completed':   return Colors.green;
-      case 'cancelled':   return context.colors.error;
-      default:            return context.colors.textSecondary;
+      case 'pending':
+        return Colors.orange;
+      case 'accepted':
+        return Colors.green;
+      case 'in_progress':
+        return Colors.deepOrange;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return context.colors.error;
+      default:
+        return context.colors.textSecondary;
     }
   }
 }
@@ -396,10 +455,10 @@ class _ProposalsBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingS,
-        vertical:   AppSizes.paddingXS,
+        vertical: AppSizes.paddingXS,
       ),
       decoration: BoxDecoration(
-        color:        context.colors.primary.withOpacity(0.1),
+        color: context.colors.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(AppSizes.radiusXL),
       ),
       child: Row(
@@ -407,15 +466,15 @@ class _ProposalsBadge extends StatelessWidget {
         children: [
           Icon(
             Icons.request_quote_outlined,
-            size:  14,
+            size: 14,
             color: context.colors.primary,
           ),
           const SizedBox(width: 4),
           Text(
             count == 1 ? '1 cotización' : '$count cotizaciones',
             style: TextStyle(
-              color:      context.colors.primary,
-              fontSize:   AppSizes.fontS,
+              color: context.colors.primary,
+              fontSize: AppSizes.fontS,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -435,10 +494,10 @@ class _PriceBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.paddingS,
-        vertical:   AppSizes.paddingXS,
+        vertical: AppSizes.paddingXS,
       ),
       decoration: BoxDecoration(
-        color:        context.colors.primary.withOpacity(0.15),
+        color: context.colors.primary.withOpacity(0.15),
         borderRadius: BorderRadius.circular(AppSizes.radiusXL),
       ),
       child: Row(
@@ -446,15 +505,15 @@ class _PriceBadge extends StatelessWidget {
         children: [
           Icon(
             Icons.payments_outlined,
-            size:  14,
+            size: 14,
             color: context.colors.primary,
           ),
           const SizedBox(width: 4),
           Text(
             'S/ ${_parseCurrency(amount)}',
             style: TextStyle(
-              color:      context.colors.primary,
-              fontSize:   AppSizes.fontS,
+              color: context.colors.primary,
+              fontSize: AppSizes.fontS,
               fontWeight: FontWeight.w700,
             ),
           ),

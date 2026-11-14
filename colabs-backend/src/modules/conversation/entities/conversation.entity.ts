@@ -30,7 +30,7 @@ export class Conversation extends BaseEntity {
   serviceRequestId?: string;
 
 
-  @Column({ name: 'expires_at', nullable: true })
+  @Column({ name: 'expires_at', nullable: true, type: 'timestamptz' })
   expiresAt?: Date;
 
 

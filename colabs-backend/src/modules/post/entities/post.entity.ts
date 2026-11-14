@@ -27,7 +27,7 @@ export class Post extends BaseEntity {
   @Column({ type: 'jsonb', nullable: true })
   media?: string[];
 
-  @CreateDateColumn({ name: 'creation_date' })
+  @CreateDateColumn({ name: 'creation_date', type: 'timestamptz' })
   creationDate!: Date;
 
   @ManyToOne(() => ProfileColab, (profile) => profile.posts)

@@ -22,7 +22,7 @@ export class PostComment extends BaseEntity {
   @Column({ nullable: true })
   comment?: string;
 
-  @CreateDateColumn({ name: 'creation_date' })
+  @CreateDateColumn({ name: 'creation_date', type: 'timestamptz' })
   creationDate!: Date;
 
   @ManyToOne(() => User)

@@ -37,13 +37,13 @@ export class ServiceRequest extends BaseEntity {
   @Column({ name: 'profile_colab_id', nullable: true })
   profileColabId?: string;
 
-  @CreateDateColumn({ name: 'creation_date' })
+  @CreateDateColumn({ name: 'creation_date', type: 'timestamptz' })
   creationDate!: Date;
 
-  @Column({ name: 'acceptance_date', nullable: true })
+  @Column({ name: 'acceptance_date', type: 'timestamptz', nullable: true })
   acceptanceDate?: Date;
 
-  @Column({ name: 'completion_date', nullable: true })
+  @Column({ name: 'completion_date', type: 'timestamptz', nullable: true })
   completionDate?: Date;
 
   @ManyToOne(() => User)

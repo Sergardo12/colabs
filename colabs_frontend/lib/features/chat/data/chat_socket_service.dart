@@ -1,9 +1,10 @@
+import 'package:colabs_frontend/core/network/api_client.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../models/message_model.dart';
 
 class ChatSocketService {
   IO.Socket? _socket;
-  final String _baseUrl = 'http://10.0.2.2:8080';
+  final String _baseUrl = ApiClient.host;
 
   /// Conecta al WebSocket con el JWT del usuario
   void connect(String token) {

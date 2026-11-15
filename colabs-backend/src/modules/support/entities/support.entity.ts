@@ -22,7 +22,7 @@ export class Support extends BaseEntity {
   @Column({ nullable: true })
   description?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({type: 'timestamptz'})
   date!: Date;
 
   @ManyToOne(() => User)

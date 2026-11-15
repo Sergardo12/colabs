@@ -26,7 +26,7 @@ export class CommentRequest extends BaseEntity {
   @Column({ type: 'int' })
   rating!: number;
 
-  @CreateDateColumn({ name: 'creation_date' })
+  @CreateDateColumn({ name: 'creation_date', type: 'timestamptz' })
   creationDate!: Date;
 
   @ManyToOne(() => User)

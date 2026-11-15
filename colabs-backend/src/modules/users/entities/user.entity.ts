@@ -35,7 +35,7 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   gender!: string;
 
-  @CreateDateColumn({ name: 'registration_date' })
+  @CreateDateColumn({ name: 'registration_date', type: 'timestamptz' })
   registrationDate!: Date;
 
   @OneToMany(() => UserProvider, (provider) => provider.user)

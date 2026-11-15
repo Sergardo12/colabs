@@ -44,7 +44,7 @@ export class Notification extends BaseEntity {
   @Column({ type: 'jsonb', nullable: true })
   data?: Record<string, any>;
 
-  @CreateDateColumn({ name: 'creation_date' })
+  @CreateDateColumn({ name: 'creation_date', type: 'timestamptz' })
   creationDate!: Date;
 
   @ManyToOne(() => User)

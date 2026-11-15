@@ -5,7 +5,7 @@ services:
     image: postgis/postgis:15-3.5-alpine
     container_name: colabs_db
     environment:
-      PGTZ: America/Lima
+      PGTZ: UTC
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_DB}

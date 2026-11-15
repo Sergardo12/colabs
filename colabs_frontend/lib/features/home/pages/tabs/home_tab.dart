@@ -12,6 +12,8 @@ import '../../../profile/bloc/profile_bloc.dart';
 import '../../../profile/bloc/profile_state.dart';
 import '../widgets/post_card.dart';
 import '../widgets/occupation_carousel.dart';
+import '../../../profile/bloc/profile_bloc.dart';
+import '../../../profile/bloc/profile_state.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -45,6 +47,9 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    final profileState = context.watch<ProfileBloc>().state;
+    final currentUserId = profileState is ProfileSuccess ? profileState.user.id : null;
+
     return SafeArea(
       child: Column(
         children: [
@@ -125,6 +130,7 @@ class _HomeTabState extends State<HomeTab> {
                           final post = state.posts[index - 1];
                           return PostCard(
                             post: post,
+                            currentUserId: currentUserId,
                             onToggleLike: () => context
                                 .read<HomeBloc>()
                                 .add(PostLikeToggled(post.id)),

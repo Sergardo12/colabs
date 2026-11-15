@@ -8,11 +8,14 @@ import '../../../chat/bloc/chat_event.dart';
 
 class PostCard extends StatelessWidget {
   final PostModel post;
+  final String? currentUserId;
 
   /// Callback opcional para alternar el like — el feed lo conecta al HomeBloc
   final VoidCallback? onToggleLike;
 
-  const PostCard({super.key, required this.post, this.onToggleLike});
+  const PostCard({super.key, required this.post, this.onToggleLike, this.currentUserId});
+  bool get _isOwnPost =>
+      currentUserId != null && post.author.id == currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +85,7 @@ class PostCard extends StatelessWidget {
                   ),
                 ),
 
+                if(!_isOwnPost)
                 // Botón consultar
                 OutlinedButton(
                   onPressed: () {

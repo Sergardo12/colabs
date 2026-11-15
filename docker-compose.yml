@@ -44,7 +44,7 @@ services:
       - /app/node_modules
     command: yarn start:dev
     environment:
-      TZ: America/Lima
+      TZ: UTC
       NODE_ENV: ${NODE_ENV}
       PORT: ${BACKEND_PORT}
       DB_HOST: db

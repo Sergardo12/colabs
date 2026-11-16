@@ -133,6 +133,29 @@ class ServiceRequestService {
     );
   }
 
+  /// Cancela un servicio aceptado (demandante dueño o colaborador ganador)
+  Future<void> cancelRequest({
+    required String token,
+    required String serviceRequestId,
+  }) async {
+    await _dio.patch(
+      '/service-requests/$serviceRequestId/cancel',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  /// Vuelve a abrir un servicio cancelado creando uno nuevo en pending
+  Future<ServiceRequestModel> reloadRequest({
+    required String token,
+    required String serviceRequestId,
+  }) async {
+    final response = await _dio.post(
+      '/service-requests/$serviceRequestId/reload',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return ServiceRequestModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   /// Califica un servicio completado (el comentario es opcional)
   Future<void> submitReview({
     required String token,

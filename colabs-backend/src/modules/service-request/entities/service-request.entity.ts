@@ -7,6 +7,7 @@ import {
   OneToMany,
   OneToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Occupation } from '../../occupation/entities/occupation.entity';
@@ -36,6 +37,10 @@ export class ServiceRequest extends BaseEntity {
 
   @Column({ name: 'profile_colab_id', nullable: true })
   profileColabId?: string;
+
+  @Index('UQ_service_requests_reopened_from_id', { unique: true })
+  @Column({ name: 'reopened_from_id', type: 'uuid', nullable: true })
+  reopenedFromId?: string;
 
   @CreateDateColumn({ name: 'creation_date', type: 'timestamptz' })
   creationDate!: Date;

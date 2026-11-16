@@ -111,3 +111,37 @@ class SubmitReviewRequested extends ServiceRequestEvent {
   @override
   List<Object?> get props => [serviceRequestId, rating, comment];
 }
+
+class CancelServiceRequestRequested extends ServiceRequestEvent {
+  final String serviceRequestId;
+
+  /// true cuando la acción se origina en HEAD 4 (colaborador), para refrescar
+  /// también la lista de solicitudes cercanas tras cancelar.
+  final bool refreshNearby;
+
+  const CancelServiceRequestRequested({
+    required this.serviceRequestId,
+    this.refreshNearby = false,
+  });
+
+  @override
+  List<Object?> get props => [serviceRequestId, refreshNearby];
+}
+
+class ReloadServiceRequestRequested extends ServiceRequestEvent {
+  final String serviceRequestId;
+
+  const ReloadServiceRequestRequested({required this.serviceRequestId});
+
+  @override
+  List<Object?> get props => [serviceRequestId];
+}
+
+class NearbyRequestRejected extends ServiceRequestEvent {
+  final String requestId;
+
+  const NearbyRequestRejected({required this.requestId});
+
+  @override
+  List<Object?> get props => [requestId];
+}

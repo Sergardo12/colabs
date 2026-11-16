@@ -12,8 +12,10 @@ import '../bloc/service_request_event.dart';
 import '../bloc/service_request_state.dart';
 import '../models/request_status_filter.dart';
 import '../models/service_request_model.dart';
+import 'widgets/cancel_service_dialog.dart';
 import 'widgets/proposals_dialog.dart';
 import 'widgets/rating_bottom_sheet.dart';
+import 'widgets/reload_service_dialog.dart';
 import 'widgets/request_status_filter_bar.dart';
 
 class MyRequestsPage extends StatefulWidget {
@@ -25,6 +27,7 @@ class MyRequestsPage extends StatefulWidget {
 
 class _MyRequestsPageState extends State<MyRequestsPage> {
   RequestStatusFilter _selectedFilter = RequestStatusFilter.pending;
+  bool _reloadInProgress = false;
 
   @override
   void initState() {
@@ -35,155 +38,234 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: context.colors.surface,
-        elevation: 0,
-        title: Text(
-          'Mis solicitudes',
-          style: TextStyle(
-            color: context.colors.textPrimary,
-            fontSize: AppSizes.fontXL,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          RequestStatusFilterBar(
-            selected: _selectedFilter,
-            onSelected: (filter) => setState(() => _selectedFilter = filter),
-          ),
-          Expanded(
-            child: BlocListener<ChatBloc, ChatState>(
-              listenWhen: (previous, current) =>
-                  current is ChatInitial && previous is! ChatInitial,
-              listener: (context, state) {
-                if (context.mounted) {
-                  context.read<ChatBloc>().add(
-                    const ConversationsLoadRequested(),
-                  );
-                }
-              },
-              child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
-                buildWhen: (previous, current) =>
-                    current is ServiceRequestLoading ||
-                    current is ServiceRequestSuccess ||
-                    current is ServiceRequestError,
-                builder: (context, state) {
-                  if (state is ServiceRequestLoading) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: context.colors.primary,
-                      ),
-                    );
-                  }
-
-                  if (state is ServiceRequestError) {
-                    return Center(
-                      child: Text(
-                        state.message,
-                        style: TextStyle(color: context.colors.error),
-                      ),
-                    );
-                  }
-
-                  if (state is ServiceRequestSuccess) {
-                    if (state.requests.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.assignment_outlined,
-                              color: context.colors.textSecondary,
-                              size: 48,
-                            ),
-                            const SizedBox(height: AppSizes.paddingM),
-                            Text(
-                              'No tienes solicitudes aún',
-                              style: TextStyle(
-                                color: context.colors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    final filteredRequests = state.requests
-                        .where((r) => _selectedFilter.matches(r.status))
-                        .toList();
-
-                    if (filteredRequests.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.filter_alt_off_outlined,
-                              color: context.colors.textSecondary,
-                              size: 48,
-                            ),
-                            const SizedBox(height: AppSizes.paddingM),
-                            Text(
-                              'No tienes solicitudes en estado '
-                              '${_selectedFilter.label}',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: context.colors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return BlocBuilder<ChatBloc, ChatState>(
-                      builder: (context, chatState) {
-                        final conversations = chatState is ConversationsLoaded
-                            ? chatState.conversations
-                            : <ConversationModel>[];
-
-                        return ListView.separated(
-                          padding: const EdgeInsets.all(AppSizes.paddingL),
-                          itemCount: filteredRequests.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: AppSizes.paddingM),
-                          itemBuilder: (context, index) {
-                            final request = filteredRequests[index];
-                            return _ServiceRequestCard(
-                              request: request,
-                              conversation: _findConversation(
-                                conversations,
-                                request.id,
-                              ),
-                              rated: state.ratedIds.contains(request.id),
-                              onChatTap: (conv) => Navigator.pushNamed(
-                                context,
-                                AppRouter.chat,
-                                arguments: {'conversation': conv, 'post': null},
-                              ),
-                              onQuotesTap:
-                                  request.status == 'pending' &&
-                                      (request.proposalsCount ?? 0) > 0
-                                  ? () => showProposalsDialog(context, request)
-                                  : null,
-                            );
-                          },
-                        );
-                      },
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              ),
+    return BlocListener<ServiceRequestBloc, ServiceRequestState>(
+      listenWhen: (previous, current) =>
+          current is CancelServiceRequestSuccess ||
+          current is CancelServiceRequestError ||
+          current is ReloadServiceRequestSuccess ||
+          current is ReloadServiceRequestError,
+      listener: (context, state) {
+        final messenger = ScaffoldMessenger.of(context);
+        if (state is CancelServiceRequestSuccess) {
+          setState(() => _selectedFilter = RequestStatusFilter.cancelled);
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(const SnackBar(content: Text('Servicio cancelado')));
+        } else if (state is CancelServiceRequestError) {
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(state.message)));
+        } else if (state is ReloadServiceRequestSuccess) {
+          setState(() {
+            _selectedFilter = RequestStatusFilter.pending;
+            _reloadInProgress = false;
+          });
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text('Servicio vuelto a abrir')),
+            );
+        } else if (state is ReloadServiceRequestError) {
+          setState(() => _reloadInProgress = false);
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      child: Scaffold(
+        backgroundColor: context.colors.background,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: context.colors.surface,
+          elevation: 0,
+          title: Text(
+            'Mis solicitudes',
+            style: TextStyle(
+              color: context.colors.textPrimary,
+              fontSize: AppSizes.fontXL,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ],
+        ),
+        body: Column(
+          children: [
+            RequestStatusFilterBar(
+              selected: _selectedFilter,
+              onSelected: (filter) => setState(() => _selectedFilter = filter),
+            ),
+            Expanded(
+              child: BlocListener<ChatBloc, ChatState>(
+                listenWhen: (previous, current) =>
+                    current is ChatInitial && previous is! ChatInitial,
+                listener: (context, state) {
+                  if (context.mounted) {
+                    context.read<ChatBloc>().add(
+                      const ConversationsLoadRequested(),
+                    );
+                  }
+                },
+                child: BlocBuilder<ServiceRequestBloc, ServiceRequestState>(
+                  buildWhen: (previous, current) =>
+                      current is ServiceRequestLoading ||
+                      current is ServiceRequestSuccess ||
+                      current is ServiceRequestError,
+                  builder: (context, state) {
+                    if (state is ServiceRequestLoading) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: context.colors.primary,
+                        ),
+                      );
+                    }
+
+                    if (state is ServiceRequestError) {
+                      return Center(
+                        child: Text(
+                          state.message,
+                          style: TextStyle(color: context.colors.error),
+                        ),
+                      );
+                    }
+
+                    if (state is ServiceRequestSuccess) {
+                      if (state.requests.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.assignment_outlined,
+                                color: context.colors.textSecondary,
+                                size: 48,
+                              ),
+                              const SizedBox(height: AppSizes.paddingM),
+                              Text(
+                                'No tienes solicitudes aún',
+                                style: TextStyle(
+                                  color: context.colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      final filteredRequests = state.requests
+                          .where((r) => _selectedFilter.matches(r.status))
+                          .toList();
+
+                      if (filteredRequests.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.filter_alt_off_outlined,
+                                color: context.colors.textSecondary,
+                                size: 48,
+                              ),
+                              const SizedBox(height: AppSizes.paddingM),
+                              Text(
+                                'No tienes solicitudes en estado '
+                                '${_selectedFilter.label}',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: context.colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return BlocBuilder<ChatBloc, ChatState>(
+                        builder: (context, chatState) {
+                          final conversations = chatState is ConversationsLoaded
+                              ? chatState.conversations
+                              : <ConversationModel>[];
+
+                          return ListView.separated(
+                            padding: const EdgeInsets.all(AppSizes.paddingL),
+                            itemCount: filteredRequests.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: AppSizes.paddingM),
+                            itemBuilder: (context, index) {
+                              final request = filteredRequests[index];
+                              return _ServiceRequestCard(
+                                request: request,
+                                conversation: _findConversation(
+                                  conversations,
+                                  request.id,
+                                ),
+                                rated: state.ratedIds.contains(request.id),
+                                onChatTap: (conv) => Navigator.pushNamed(
+                                  context,
+                                  AppRouter.chat,
+                                  arguments: {
+                                    'conversation': conv,
+                                    'post': null,
+                                  },
+                                ),
+                                onQuotesTap:
+                                    request.status == 'pending' &&
+                                        (request.proposalsCount ?? 0) > 0
+                                    ? () =>
+                                          showProposalsDialog(context, request)
+                                    : null,
+                                onCancelTap: request.status == 'accepted'
+                                    ? () async {
+                                        final confirmed =
+                                            await showCancelServiceDialog(
+                                              context,
+                                            );
+                                        if (confirmed && context.mounted) {
+                                          context
+                                              .read<ServiceRequestBloc>()
+                                              .add(
+                                                CancelServiceRequestRequested(
+                                                  serviceRequestId: request.id,
+                                                ),
+                                              );
+                                        }
+                                      }
+                                    : null,
+                                onReloadTap:
+                                    request.status == 'cancelled' &&
+                                        !request.hasBeenReopened &&
+                                        !_reloadInProgress
+                                    ? () async {
+                                        final confirmed =
+                                            await showReloadServiceDialog(
+                                              context,
+                                            );
+                                        if (confirmed && context.mounted) {
+                                          setState(
+                                            () => _reloadInProgress = true,
+                                          );
+                                          context
+                                              .read<ServiceRequestBloc>()
+                                              .add(
+                                                ReloadServiceRequestRequested(
+                                                  serviceRequestId: request.id,
+                                                ),
+                                              );
+                                        }
+                                      }
+                                    : null,
+                              );
+                            },
+                          );
+                        },
+                      );
+                    }
+
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -207,6 +289,8 @@ class _ServiceRequestCard extends StatelessWidget {
   final ConversationModel? conversation;
   final void Function(ConversationModel) onChatTap;
   final VoidCallback? onQuotesTap;
+  final VoidCallback? onCancelTap;
+  final VoidCallback? onReloadTap;
 
   /// true si el demandante ya calificó este servicio completado
   /// (si es true no se muestra el ícono de calificación).
@@ -217,6 +301,8 @@ class _ServiceRequestCard extends StatelessWidget {
     required this.conversation,
     required this.onChatTap,
     this.onQuotesTap,
+    this.onCancelTap,
+    this.onReloadTap,
     this.rated = false,
   });
 
@@ -330,43 +416,82 @@ class _ServiceRequestCard extends StatelessWidget {
                 ),
                 const Spacer(),
 
+                // Cancelado: botón Reload para volver a abrir el servicio.
                 // Completada sin calificar: estrella que abre el BottomSheet
                 // de calificación. Canal de chat cerrado en completadas.
                 // Completada ya calificada: sin ícono (estado reactivo vía BLoC).
-                if (request.status == 'completed' && !rated)
-                  GestureDetector(
-                    onTap: () => showRatingBottomSheet(context, request),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSizes.paddingS),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppSizes.radiusS),
-                      ),
-                      child: const Icon(
-                        Icons.star_outline,
-                        color: Colors.amber,
-                        size: 18,
-                      ),
-                    ),
-                  )
-                else if (request.status != 'completed' &&
-                    conversation != null &&
-                    request.acceptedProposal != null)
-                  GestureDetector(
-                    onTap: () => onChatTap(conversation!),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSizes.paddingS),
-                      decoration: BoxDecoration(
-                        color: context.colors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppSizes.radiusS),
-                      ),
-                      child: Icon(
-                        Icons.chat_bubble_outline,
-                        color: context.colors.primary,
-                        size: 18,
+                if (request.status == 'cancelled') ...[
+                  if (onReloadTap != null)
+                    GestureDetector(
+                      onTap: onReloadTap,
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSizes.paddingS),
+                        decoration: BoxDecoration(
+                          color: context.colors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                        ),
+                        child: Icon(
+                          Icons.refresh,
+                          color: context.colors.primary,
+                          size: 18,
+                        ),
                       ),
                     ),
-                  ),
+                ] else if (request.status == 'completed') ...[
+                  if (!rated)
+                    GestureDetector(
+                      onTap: () => showRatingBottomSheet(context, request),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSizes.paddingS),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                        ),
+                        child: const Icon(
+                          Icons.star_outline,
+                          color: Colors.amber,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                ] else ...[
+                  if (conversation != null &&
+                      request.acceptedProposal != null) ...[
+                    GestureDetector(
+                      onTap: () => onChatTap(conversation!),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSizes.paddingS),
+                        decoration: BoxDecoration(
+                          color: context.colors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                        ),
+                        child: Icon(
+                          Icons.chat_bubble_outline,
+                          color: context.colors.primary,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (request.status == 'accepted' && onCancelTap != null) ...[
+                    const SizedBox(width: AppSizes.paddingS),
+                    GestureDetector(
+                      onTap: onCancelTap,
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSizes.paddingS),
+                        decoration: BoxDecoration(
+                          color: context.colors.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppSizes.radiusS),
+                        ),
+                        child: Icon(
+                          Icons.cancel_outlined,
+                          color: context.colors.error,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ],
             ),
           ],

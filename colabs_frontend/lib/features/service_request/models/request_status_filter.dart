@@ -2,7 +2,8 @@ enum RequestStatusFilter {
   pending('Pendiente', 'pending'),
   accepted('Aceptado', 'accepted'),
   inProgress('En progreso', 'in_progress'),
-  completed('Completado', 'completed');
+  completed('Completado', 'completed'),
+  cancelled('Cancelado', 'cancelled');
 
   const RequestStatusFilter(this.label, this.apiValue);
 

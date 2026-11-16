@@ -11,6 +11,7 @@ import '../../../service_request/bloc/service_request_event.dart';
 import '../../../service_request/bloc/service_request_state.dart';
 import '../../../service_request/models/request_status_filter.dart';
 import '../../../service_request/models/service_request_model.dart';
+import '../../../service_request/pages/widgets/cancel_service_dialog.dart';
 import '../../../service_request/pages/widgets/request_status_filter_bar.dart';
 import '../../../chat/bloc/chat_bloc.dart';
 import '../../../chat/bloc/chat_event.dart';
@@ -182,7 +183,9 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
                     current is StartWorkSuccess ||
                     current is StartWorkError ||
                     current is CompleteWorkSuccess ||
-                    current is CompleteWorkError,
+                    current is CompleteWorkError ||
+                    current is CancelServiceRequestSuccess ||
+                    current is CancelServiceRequestError,
                 listener: (context, state) {
                   if (state is StartWorkSuccess) {
                     ScaffoldMessenger.of(context)
@@ -210,6 +213,16 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
                       if (mounted) _showCompletionSuccessDialog();
                     });
                   } else if (state is CompleteWorkError) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(SnackBar(content: Text(state.message)));
+                  } else if (state is CancelServiceRequestSuccess) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        const SnackBar(content: Text('Servicio cancelado')),
+                      );
+                  } else if (state is CancelServiceRequestError) {
                     ScaffoldMessenger.of(context)
                       ..hideCurrentSnackBar()
                       ..showSnackBar(SnackBar(content: Text(state.message)));
@@ -418,6 +431,32 @@ class _SpecialtyRequestsTabState extends State<SpecialtyRequestsTab> {
                                             'post': null,
                                           },
                                         ),
+                                  onCancel:
+                                      nearbyRequest.status == 'accepted'
+                                      ? () async {
+                                          final confirmed =
+                                              await showCancelServiceDialog(
+                                                context,
+                                              );
+                                          if (confirmed && context.mounted) {
+                                            context
+                                                .read<ServiceRequestBloc>()
+                                                .add(
+                                                  CancelServiceRequestRequested(
+                                                    serviceRequestId:
+                                                        nearbyRequest.id,
+                                                    refreshNearby: true,
+                                                  ),
+                                                );
+                                          }
+                                        }
+                                      : null,
+                                  onReject: () =>
+                                      context.read<ServiceRequestBloc>().add(
+                                        NearbyRequestRejected(
+                                          requestId: nearbyRequest.id,
+                                        ),
+                                      ),
                                 ),
                               );
                             },
@@ -567,11 +606,15 @@ class _SpecialtyRequestCard extends StatelessWidget {
   final ServiceRequestModel request;
   final VoidCallback onAccept;
   final VoidCallback? onChatTap;
+  final VoidCallback? onCancel;
+  final VoidCallback onReject;
 
   const _SpecialtyRequestCard({
     required this.request,
     required this.onAccept,
+    required this.onReject,
     this.onChatTap,
+    this.onCancel,
   });
 
   @override
@@ -665,6 +708,15 @@ class _SpecialtyRequestCard extends StatelessWidget {
                         tooltip: 'Abrir chat',
                         onPressed: onChatTap!,
                       ),
+                    if (request.status == 'accepted' && onCancel != null) ...[
+                      const SizedBox(height: AppSizes.paddingXS),
+                      _ActionIcon(
+                        icon: Icons.cancel_outlined,
+                        color: context.colors.error,
+                        tooltip: 'Cancelar servicio',
+                        onPressed: onCancel!,
+                      ),
+                    ],
                   ],
                 )
               else
@@ -690,7 +742,7 @@ class _SpecialtyRequestCard extends StatelessWidget {
                       icon: Icons.close,
                       color: context.colors.error,
                       tooltip: 'Rechazar',
-                      onPressed: () {},
+                      onPressed: onReject,
                     ),
                   ],
                 ),

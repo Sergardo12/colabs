@@ -1,15 +1,19 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../data/service_request_repository.dart';
+import '../models/service_request_model.dart';
 import 'service_request_event.dart';
 import 'service_request_state.dart';
 
-class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> {
+class ServiceRequestBloc
+    extends Bloc<ServiceRequestEvent, ServiceRequestState> {
   final ServiceRequestRepository _repository;
+  List<ServiceRequestModel> _nearbyRequestsCache = const [];
+  final Set<String> _pendingRejectedIds = {};
 
   ServiceRequestBloc({required ServiceRequestRepository repository})
-      : _repository = repository,
-        super(ServiceRequestInitial()) {
+    : _repository = repository,
+      super(ServiceRequestInitial()) {
     on<MyRequestsLoadRequested>(_onMyRequestsLoadRequested);
     on<NearbyRequestsLoadRequested>(_onNearbyRequestsLoadRequested);
     on<NearbyRequestsLocationUnavailable>(_onNearbyRequestsLocationUnavailable);
@@ -21,6 +25,9 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     on<StartWorkRequested>(_onStartWorkRequested);
     on<CompleteWorkRequested>(_onCompleteWorkRequested);
     on<SubmitReviewRequested>(_onSubmitReviewRequested);
+    on<CancelServiceRequestRequested>(_onCancelServiceRequestRequested);
+    on<ReloadServiceRequestRequested>(_onReloadServiceRequestRequested);
+    on<NearbyRequestRejected>(_onNearbyRequestRejected);
   }
 
   Future<void> _onMyRequestsLoadRequested(
@@ -39,8 +46,9 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       }
       emit(ServiceRequestSuccess(requests: requests, ratedIds: ratedIds));
     } catch (e) {
-      emit(const ServiceRequestError(
-        message: 'Error al cargar tus solicitudes'));
+      emit(
+        const ServiceRequestError(message: 'Error al cargar tus solicitudes'),
+      );
     }
   }
 
@@ -51,7 +59,18 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     emit(NearbyRequestsLoading());
     try {
       final requests = await _repository.getNearbyRequests();
-      emit(NearbyRequestsSuccess(requests: requests));
+      var hiddenIds = <String>{};
+      try {
+        hiddenIds = await _repository.getHiddenNearbyRequestIds();
+      } catch (_) {
+        hiddenIds = <String>{};
+      }
+      hiddenIds.addAll(_pendingRejectedIds);
+      final visible = requests
+          .where((request) => !hiddenIds.contains(request.id))
+          .toList();
+      _nearbyRequestsCache = List.unmodifiable(visible);
+      emit(NearbyRequestsSuccess(requests: _nearbyRequestsCache));
     } catch (e) {
       emit(NearbyRequestsError(message: _nearbyErrorMessage(e)));
     }
@@ -61,9 +80,12 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     NearbyRequestsLocationUnavailable event,
     Emitter<ServiceRequestState> emit,
   ) {
-    emit(const NearbyRequestsError(
-      message:
-          'Activa la ubicación del dispositivo para ver solicitudes cercanas'));
+    emit(
+      const NearbyRequestsError(
+        message:
+            'Activa la ubicación del dispositivo para ver solicitudes cercanas',
+      ),
+    );
   }
 
   String _nearbyErrorMessage(Object error) {
@@ -74,7 +96,9 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
         if (data is Map<String, dynamic>) {
           final message = data['message'];
           if (message is String && message.isNotEmpty) return message;
-          if (message is List && message.isNotEmpty && message.first is String) {
+          if (message is List &&
+              message.isNotEmpty &&
+              message.first is String) {
             return message.first as String;
           }
         }
@@ -94,18 +118,17 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     emit(ServiceRequestCreating());
     try {
       final request = await _repository.createRequest(
-        lat:            event.lat,
-        lng:            event.lng,
-        direction:      event.direction,
-        occupationId:   event.occupationId,
-        description:    event.description,
+        lat: event.lat,
+        lng: event.lng,
+        direction: event.direction,
+        occupationId: event.occupationId,
+        description: event.description,
         profileColabId: event.profileColabId,
       );
       emit(ServiceRequestCreated(request: request));
       add(const MyRequestsLoadRequested());
     } catch (e) {
-      emit(const ServiceRequestError(
-        message: 'Error al crear la solicitud'));
+      emit(const ServiceRequestError(message: 'Error al crear la solicitud'));
     }
   }
 
@@ -117,11 +140,15 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     try {
       await _repository.sendProposal(
         serviceRequestId: event.serviceRequestId,
-        amount:           event.amount,
+        amount: event.amount,
       );
       emit(ProposalSent(serviceRequestId: event.serviceRequestId));
     } catch (e) {
-      emit(ProposalSendError(message: _apiErrorMessage(e, 'No se pudo enviar la propuesta')));
+      emit(
+        ProposalSendError(
+          message: _apiErrorMessage(e, 'No se pudo enviar la propuesta'),
+        ),
+      );
     }
   }
 
@@ -161,13 +188,11 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
           // Lista de solicitudes no disponible; se asume pending.
         }
       }
-      emit(ProposalsLoaded(
-        proposals:    proposals,
-        requestStatus: requestStatus,
-      ));
+      emit(ProposalsLoaded(proposals: proposals, requestStatus: requestStatus));
     } catch (e) {
-      emit(const ProposalsError(
-        message: 'No se pudieron cargar las propuestas'));
+      emit(
+        const ProposalsError(message: 'No se pudieron cargar las propuestas'),
+      );
     }
   }
 
@@ -181,7 +206,11 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       add(const MyRequestsLoadRequested());
       add(ProposalsLoadRequested(requestId: event.requestId));
     } catch (e) {
-      emit(ProposalActionError(message: _apiErrorMessage(e, 'No se pudo enviar la propuesta')));
+      emit(
+        ProposalActionError(
+          message: _apiErrorMessage(e, 'No se pudo enviar la propuesta'),
+        ),
+      );
     }
   }
 
@@ -194,7 +223,11 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       add(ProposalsLoadRequested(requestId: event.requestId));
       add(const MyRequestsLoadRequested());
     } catch (e) {
-      emit(ProposalActionError(message: _apiErrorMessage(e, 'No se pudo enviar la propuesta')));
+      emit(
+        ProposalActionError(
+          message: _apiErrorMessage(e, 'No se pudo enviar la propuesta'),
+        ),
+      );
     }
   }
 
@@ -208,9 +241,11 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       emit(StartWorkSuccess(requestId: event.serviceRequestId));
       add(const NearbyRequestsLoadRequested());
     } catch (e) {
-      emit(StartWorkError(
-        message: _apiErrorMessage(e, 'No se pudo iniciar el trabajo'),
-      ));
+      emit(
+        StartWorkError(
+          message: _apiErrorMessage(e, 'No se pudo iniciar el trabajo'),
+        ),
+      );
     }
   }
 
@@ -228,9 +263,11 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
       add(const MyRequestsLoadRequested());
       add(const NearbyRequestsLoadRequested());
     } catch (e) {
-      emit(CompleteWorkError(
-        message: _apiErrorMessage(e, 'No se pudo completar el servicio'),
-      ));
+      emit(
+        CompleteWorkError(
+          message: _apiErrorMessage(e, 'No se pudo completar el servicio'),
+        ),
+      );
     }
   }
 
@@ -242,16 +279,81 @@ class ServiceRequestBloc extends Bloc<ServiceRequestEvent, ServiceRequestState> 
     try {
       await _repository.submitReview(
         serviceRequestId: event.serviceRequestId,
-        rating:           event.rating,
-        comment:          event.comment,
+        rating: event.rating,
+        comment: event.comment,
       );
       emit(ReviewSubmitted(serviceRequestId: event.serviceRequestId));
       // Recarga reactiva: el set de ratedIds oculta la estrella en la card.
       add(const MyRequestsLoadRequested());
     } catch (e) {
-      emit(ReviewSubmitError(
-        message: _apiErrorMessage(e, 'No se pudo enviar la calificación'),
-      ));
+      emit(
+        ReviewSubmitError(
+          message: _apiErrorMessage(e, 'No se pudo enviar la calificación'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onCancelServiceRequestRequested(
+    CancelServiceRequestRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    emit(CancelServiceRequestInProgress());
+    try {
+      await _repository.cancelRequest(event.serviceRequestId);
+      emit(CancelServiceRequestSuccess(requestId: event.serviceRequestId));
+      add(const MyRequestsLoadRequested());
+      if (event.refreshNearby) {
+        add(const NearbyRequestsLoadRequested());
+      }
+    } catch (e) {
+      emit(
+        CancelServiceRequestError(
+          message: _apiErrorMessage(e, 'No se pudo cancelar el servicio'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onReloadServiceRequestRequested(
+    ReloadServiceRequestRequested event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    emit(ReloadServiceRequestInProgress());
+    try {
+      final request = await _repository.reloadRequest(event.serviceRequestId);
+      emit(ReloadServiceRequestSuccess(request: request));
+      add(const MyRequestsLoadRequested());
+    } catch (e) {
+      emit(
+        ReloadServiceRequestError(
+          message: _apiErrorMessage(e, 'No se pudo volver a abrir el servicio'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onNearbyRequestRejected(
+    NearbyRequestRejected event,
+    Emitter<ServiceRequestState> emit,
+  ) async {
+    _pendingRejectedIds.add(event.requestId);
+    final visible = _nearbyRequestsCache
+        .where((request) => request.id != event.requestId)
+        .toList();
+    _nearbyRequestsCache = List.unmodifiable(visible);
+
+    // Oculta la tarjeta de inmediato. El estado global del BLoC puede ser
+    // ServiceRequestSuccess (HEAD 3) aunque la vista de especialidad siga
+    // mostrando la última lista NearbyRequestsSuccess.
+    emit(NearbyRequestsSuccess(requests: _nearbyRequestsCache));
+
+    try {
+      await _repository.hideNearbyRequest(event.requestId);
+      _pendingRejectedIds.remove(event.requestId);
+    } catch (_) {
+      // Si falla la persistencia, se mantiene en memoria para que la tarjeta
+      // siga oculta durante la sesión actual.
     }
   }
 }

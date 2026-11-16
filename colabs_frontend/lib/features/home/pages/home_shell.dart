@@ -80,6 +80,14 @@ class _HomeShellState extends State<HomeShell> {
       if (data['type'] == 'proposal_rejected') {
         context.read<ChatBloc>().add(const ConversationsLoadRequested());
       }
+      // Si la contraparte canceló el servicio, refleja el nuevo estado en
+      // HEAD 3 (Mis solicitudes) y HEAD 4 (Solicitudes según especialidad).
+      if (data['type'] == 'service_cancelled') {
+        context
+            .read<ServiceRequestBloc>()
+            .add(const NearbyRequestsLoadRequested());
+        context.read<ChatBloc>().add(const ConversationsLoadRequested());
+      }
     });
 
     // Ciclo de vida: reconectar si la app vuelve de background

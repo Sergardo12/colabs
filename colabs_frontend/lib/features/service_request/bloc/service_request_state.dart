@@ -155,3 +155,35 @@ class ReviewSubmitError extends ServiceRequestState {
   @override
   List<Object?> get props => [message];
 }
+
+class CancelServiceRequestInProgress extends ServiceRequestState {}
+
+class CancelServiceRequestSuccess extends ServiceRequestState {
+  final String requestId;
+  const CancelServiceRequestSuccess({required this.requestId});
+  @override
+  List<Object?> get props => [requestId];
+}
+
+class CancelServiceRequestError extends ServiceRequestState {
+  final String message;
+  const CancelServiceRequestError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}
+
+class ReloadServiceRequestInProgress extends ServiceRequestState {}
+
+class ReloadServiceRequestSuccess extends ServiceRequestState {
+  final ServiceRequestModel request;
+  const ReloadServiceRequestSuccess({required this.request});
+  @override
+  List<Object?> get props => [request];
+}
+
+class ReloadServiceRequestError extends ServiceRequestState {
+  final String message;
+  const ReloadServiceRequestError({required this.message});
+  @override
+  List<Object?> get props => [message];
+}

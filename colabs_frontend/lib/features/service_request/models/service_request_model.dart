@@ -1,8 +1,8 @@
 import 'proposal_model.dart';
 
 class ServiceRequestOccupation {
-  final String  id;
-  final String  name;
+  final String id;
+  final String name;
   final String? image;
 
   const ServiceRequestOccupation({
@@ -13,8 +13,8 @@ class ServiceRequestOccupation {
 
   factory ServiceRequestOccupation.fromJson(Map<String, dynamic> json) {
     return ServiceRequestOccupation(
-      id:    json['id']    as String? ?? '',
-      name:  json['name']  as String? ?? '',
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       image: json['image'] as String?,
     );
   }
@@ -35,9 +35,9 @@ class ServiceRequestRequester {
 
   factory ServiceRequestRequester.fromJson(Map<String, dynamic> json) {
     return ServiceRequestRequester(
-      id:           json['id']           as String?,
-      name:         json['name']         as String?,
-      lastName:     json['lastName']     as String?,
+      id: json['id'] as String?,
+      name: json['name'] as String?,
+      lastName: json['lastName'] as String?,
       imageProfile: json['imageProfile'] as String?,
     );
   }
@@ -46,10 +46,10 @@ class ServiceRequestRequester {
 }
 
 class ServiceRequestProposal {
-  final String      id;
-  final String      status;
-  final String      amount;
-  final String      profileColabId;
+  final String id;
+  final String status;
+  final String amount;
+  final String profileColabId;
   final ProposalColab colab;
 
   const ServiceRequestProposal({
@@ -63,11 +63,11 @@ class ServiceRequestProposal {
   factory ServiceRequestProposal.fromJson(Map<String, dynamic> json) {
     final profileColab = json['profileColab'] as Map<String, dynamic>? ?? {};
     return ServiceRequestProposal(
-      id:             json['id']             as String? ?? '',
-      status:         (json['status'] as String?) ?? '',
-      amount:         _parseAmount(json['amount']),
+      id: json['id'] as String? ?? '',
+      status: (json['status'] as String?) ?? '',
+      amount: _parseAmount(json['amount']),
       profileColabId: (json['profileColabId'] as String?) ?? '',
-      colab:          ProposalColab.fromJson(profileColab),
+      colab: ProposalColab.fromJson(profileColab),
     );
   }
 
@@ -79,19 +79,21 @@ class ServiceRequestProposal {
 }
 
 class ServiceRequestModel {
-  final String                        id;
-  final String                        status;
-  final String                        direction;
-  final String                        description;
-  final String                        createdAt;
-  final String?                       acceptanceDate;
-  final String?                       completionDate;
-  final double?                       distanceKm;
-  final int?                          proposalsCount;
-  final ServiceRequestOccupation      occupation;
-  final ServiceRequestRequester?      requester;
-  final List<ServiceRequestProposal>  proposals;
-  final Map<String, dynamic>?         location;
+  final String id;
+  final String status;
+  final String direction;
+  final String description;
+  final String createdAt;
+  final String? acceptanceDate;
+  final String? completionDate;
+  final double? distanceKm;
+  final int? proposalsCount;
+  final ServiceRequestOccupation occupation;
+  final ServiceRequestRequester? requester;
+  final List<ServiceRequestProposal> proposals;
+  final Map<String, dynamic>? location;
+  final bool hasBeenReopened;
+  final String? reopenedFromId;
 
   const ServiceRequestModel({
     required this.id,
@@ -107,32 +109,41 @@ class ServiceRequestModel {
     this.requester,
     required this.proposals,
     this.location,
+    this.hasBeenReopened = false,
+    this.reopenedFromId,
   });
 
   factory ServiceRequestModel.fromJson(Map<String, dynamic> json) {
     return ServiceRequestModel(
-      id:             json['id']             as String,
-      status:         json['status']         as String,
-      direction:   json['direction']   as String? ?? '',
+      id: json['id'] as String,
+      status: json['status'] as String,
+      direction: json['direction'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      createdAt:      json['createdAt']      as String,
+      createdAt: json['createdAt'] as String,
       acceptanceDate: json['acceptanceDate'] as String?,
       completionDate: json['completionDate'] as String?,
-      distanceKm:     (json['distanceKm'] as num?)?.toDouble(),
+      distanceKm: (json['distanceKm'] as num?)?.toDouble(),
       proposalsCount: (json['proposalsCount'] as num?)?.toInt(),
-      occupation:     ServiceRequestOccupation.fromJson(
-                        json['occupation'] as Map<String, dynamic>),
-      requester:      json['user'] != null
-                        ? ServiceRequestRequester.fromJson(
-                            json['user'] as Map<String, dynamic>)
-                        : null,
-      proposals:      json['proposals'] != null
+      occupation: ServiceRequestOccupation.fromJson(
+        json['occupation'] as Map<String, dynamic>,
+      ),
+      requester: json['user'] != null
+          ? ServiceRequestRequester.fromJson(
+              json['user'] as Map<String, dynamic>,
+            )
+          : null,
+      proposals: json['proposals'] != null
           ? (json['proposals'] as List<dynamic>)
-              .map((e) => ServiceRequestProposal.fromJson(
-                    e as Map<String, dynamic>))
-              .toList()
+                .map(
+                  (e) => ServiceRequestProposal.fromJson(
+                    e as Map<String, dynamic>,
+                  ),
+                )
+                .toList()
           : [],
-      location:       json['location'] as Map<String, dynamic>?,
+      location: json['location'] as Map<String, dynamic>?,
+      hasBeenReopened: json['hasBeenReopened'] as bool? ?? false,
+      reopenedFromId: json['reopenedFromId'] as String?,
     );
   }
 

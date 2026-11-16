@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, QueryFailedError, Repository } from 'typeorm';
 import { ServiceRequest } from './entities/service-request.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { User } from '../users/entities/user.entity';
@@ -108,14 +113,32 @@ export class ServiceRequestService {
       });
     }
 
-    // Flujo A — solicitud a colaboradores cercanos (código existente sin cambios)
+    // Flujo A — solicitud a colaboradores cercanos
+    await this.notifyNearbyRequest(saved, dto.lat, dto.lng);
+
+    return this.serviceRequestRepository.findOne({
+        where: { id: saved.id },
+      relations: ['occupation'],
+    });
+  }
+
+  /**
+   * Emite la nueva solicitud a colaboradores cercanos (WebSocket + Redis)
+   * y crea notificaciones persistentes para los colaboradores de la ocupación.
+   * Usado tanto al crear una solicitud como al reabrir una cancelada.
+   */
+  private async notifyNearbyRequest(
+    saved: ServiceRequest,
+    lat: number,
+    lng: number,
+  ) {
     const nearbyCollaborators = await this.redisService
-      .findNearbyCollaborators(dto.occupationId);
+      .findNearbyCollaborators(saved.occupationId);
 
     // Filtrar por radio de 5km usando Haversine
     const inRange = nearbyCollaborators.filter(colab => {
       const distance = this.haversineDistance(
-        dto.lat, dto.lng,
+        lat, lng,
         colab.lat, colab.lng,
       );
       return distance <= 5;
@@ -129,8 +152,8 @@ export class ServiceRequestService {
         occupationId: saved.occupationId,
         direction: saved.direction,
         description: saved.description,
-        lat: dto.lat,
-        lng: dto.lng,
+        lat,
+        lng,
       });
 
       // Marcar colaboradores como busy en Redis
@@ -142,14 +165,14 @@ export class ServiceRequestService {
     // Notificación persistente a TODOS los colaboradores de la ocupación (aunque offline).
     // Se excluye a sí mismo si el solicitante es colaborador de la misma ocupación.
     const occupation = await this.occupationRepository.findOne({
-      where: { id: dto.occupationId },
+      where: { id: saved.occupationId },
     });
 
     const targets = await this.profileColabRepository
       .createQueryBuilder('pc')
       .innerJoin('pc.occupations', 'occ')
-      .where('occ.id = :occupationId', { occupationId: dto.occupationId })
-      .andWhere('pc.userId != :userId', { userId })
+      .where('occ.id = :occupationId', { occupationId: saved.occupationId })
+      .andWhere('pc.userId != :userId', { userId: saved.userId })
       .getMany();
 
     if (targets.length > 0) {
@@ -159,7 +182,7 @@ export class ServiceRequestService {
           userId: target.userId,
           type: 'service_request_new',
           title: `Nueva solicitud: ${occupationName}`,
-          body: dto.description ?? dto.direction ?? '',
+          body: saved.description ?? saved.direction ?? '',
           entityType: 'service_request',
           entityId: saved.id,
         }),
@@ -169,11 +192,6 @@ export class ServiceRequestService {
         await Promise.all(notifications.slice(i, i + 50));
       }
     }
-
-    return this.serviceRequestRepository.findOne({
-        where: { id: saved.id },
-      relations: ['occupation'],
-    });
   }
 
   async findMyRequests(userId: string) {
@@ -188,12 +206,21 @@ export class ServiceRequestService {
       order: { creationDate: 'DESC' },
     });
 
+    // Ids de solicitudes que ya generaron una reapertura. Una solicitud
+    // cancelada solo puede reabrirse una vez.
+    const reopenedSourceIds = new Set(
+      requests
+        .map((request) => request.reopenedFromId)
+        .filter((id): id is string => Boolean(id)),
+    );
+
     // Añade el número de propuestas/cotizaciones pendientes recibidas por solicitud
     return requests.map(request => ({
       ...request,
       proposalsCount:
         request.proposals?.filter(p => p.status === ProposalStatus.PENDING)
           .length ?? 0,
+      hasBeenReopened: reopenedSourceIds.has(request.id),
     }));
   }
 
@@ -514,6 +541,205 @@ export class ServiceRequestService {
     });
 
     return saved;
+  }
+
+  // Cancela un servicio aceptado. Puede hacerlo el demandante dueño de la
+  // solicitud o el colaborador cuya propuesta fue aceptada. Cierra el canal
+  // de chat y notifica a la contraparte.
+  async cancel(id: string, userId: string) {
+    const request = await this.serviceRequestRepository.findOne({
+      where: { id },
+    });
+
+    if (!request) throw new NotFoundException('Solicitud no encontrada');
+
+    const isOwner = request.userId === userId;
+
+    let isWinner = false;
+    if (!isOwner) {
+      const profile = await this.profileColabRepository.findOne({
+        where: { userId },
+      });
+
+      if (profile) {
+        const winner = await this.serviceRequestRepository
+          .createQueryBuilder('sr')
+          .where('sr.id = :id', { id })
+          .andWhere(
+            `EXISTS (
+              SELECT 1
+              FROM proposals p
+              WHERE p.service_request_id = sr.id
+                AND p.profile_colab_id = :profileColabId
+                AND p.status = :acceptedStatus
+            )`,
+            {
+              profileColabId: profile.id,
+              acceptedStatus: ProposalStatus.ACCEPTED,
+            },
+          )
+          .getOne();
+
+        isWinner = !!winner;
+      }
+    }
+
+    if (!isOwner && !isWinner) {
+      throw new ForbiddenException(
+        'No tienes permiso para cancelar esta solicitud',
+      );
+    }
+
+    if (request.status !== ServiceRequestStatus.ACCEPTED) {
+      throw new ForbiddenException(
+        'Solo se puede cancelar un servicio en estado aceptado',
+      );
+    }
+
+    request.status = ServiceRequestStatus.CANCELLED;
+    const saved = await this.serviceRequestRepository.save(request);
+
+    // Cierra el chat asociado (solo Flujo A: conversación sin post)
+    const conversation = await this.conversationRepository.findOne({
+      where: { serviceRequestId: saved.id, postId: IsNull() },
+      relations: ['profileColab'],
+    });
+
+    if (conversation) {
+      const systemMessage = this.messageRepository.create({
+        conversationId: conversation.id,
+        senderId: userId,
+        content: 'Servicio cancelado. El chat queda en solo lectura.',
+        type: MessageType.TEXT,
+        isRead: false,
+      });
+      const savedMessage = await this.messageRepository.save(systemMessage);
+
+      conversation.status = 'closed';
+      await this.conversationRepository.save(conversation);
+
+      this.collabsGateway.emitNewMessage(conversation.id, savedMessage);
+    }
+
+    // Notifica a la contraparte (colaborador ganador o demandante)
+    const counterpartUserId = isOwner
+      ? conversation?.profileColab?.userId
+      : request.userId;
+
+    if (counterpartUserId && counterpartUserId !== userId) {
+      const notification = await this.notificationService.notify({
+        userId: counterpartUserId,
+        type: 'service_cancelled',
+        title: 'Servicio cancelado',
+        body: isOwner
+          ? 'El solicitante canceló el servicio.'
+          : 'El colaborador canceló el servicio.',
+        entityType: 'service_request',
+        entityId: saved.id,
+      });
+
+      this.collabsGateway.emitNewNotification(counterpartUserId, {
+        id: notification.id,
+        userId: notification.userId,
+        type: notification.type,
+        title: notification.title,
+        body: notification.body,
+        entityType: notification.entityType,
+        entityId: notification.entityId,
+        isRead: notification.isRead,
+        creationDate: notification.creationDate,
+      });
+    }
+
+    return saved;
+  }
+
+  // Vuelve a abrir un servicio cancelado creando uno nuevo en pending.
+  // Clona occupation, location, direction y description; no copia
+  // profileColabId, propuestas, conversación ni historial.
+  async reload(id: string, userId: string) {
+    const source = await this.serviceRequestRepository.findOne({
+      where: { id },
+    });
+
+    if (!source) throw new NotFoundException('Solicitud no encontrada');
+
+    if (source.userId !== userId) {
+      throw new ForbiddenException(
+        'No tienes permiso para volver a abrir esta solicitud',
+      );
+    }
+
+    if (source.status !== ServiceRequestStatus.CANCELLED) {
+      throw new ForbiddenException(
+        'Solo se puede volver a abrir un servicio cancelado',
+      );
+    }
+
+    const alreadyReopened = await this.serviceRequestRepository.findOne({
+      where: { reopenedFromId: id },
+    });
+    if (alreadyReopened) {
+      throw new ConflictException('Esta solicitud ya fue reabierta');
+    }
+
+    // Coordenadas del servicio original (pueden ser null en Flujo B)
+    const coords = await this.serviceRequestRepository
+      .createQueryBuilder('sr')
+      .select('ST_X(sr.location::geometry)', 'lng')
+      .addSelect('ST_Y(sr.location::geometry)', 'lat')
+      .where('sr.id = :id', { id })
+      .getRawOne();
+
+    const lat = coords?.lat != null ? Number(coords.lat) : null;
+    const lng = coords?.lng != null ? Number(coords.lng) : null;
+    const hasLocation =
+      lat !== null && lng !== null && Number.isFinite(lat) && Number.isFinite(lng);
+
+    const clone = this.serviceRequestRepository.create({
+      userId,
+      occupationId: source.occupationId,
+      direction: source.direction,
+      description: source.description,
+      status: ServiceRequestStatus.PENDING,
+      reopenedFromId: id,
+    });
+
+    let saved: ServiceRequest;
+    try {
+      saved = (await this.serviceRequestRepository.save(
+        clone,
+      )) as ServiceRequest;
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const driverError = error.driverError as { code?: string } | undefined;
+        if (driverError?.code === '23505') {
+          throw new ConflictException('Esta solicitud ya fue reabierta');
+        }
+      }
+      throw error;
+    }
+
+    if (hasLocation) {
+      // Copia la ubicación PostGIS exacta del servicio original
+      await this.serviceRequestRepository
+        .createQueryBuilder()
+        .update(ServiceRequest)
+        .set({
+          location: () =>
+            '(SELECT location FROM service_requests WHERE id = :sourceId)',
+        })
+        .setParameters({ sourceId: id })
+        .where('id = :id', { id: saved.id })
+        .execute();
+
+      await this.notifyNearbyRequest(saved, lat, lng);
+    }
+
+    return this.serviceRequestRepository.findOne({
+      where: { id: saved.id },
+      relations: ['occupation'],
+    });
   }
 
   // Fórmula Haversine — distancia entre dos puntos en km

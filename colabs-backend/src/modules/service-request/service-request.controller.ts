@@ -82,4 +82,28 @@ export class ServiceRequestController {
   ) {
     return this.serviceRequestService.completeWork(id, user.id);
   }
+
+  @Patch(':id/cancel')
+  @ApiOperation({
+    summary:
+      'Cancelar servicio aceptado (demandante dueño o colaborador ganador)',
+  })
+  cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.serviceRequestService.cancel(id, user.id);
+  }
+
+  @Post(':id/reload')
+  @ApiOperation({
+    summary:
+      'Volver a abrir un servicio cancelado creando uno nuevo en pending',
+  })
+  reload(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.serviceRequestService.reload(id, user.id);
+  }
 }

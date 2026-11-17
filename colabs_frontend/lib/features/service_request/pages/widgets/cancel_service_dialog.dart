@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 
-/// PopUp de advertencia antes de cancelar un servicio aceptado.
+/// PopUp de advertencia antes de cancelar un servicio pendiente o aceptado.
 /// Devuelve `true` si el usuario confirma y `false`/`null` si elige "No".
 Future<bool> showCancelServiceDialog(BuildContext context) async {
   final result = await showDialog<bool>(

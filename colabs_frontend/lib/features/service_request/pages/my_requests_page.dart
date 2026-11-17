@@ -212,7 +212,9 @@ class _MyRequestsPageState extends State<MyRequestsPage> {
                                     ? () =>
                                           showProposalsDialog(context, request)
                                     : null,
-                                onCancelTap: request.status == 'accepted'
+                                onCancelTap:
+                                    request.status == 'pending' ||
+                                        request.status == 'accepted'
                                     ? () async {
                                         final confirmed =
                                             await showCancelServiceDialog(
@@ -473,7 +475,9 @@ class _ServiceRequestCard extends StatelessWidget {
                       ),
                     ),
                   ],
-                  if (request.status == 'accepted' && onCancelTap != null) ...[
+                  if ((request.status == 'pending' ||
+                          request.status == 'accepted') &&
+                      onCancelTap != null) ...[
                     const SizedBox(width: AppSizes.paddingS),
                     GestureDetector(
                       onTap: onCancelTap,

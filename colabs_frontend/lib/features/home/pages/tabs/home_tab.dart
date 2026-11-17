@@ -12,8 +12,6 @@ import '../../../profile/bloc/profile_bloc.dart';
 import '../../../profile/bloc/profile_state.dart';
 import '../widgets/post_card.dart';
 import '../widgets/occupation_carousel.dart';
-import '../../../profile/bloc/profile_bloc.dart';
-import '../../../profile/bloc/profile_state.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});

@@ -8,6 +8,7 @@ import { User } from '../users/entities/user.entity';
 import { Occupation } from '../occupation/entities/occupation.entity';
 import { Conversation } from '../conversation/entities/conversation.entity';
 import { Message } from '../message/entities/message.entity';
+import { Proposal } from '../proposal/entities/proposal.entity';
 import { GatewayModule } from '../gateway/gateway.module';
 import { RedisModule } from 'src/common/redis.module';
 import { NotificationModule } from '../notification/notification.module';
@@ -21,6 +22,7 @@ import { NotificationModule } from '../notification/notification.module';
       Occupation,
       Conversation,
       Message,
+      Proposal,
     ]),
     GatewayModule,
     RedisModule,

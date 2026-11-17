@@ -86,7 +86,7 @@ export class ServiceRequestController {
   @Patch(':id/cancel')
   @ApiOperation({
     summary:
-      'Cancelar servicio aceptado (demandante dueño o colaborador ganador)',
+      'Cancelar servicio pendiente o aceptado (dueño; en aceptado también colaborador ganador)',
   })
   cancel(
     @Param('id', ParseUUIDPipe) id: string,

@@ -12,6 +12,7 @@ import { User } from '../users/entities/user.entity';
 import { Occupation } from '../occupation/entities/occupation.entity';
 import { Conversation } from '../conversation/entities/conversation.entity';
 import { Message } from '../message/entities/message.entity';
+import { Proposal } from '../proposal/entities/proposal.entity';
 import { MessageType } from '../conversation/dto/send-message.dto';
 import { RedisService } from '../../common/services/redis.service';
 import { CollabsGateway } from '../gateway/colabs.gateway';
@@ -41,6 +42,9 @@ export class ServiceRequestService {
 
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
+
+    @InjectRepository(Proposal)
+    private proposalRepository: Repository<Proposal>,
 
     private notificationService: NotificationService,
     private redisService: RedisService,
@@ -543,9 +547,9 @@ export class ServiceRequestService {
     return saved;
   }
 
-  // Cancela un servicio aceptado. Puede hacerlo el demandante dueño de la
-  // solicitud o el colaborador cuya propuesta fue aceptada. Cierra el canal
-  // de chat y notifica a la contraparte.
+  // Cancela un servicio pendiente o aceptado. En pending solo puede hacerlo
+  // el demandante dueño; en accepted también el colaborador ganador. Cierra
+  // todos los chats del servicio y notifica a las contrapartes.
   async cancel(id: string, userId: string) {
     const request = await this.serviceRequestRepository.findOne({
       where: { id },
@@ -590,22 +594,38 @@ export class ServiceRequestService {
       );
     }
 
-    if (request.status !== ServiceRequestStatus.ACCEPTED) {
+    const cancellableStatuses: string[] = [
+      ServiceRequestStatus.PENDING,
+      ServiceRequestStatus.ACCEPTED,
+    ];
+
+    if (!cancellableStatuses.includes(request.status)) {
       throw new ForbiddenException(
-        'Solo se puede cancelar un servicio en estado aceptado',
+        'Solo se puede cancelar un servicio pendiente o aceptado',
       );
     }
 
     request.status = ServiceRequestStatus.CANCELLED;
     const saved = await this.serviceRequestRepository.save(request);
 
-    // Cierra el chat asociado (solo Flujo A: conversación sin post)
-    const conversation = await this.conversationRepository.findOne({
+    await this.proposalRepository.update(
+      {
+        serviceRequestId: saved.id,
+        status: ProposalStatus.PENDING,
+      },
+      {
+        status: ProposalStatus.REJECTED,
+      },
+    );
+
+    // Cierra todos los chats asociados (solo Flujo A: conversación sin post).
+    // Una solicitud pendiente puede tener una conversación por propuesta.
+    const conversations = await this.conversationRepository.find({
       where: { serviceRequestId: saved.id, postId: IsNull() },
       relations: ['profileColab'],
     });
 
-    if (conversation) {
+    for (const conversation of conversations) {
       const systemMessage = this.messageRepository.create({
         conversationId: conversation.id,
         senderId: userId,
@@ -621,12 +641,22 @@ export class ServiceRequestService {
       this.collabsGateway.emitNewMessage(conversation.id, savedMessage);
     }
 
-    // Notifica a la contraparte (colaborador ganador o demandante)
-    const counterpartUserId = isOwner
-      ? conversation?.profileColab?.userId
-      : request.userId;
+    // Notifica a todos los colaboradores con chat si cancela el dueño, o al
+    // demandante si cancela el colaborador ganador.
+    const counterpartUserIds = new Set<string>();
 
-    if (counterpartUserId && counterpartUserId !== userId) {
+    if (isOwner) {
+      for (const conversation of conversations) {
+        const counterpartUserId = conversation.profileColab?.userId;
+        if (counterpartUserId) counterpartUserIds.add(counterpartUserId);
+      }
+    } else {
+      counterpartUserIds.add(request.userId);
+    }
+
+    for (const counterpartUserId of counterpartUserIds) {
+      if (counterpartUserId === userId) continue;
+
       const notification = await this.notificationService.notify({
         userId: counterpartUserId,
         type: 'service_cancelled',

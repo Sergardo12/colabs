@@ -7,16 +7,18 @@ class SupportService {
 
   Future<void> createReport({
     required String token,
-    required String reportedUserId,
     required String category,
+    String? reportedUserId,
+    String? profileColabId,
     String? serviceRequestId,
     String? description,
   }) async {
     await _dio.post(
       '/reports',
       data: {
-        'reportedUserId':   reportedUserId,
-        'category':         category,
+        'category': category,
+        if (reportedUserId != null) 'reportedUserId': reportedUserId,
+        if (profileColabId != null) 'profileColabId': profileColabId,
         if (serviceRequestId != null)
           'serviceRequestId': serviceRequestId,
         if (description != null && description.isNotEmpty)

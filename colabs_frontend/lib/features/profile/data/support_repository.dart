@@ -20,16 +20,18 @@ class SupportRepository {
   }
 
   Future<void> createReport({
-    required String reportedUserId,
     required String category,
+    String? reportedUserId,
+    String? profileColabId,
     String? serviceRequestId,
     String? description,
   }) async {
     final token = await _getToken();
     await _service.createReport(
       token:            token,
-      reportedUserId:   reportedUserId,
       category:         category,
+      reportedUserId:   reportedUserId,
+      profileColabId:   profileColabId,
       serviceRequestId: serviceRequestId,
       description:      description,
     );

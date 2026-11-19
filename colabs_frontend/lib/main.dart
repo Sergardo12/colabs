@@ -10,6 +10,7 @@ import 'features/home/bloc/home_bloc.dart';
 import 'features/home/data/home_repository.dart';
 import 'features/home/data/home_service.dart';
 import 'features/profile/bloc/profile_bloc.dart';
+import 'features/profile/bloc/report_colab_bloc.dart';
 import 'features/profile/data/profile_repository.dart';
 import 'features/profile/data/profile_service.dart';
 import 'features/public_profile/bloc/public_profile_bloc.dart';
@@ -192,6 +193,12 @@ final publicProfileRepository = PublicProfileRepository(
         BlocProvider(
           create: (_) => ServiceRequestBloc(
             repository: serviceRequestRepository,
+          ),
+        ),
+        BlocProvider(
+          create: (_) => ReportColabBloc(
+            serviceRequestRepository: serviceRequestRepository,
+            supportRepository: supportRepository,
           ),
         ),
         BlocProvider(

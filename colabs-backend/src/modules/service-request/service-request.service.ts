@@ -55,39 +55,37 @@ export class ServiceRequestService {
     // Crear la solicitud con PostGIS
     const serviceRequest = this.serviceRequestRepository.create({
       userId,
-      occupationId:   dto.occupationId,
-      direction:      dto.direction,
-      description:    dto.description,
+      occupationId: dto.occupationId,
+      direction: dto.direction,
+      description: dto.description,
       profileColabId: dto.profileColabId,
-      status:         ServiceRequestStatus.PENDING,
+      status: ServiceRequestStatus.PENDING,
     });
 
-    const saved = await this.serviceRequestRepository.save(serviceRequest) as ServiceRequest;
+    const saved = await this.serviceRequestRepository.save(serviceRequest);
 
     // Actualiza la ubicación con PostGIS por separado
     await this.serviceRequestRepository
-    .createQueryBuilder()
-    .update(ServiceRequest)
-    .set({
-        location: () => `ST_SetSRID(ST_MakePoint(${dto.lng}, ${dto.lat}), 4326)`,
-    })
-    .where('id = :id', { id: saved.id })
-    .execute();
+      .createQueryBuilder()
+      .update(ServiceRequest)
+      .set({
+        location: () =>
+          `ST_SetSRID(ST_MakePoint(${dto.lng}, ${dto.lat}), 4326)`,
+      })
+      .where('id = :id', { id: saved.id })
+      .execute();
 
     // Flujo C — solicitud directa a un colaborador específico
     if (dto.profileColabId) {
       // Notificar solo a ese colaborador via WebSocket
-      this.collabsGateway.emitNewServiceRequest(
-        [dto.profileColabId],
-        {
-          id:          saved.id,
-          occupationId: saved.occupationId,
-          direction:   saved.direction,
-          description: saved.description,
-          lat:         dto.lat,
-          lng:         dto.lng,
-        },
-      );
+      this.collabsGateway.emitNewServiceRequest([dto.profileColabId], {
+        id: saved.id,
+        occupationId: saved.occupationId,
+        direction: saved.direction,
+        description: saved.description,
+        lat: dto.lat,
+        lng: dto.lng,
+      });
 
       // Notificación persistente solo a ese colaborador
       const occupation = await this.occupationRepository.findOne({
@@ -102,17 +100,17 @@ export class ServiceRequestService {
 
       if (profileColab) {
         await this.notificationService.notify({
-          userId:     profileColab.userId,
-          type:       'service_request_new',
-          title:      `Solicitud directa: ${occupationName}`,
-          body:       saved.description ?? saved.direction ?? '',
+          userId: profileColab.userId,
+          type: 'service_request_new',
+          title: `Solicitud directa: ${occupationName}`,
+          body: saved.description ?? saved.direction ?? '',
           entityType: 'service_request',
-          entityId:   saved.id,
+          entityId: saved.id,
         });
       }
 
       return this.serviceRequestRepository.findOne({
-        where:     { id: saved.id },
+        where: { id: saved.id },
         relations: ['occupation'],
       });
     }
@@ -121,7 +119,7 @@ export class ServiceRequestService {
     await this.notifyNearbyRequest(saved, dto.lat, dto.lng);
 
     return this.serviceRequestRepository.findOne({
-        where: { id: saved.id },
+      where: { id: saved.id },
       relations: ['occupation'],
     });
   }
@@ -136,21 +134,19 @@ export class ServiceRequestService {
     lat: number,
     lng: number,
   ) {
-    const nearbyCollaborators = await this.redisService
-      .findNearbyCollaborators(saved.occupationId);
+    const nearbyCollaborators = await this.redisService.findNearbyCollaborators(
+      saved.occupationId,
+    );
 
     // Filtrar por radio de 5km usando Haversine
-    const inRange = nearbyCollaborators.filter(colab => {
-      const distance = this.haversineDistance(
-        lat, lng,
-        colab.lat, colab.lng,
-      );
+    const inRange = nearbyCollaborators.filter((colab) => {
+      const distance = this.haversineDistance(lat, lng, colab.lat, colab.lng);
       return distance <= 5;
     });
 
     // Notificar a cada colaborador en rango via WebSocket
     if (inRange.length > 0) {
-      const collaboratorIds = inRange.map(c => c.userId);
+      const collaboratorIds = inRange.map((c) => c.userId);
       this.collabsGateway.emitNewServiceRequest(collaboratorIds, {
         id: saved.id,
         occupationId: saved.occupationId,
@@ -181,7 +177,7 @@ export class ServiceRequestService {
 
     if (targets.length > 0) {
       const occupationName = occupation?.name ?? 'Servicio';
-      const notifications = targets.map(target =>
+      const notifications = targets.map((target) =>
         this.notificationService.notify({
           userId: target.userId,
           type: 'service_request_new',
@@ -219,13 +215,82 @@ export class ServiceRequestService {
     );
 
     // Añade el número de propuestas/cotizaciones pendientes recibidas por solicitud
-    return requests.map(request => ({
+    return requests.map((request) => ({
       ...request,
       proposalsCount:
-        request.proposals?.filter(p => p.status === ProposalStatus.PENDING)
+        request.proposals?.filter((p) => p.status === ProposalStatus.PENDING)
           .length ?? 0,
       hasBeenReopened: reopenedSourceIds.has(request.id),
     }));
+  }
+
+  /**
+   * Servicios cancelados del usuario autenticado que tuvieron colaborador
+   * ganador. Cubre:
+   * - Flujo C/directo: profileColabId se guarda al crear la solicitud.
+   * - Flujo A/B: el ganador está en la propuesta aceptada (el accept actual
+   *   no persiste profile_colab_id en service_requests).
+   * Se excluyen los cancelados en pending sin colaborador.
+   */
+  async findCancelledWithColab(userId: string, search?: string) {
+    const qb = this.serviceRequestRepository
+      .createQueryBuilder('sr')
+      .leftJoinAndSelect('sr.occupation', 'occupation')
+      .leftJoinAndSelect(
+        'sr.proposals',
+        'winnerProposal',
+        'winnerProposal.status = :acceptedStatus',
+        { acceptedStatus: ProposalStatus.ACCEPTED },
+      )
+      .where('sr.userId = :userId', { userId })
+      .andWhere('sr.status = :status', {
+        status: ServiceRequestStatus.CANCELLED,
+      })
+      .andWhere(
+        `(
+          sr.profile_colab_id IS NOT NULL
+          OR EXISTS (
+            SELECT 1
+            FROM proposals p
+            WHERE p.service_request_id = sr.id
+              AND p.status = :acceptedStatus
+          )
+        )`,
+        { acceptedStatus: ProposalStatus.ACCEPTED },
+      );
+
+    const term = search?.trim();
+    if (term) {
+      qb.andWhere(
+        '(occupation.name ILIKE :search OR sr.description ILIKE :search)',
+        { search: `%${term}%` },
+      );
+    }
+
+    const requests = await qb.orderBy('sr.creationDate', 'DESC').getMany();
+
+    return requests.flatMap((request) => {
+      const winnerProfileColabId =
+        request.profileColabId ??
+        request.proposals?.find(
+          (proposal) => proposal.status === (ProposalStatus.ACCEPTED as string),
+        )?.profileColabId;
+
+      if (!winnerProfileColabId) return [];
+
+      return [
+        {
+          id: request.id,
+          description: request.description ?? '',
+          profileColabId: winnerProfileColabId,
+          occupation: {
+            id: request.occupation?.id ?? request.occupationId,
+            name: request.occupation?.name ?? '',
+            image: request.occupation?.image ?? null,
+          },
+        },
+      ];
+    });
   }
 
   async findOne(id: string, userId: string) {
@@ -259,7 +324,7 @@ export class ServiceRequestService {
       throw new ForbiddenException('No tienes perfil de colaborador');
     }
 
-    const occupationIds = profile.occupations.map(o => o.id);
+    const occupationIds = profile.occupations.map((o) => o.id);
 
     // Buscar solicitudes pending en PostgreSQL de la ocupación del colaborador:
     // - Dentro de un radio de 5km (PostGIS ST_DWithin sobre la columna geography)
@@ -344,8 +409,14 @@ export class ServiceRequestService {
       .setParameters({ lat: location.lat, lng: location.lng })
       .getRawAndEntities();
 
-    const pending  = requests.entities.map((r, i) => ({ ...r, distanceKm: Number(requests.raw[i].distance) / 1000 }));
-    const accepted = acceptedRaw.entities.map((r, i) => ({ ...r, distanceKm: Number(acceptedRaw.raw[i].distance) / 1000 }));
+    const pending = requests.entities.map((r, i) => ({
+      ...r,
+      distanceKm: Number(requests.raw[i].distance) / 1000,
+    }));
+    const accepted = acceptedRaw.entities.map((r, i) => ({
+      ...r,
+      distanceKm: Number(acceptedRaw.raw[i].distance) / 1000,
+    }));
 
     // Trabajo activo primero, pendientes después y completadas al fondo
     // del tablero (historial del colaborador, sin ocupar el foco).
@@ -372,7 +443,9 @@ export class ServiceRequestService {
 
     // Solo el dueño de la solicitud puede cambiar el estado
     if (request.userId !== userId) {
-      throw new ForbiddenException('No tienes permiso para modificar esta solicitud');
+      throw new ForbiddenException(
+        'No tienes permiso para modificar esta solicitud',
+      );
     }
 
     request.status = dto.status;
@@ -396,7 +469,9 @@ export class ServiceRequestService {
     });
 
     if (!profile) {
-      throw new ForbiddenException('Solo los colaboradores pueden iniciar el trabajo');
+      throw new ForbiddenException(
+        'Solo los colaboradores pueden iniciar el trabajo',
+      );
     }
 
     const request = await this.serviceRequestRepository.findOne({
@@ -460,7 +535,9 @@ export class ServiceRequestService {
     if (!request) throw new NotFoundException('Solicitud no encontrada');
 
     if (request.status !== ServiceRequestStatus.IN_PROGRESS) {
-      throw new ForbiddenException('Esta solicitud no está en estado en proceso');
+      throw new ForbiddenException(
+        'Esta solicitud no está en estado en proceso',
+      );
     }
 
     // Solo el colaborador cuya propuesta fue aceptada puede finalizar
@@ -724,7 +801,10 @@ export class ServiceRequestService {
     const lat = coords?.lat != null ? Number(coords.lat) : null;
     const lng = coords?.lng != null ? Number(coords.lng) : null;
     const hasLocation =
-      lat !== null && lng !== null && Number.isFinite(lat) && Number.isFinite(lng);
+      lat !== null &&
+      lng !== null &&
+      Number.isFinite(lat) &&
+      Number.isFinite(lng);
 
     const clone = this.serviceRequestRepository.create({
       userId,
@@ -737,9 +817,7 @@ export class ServiceRequestService {
 
     let saved: ServiceRequest;
     try {
-      saved = (await this.serviceRequestRepository.save(
-        clone,
-      )) as ServiceRequest;
+      saved = await this.serviceRequestRepository.save(clone);
     } catch (error) {
       if (error instanceof QueryFailedError) {
         const driverError = error.driverError as { code?: string } | undefined;
@@ -774,17 +852,19 @@ export class ServiceRequestService {
 
   // Fórmula Haversine — distancia entre dos puntos en km
   private haversineDistance(
-    lat1: number, lng1: number,
-    lat2: number, lng2: number,
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number,
   ): number {
     const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng / 2) ** 2;
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 }

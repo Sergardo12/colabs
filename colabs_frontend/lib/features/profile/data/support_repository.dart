@@ -1,5 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'support_service.dart';
+
+class ReportAlreadyReportedException implements Exception {
+  const ReportAlreadyReportedException();
+}
 
 class SupportRepository {
   final SupportService       _service;
@@ -27,14 +32,21 @@ class SupportRepository {
     String? description,
   }) async {
     final token = await _getToken();
-    await _service.createReport(
-      token:            token,
-      category:         category,
-      reportedUserId:   reportedUserId,
-      profileColabId:   profileColabId,
-      serviceRequestId: serviceRequestId,
-      description:      description,
-    );
+    try {
+      await _service.createReport(
+        token:            token,
+        category:         category,
+        reportedUserId:   reportedUserId,
+        profileColabId:   profileColabId,
+        serviceRequestId: serviceRequestId,
+        description:      description,
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw const ReportAlreadyReportedException();
+      }
+      rethrow;
+    }
   }
 
   Future<void> createSuggestion({required String description}) async {

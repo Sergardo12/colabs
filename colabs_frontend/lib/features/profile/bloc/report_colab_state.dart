@@ -7,6 +7,7 @@ enum ReportColabStatus {
   loaded,
   submitting,
   submitted,
+  alreadyReported,
   failure,
 }
 

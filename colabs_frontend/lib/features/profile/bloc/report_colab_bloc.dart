@@ -164,7 +164,22 @@ class ReportColabBloc extends Bloc<ReportColabEvent, ReportColabState> {
       emit(
         state.copyWith(
           status: ReportColabStatus.submitted,
+          services: state.services
+              .where((service) => service.id != selected.id)
+              .toList(),
+          clearSelected: true,
           clearError: true,
+        ),
+      );
+    } on ReportAlreadyReportedException {
+      emit(
+        state.copyWith(
+          status: ReportColabStatus.alreadyReported,
+          services: state.services
+              .where((service) => service.id != selected.id)
+              .toList(),
+          clearSelected: true,
+          errorMessage: 'Este servicio ya fue reportado',
         ),
       );
     } catch (_) {

@@ -47,6 +47,7 @@ class _ReportColabPageState extends State<ReportColabPage> {
     return BlocListener<ReportColabBloc, ReportColabState>(
       listenWhen: (previous, current) =>
           current.status == ReportColabStatus.submitted ||
+          current.status == ReportColabStatus.alreadyReported ||
           current.status == ReportColabStatus.failure,
       listener: (context, state) {
         final messenger = ScaffoldMessenger.of(context);
@@ -58,6 +59,13 @@ class _ReportColabPageState extends State<ReportColabPage> {
               content: Text('Reporte enviado. Lo revisaremos pronto 🔍'),
               backgroundColor: Color(0xFF4CAF50),
             ),
+          );
+          return;
+        }
+
+        if (state.status == ReportColabStatus.alreadyReported) {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Este servicio ya fue reportado')),
           );
           return;
         }

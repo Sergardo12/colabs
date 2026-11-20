@@ -29,7 +29,10 @@ export class CreateServiceRequestDto {
   @IsUUID()
   occupationId!: string;
 
-  @ApiProperty({ example: 'Necesito instalar 3 tomacorrientes', required: false })
+  @ApiProperty({
+    example: 'Necesito instalar 3 tomacorrientes',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   description?: string;

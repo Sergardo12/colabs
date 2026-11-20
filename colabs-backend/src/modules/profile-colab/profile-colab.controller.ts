@@ -54,11 +54,7 @@ export class ProfileColabController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateLocationDto,
   ) {
-    return this.profileColabService.updateLocation(
-      user.id,
-      dto.lat,
-      dto.lng,
-    );
+    return this.profileColabService.updateLocation(user.id, dto.lat, dto.lng);
   }
 
   @Delete('me/location')
@@ -67,20 +63,26 @@ export class ProfileColabController {
     return this.profileColabService.deactivateLocation(user.id);
   }
 
-@Get('search')
-@ApiOperation({ summary: 'Buscar colaboradores con filtros y paginación' })
-@ApiQuery({ name: 'query', required: false, type: String })
-@ApiQuery({ name: 'page', required: false, type: Number })
-@ApiQuery({ name: 'limit', required: false, type: Number })
-@ApiQuery({ name: 'name', required: false, type: String })
-@ApiQuery({ name: 'occupation', required: false, type: String })
-search(
-  @Query('page') page: number = 1,
-  @Query('limit') limit: number = 10,
-  @Query('query') query?: string,
-  @Query('name') name?: string,
-  @Query('occupation') occupation?: string,
-) {
-  return this.profileColabService.search(+page, +limit, query, name, occupation);
-}
+  @Get('search')
+  @ApiOperation({ summary: 'Buscar colaboradores con filtros y paginación' })
+  @ApiQuery({ name: 'query', required: false, type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'name', required: false, type: String })
+  @ApiQuery({ name: 'occupation', required: false, type: String })
+  search(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('query') query?: string,
+    @Query('name') name?: string,
+    @Query('occupation') occupation?: string,
+  ) {
+    return this.profileColabService.search(
+      +page,
+      +limit,
+      query,
+      name,
+      occupation,
+    );
+  }
 }

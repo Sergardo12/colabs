@@ -16,17 +16,20 @@ import { Proposal } from 'src/modules/proposal/entities/proposal.entity';
 import { CommentRequest } from './comment-request.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 
-
 @Entity('service_requests')
 export class ServiceRequest extends BaseEntity {
-
   @Column({ name: 'user_id' })
   userId!: string;
 
   @Column({ name: 'occupation_id' })
   occupationId!: string;
 
-  @Column({ type: 'geography', spatialFeatureType: 'Point', srid: 4326, nullable: true })
+  @Column({
+    type: 'geography',
+    spatialFeatureType: 'Point',
+    srid: 4326,
+    nullable: true,
+  })
   location?: string;
 
   @Column({ nullable: true })

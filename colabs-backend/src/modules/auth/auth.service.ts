@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -19,7 +23,7 @@ export class AuthService {
     private userProviderRepository: Repository<UserProvider>,
 
     private jwtService: JwtService,
-     private configService: ConfigService,
+    private configService: ConfigService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -82,7 +86,6 @@ export class AuthService {
     return user;
   }
 
-
   async login(user: User) {
     return this.generateToken(user);
   }
@@ -111,84 +114,82 @@ export class AuthService {
   }
 
   async validateOAuthUser(oauthData: {
-  email: string;
-  name: string;
-  lastName: string;
-  imageProfile?: string;
-  provider: string;
-  providerId: string;
-}) {
-  // Buscar si ya existe el provider
-  let provider = await this.userProviderRepository.findOne({
-    where: {
-      provider: oauthData.provider,
-      providerId: oauthData.providerId,
-    },
-  });
-
-  if (provider) {
-    // Ya existe — busca el usuario y devuelve token
-    const user = await this.userRepository.findOne({
-      where: { id: provider.userId },
-    });
-    return this.generateToken(user!);
-  }
-
-  // Buscar si el email ya existe con otro provider
-  let user = await this.userRepository.findOne({
-    where: { email: oauthData.email },
-  });
-
-  if (!user) {
-    // Usuario nuevo — crear
-    user = this.userRepository.create({
-      email: oauthData.email,
-      name: oauthData.name,
-      lastName: oauthData.lastName,
-      imageProfile: oauthData.imageProfile,
-    });
-    user = await this.userRepository.save(user);
-  }
-
-  // Crear el provider OAuth
-  const newProvider = this.userProviderRepository.create({
-    userId: user.id,
-    provider: oauthData.provider,
-    providerId: oauthData.providerId,
-  });
-  await this.userProviderRepository.save(newProvider);
-
-  return this.generateToken(user);
-}
-async validateGoogleMobileToken(idToken: string) {
-  const client = new OAuth2Client(
-    this.configService.get<string>('GOOGLE_CLIENT_ID'),
-  );
-
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: this.configService.get<string>('GOOGLE_CLIENT_ID')!,
+    email: string;
+    name: string;
+    lastName: string;
+    imageProfile?: string;
+    provider: string;
+    providerId: string;
+  }) {
+    // Buscar si ya existe el provider
+    const provider = await this.userProviderRepository.findOne({
+      where: {
+        provider: oauthData.provider,
+        providerId: oauthData.providerId,
+      },
     });
 
-    const payload = ticket.getPayload();
-
-    if (!payload) {
-      throw new UnauthorizedException('Token de Google inválido');
+    if (provider) {
+      // Ya existe — busca el usuario y devuelve token
+      const user = await this.userRepository.findOne({
+        where: { id: provider.userId },
+      });
+      return this.generateToken(user!);
     }
 
-    return this.validateOAuthUser({
-      email: payload.email!,
-      name: payload.given_name ?? '',
-      lastName: payload.family_name ?? '',
-      imageProfile: payload.picture,
-      provider: 'google',
-      providerId: payload.sub,
+    // Buscar si el email ya existe con otro provider
+    let user = await this.userRepository.findOne({
+      where: { email: oauthData.email },
     });
-  } catch {
-    throw new UnauthorizedException('Token de Google inválido o expirado');
+
+    if (!user) {
+      // Usuario nuevo — crear
+      user = this.userRepository.create({
+        email: oauthData.email,
+        name: oauthData.name,
+        lastName: oauthData.lastName,
+        imageProfile: oauthData.imageProfile,
+      });
+      user = await this.userRepository.save(user);
+    }
+
+    // Crear el provider OAuth
+    const newProvider = this.userProviderRepository.create({
+      userId: user.id,
+      provider: oauthData.provider,
+      providerId: oauthData.providerId,
+    });
+    await this.userProviderRepository.save(newProvider);
+
+    return this.generateToken(user);
   }
-}
+  async validateGoogleMobileToken(idToken: string) {
+    const client = new OAuth2Client(
+      this.configService.get<string>('GOOGLE_CLIENT_ID'),
+    );
 
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: this.configService.get<string>('GOOGLE_CLIENT_ID')!,
+      });
 
+      const payload = ticket.getPayload();
+
+      if (!payload) {
+        throw new UnauthorizedException('Token de Google inválido');
+      }
+
+      return this.validateOAuthUser({
+        email: payload.email!,
+        name: payload.given_name ?? '',
+        lastName: payload.family_name ?? '',
+        imageProfile: payload.picture,
+        provider: 'google',
+        providerId: payload.sub,
+      });
+    } catch {
+      throw new UnauthorizedException('Token de Google inválido o expirado');
+    }
+  }
 }

@@ -794,6 +794,29 @@ google_sign_in: ^6.2.2
 
 ---
 
+## Migraciones
+
+Las migraciones se ejecutan **dentro del contenedor del backend**, porque las variables `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` y `DB_NAME` solo existen en el entorno de Docker:
+
+```bash
+docker compose exec backend yarn migration:run
+docker compose exec backend yarn migration:revert
+```
+
+Para generar una migración nueva:
+
+```bash
+docker compose exec backend yarn migration:generate src/database/migrations/NombreDeLaMigracion
+```
+
+Fuera de producción `migrationsRun` está activo y las migra al arrancar. En producción se ejecutan explícitamente.
+
+### Pendiente antes del despliegue
+
+- **Migración baseline de producción:** cuando `synchronize` sea `false`, hay que generar y aplicar una migración baseline con el esquema actual (incluyendo PostGIS) antes de las migraciones incrementales, empezando por `uq_reports_service_request_id`.
+
+---
+
 ## Flujo de trabajo Git
 
 Usamos **GitHub Flow** adaptado con rama `develop` como integración.

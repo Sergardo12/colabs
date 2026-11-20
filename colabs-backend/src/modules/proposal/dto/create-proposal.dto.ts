@@ -6,7 +6,7 @@ export class CreateProposalDto {
   @IsUUID()
   serviceRequestId!: string;
 
-  @ApiProperty({ example: 150.00 })
+  @ApiProperty({ example: 150.0 })
   @IsNumber()
   @Min(1)
   amount!: number;

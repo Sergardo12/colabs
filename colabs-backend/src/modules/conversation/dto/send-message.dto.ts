@@ -2,7 +2,7 @@ import { IsString, IsOptional, IsNumber, IsEnum, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum MessageType {
-  TEXT  = 'text',
+  TEXT = 'text',
   OFFER = 'offer',
 }
 
@@ -16,7 +16,7 @@ export class SendMessageDto {
   @IsOptional()
   type?: MessageType = MessageType.TEXT;
 
-  @ApiProperty({ example: 120.00, required: false })
+  @ApiProperty({ example: 120.0, required: false })
   @IsNumber()
   @Min(1)
   @IsOptional()

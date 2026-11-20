@@ -65,7 +65,9 @@ export class ConversationService {
     if (existing) {
       // Canal del mismo post ya abierto → devolverlo (ensure)
       if (dto.postId) return this.findOne(existing.id, userId);
-      throw new ConflictException('Ya tienes una conversación activa con este colaborador');
+      throw new ConflictException(
+        'Ya tienes una conversación activa con este colaborador',
+      );
     }
 
     const conversation = this.conversationRepository.create({
@@ -111,9 +113,10 @@ export class ConversationService {
           where: {
             conversationId: conversation.id,
             isRead: false,
-            senderId: conversation.userId === userId
-              ? conversation.profileColab.userId
-              : conversation.userId,
+            senderId:
+              conversation.userId === userId
+                ? conversation.profileColab.userId
+                : conversation.userId,
           },
         });
 
@@ -139,7 +142,8 @@ export class ConversationService {
       ],
     });
 
-    if (!conversation) throw new NotFoundException('Conversación no encontrada');
+    if (!conversation)
+      throw new NotFoundException('Conversación no encontrada');
 
     // Verificar que el usuario es parte de la conversación
     const isParticipant =
@@ -153,7 +157,11 @@ export class ConversationService {
     return conversation;
   }
 
-  async sendMessage(conversationId: string, userId: string, dto: SendMessageDto) {
+  async sendMessage(
+    conversationId: string,
+    userId: string,
+    dto: SendMessageDto,
+  ) {
     const conversation = await this.findOne(conversationId, userId);
 
     if (conversation.status === 'closed' || conversation.status === 'expired') {
@@ -172,7 +180,9 @@ export class ConversationService {
       }
 
       if (conversation.profileColab.userId !== userId) {
-        throw new ForbiddenException('Solo el colaborador puede enviar ofertas');
+        throw new ForbiddenException(
+          'Solo el colaborador puede enviar ofertas',
+        );
       }
 
       if (!dto.amount) {
@@ -217,21 +227,30 @@ export class ConversationService {
     });
   }
 
-  async acceptOffer(conversationId: string, userId: string, dto: AcceptOfferDto) {
+  async acceptOffer(
+    conversationId: string,
+    userId: string,
+    dto: AcceptOfferDto,
+  ) {
     const conversation = await this.conversationRepository.findOne({
       where: { id: conversationId },
       relations: ['profileColab', 'profileColab.occupations'],
     });
 
-    if (!conversation) throw new NotFoundException('Conversación no encontrada');
+    if (!conversation)
+      throw new NotFoundException('Conversación no encontrada');
 
     // Solo el demandante puede aceptar
     if (conversation.userId !== userId) {
-      throw new ForbiddenException('Solo el demandante puede aceptar la oferta');
+      throw new ForbiddenException(
+        'Solo el demandante puede aceptar la oferta',
+      );
     }
 
     if (conversation.status !== 'offer_sent') {
-      throw new ForbiddenException('No hay una oferta pendiente en esta conversación');
+      throw new ForbiddenException(
+        'No hay una oferta pendiente en esta conversación',
+      );
     }
 
     // Obtener el monto de la última oferta
@@ -249,7 +268,9 @@ export class ConversationService {
     const occupationId = conversation.profileColab.occupations[0]?.id;
 
     if (!occupationId) {
-      throw new ForbiddenException('El colaborador no tiene ocupaciones registradas');
+      throw new ForbiddenException(
+        'El colaborador no tiene ocupaciones registradas',
+      );
     }
 
     // Crear el service_request automáticamente
@@ -297,11 +318,15 @@ export class ConversationService {
 
     // Solo el colaborador puede enviar cotizaciones
     if (conversation.profileColab.userId !== userId) {
-      throw new ForbiddenException('Solo el colaborador puede enviar cotizaciones');
+      throw new ForbiddenException(
+        'Solo el colaborador puede enviar cotizaciones',
+      );
     }
 
     if (!amount || amount <= 0) {
-      throw new ForbiddenException('La cotización debe incluir un monto válido');
+      throw new ForbiddenException(
+        'La cotización debe incluir un monto válido',
+      );
     }
 
     // Si la cotización del chat ya fue aceptada por el demandante, la
@@ -374,7 +399,9 @@ export class ConversationService {
     }
 
     if (conversation.userId !== userId) {
-      throw new ForbiddenException('Solo el demandante puede aceptar la cotización');
+      throw new ForbiddenException(
+        'Solo el demandante puede aceptar la cotización',
+      );
     }
 
     return this.proposalService.acceptQuote(conversationId, userId);
@@ -390,7 +417,9 @@ export class ConversationService {
     }
 
     if (conversation.userId !== userId) {
-      throw new ForbiddenException('Solo el demandante puede rechazar la cotización');
+      throw new ForbiddenException(
+        'Solo el demandante puede rechazar la cotización',
+      );
     }
 
     return this.proposalService.rejectQuote(conversationId, userId);

@@ -13,7 +13,6 @@ import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('comment_requests')
 export class CommentRequest extends BaseEntity {
-
   @Column({ name: 'user_id' })
   userId!: string;
 

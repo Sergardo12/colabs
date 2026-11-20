@@ -68,7 +68,9 @@ export class NotificationService {
         'requester.image_profile AS "requesterImage"',
       ])
       .where('n.user_id = :userId', { userId })
-      .andWhere(`n.type <> :proposalType`, { proposalType: 'proposal_received' })
+      .andWhere(`n.type <> :proposalType`, {
+        proposalType: 'proposal_received',
+      })
       .orderBy('n.creation_date', 'DESC')
       .getRawMany();
 
@@ -137,7 +139,8 @@ export class NotificationService {
     });
 
     const mapProposal = (row: any) => {
-      const raw = typeof row.data === 'string' ? JSON.parse(row.data) : (row.data ?? {});
+      const raw =
+        typeof row.data === 'string' ? JSON.parse(row.data) : (row.data ?? {});
       const hasColab = row.colabId != null && row.colabName != null;
       const hasAmount = row.proposalAmount != null;
       return {
@@ -162,18 +165,22 @@ export class NotificationService {
           lastName: row.requesterLastName,
           imageProfile: row.requesterImage,
         },
-        proposal: hasColab || hasAmount
-          ? {
-              amount: row.proposalAmount != null ? Number(row.proposalAmount) : null,
-              distanceKm: raw.distanceKm ?? null,
-              colab: {
-                id: row.colabId,
-                name: row.colabName,
-                lastName: row.colabLastName,
-                imageProfile: row.colabImage,
-              },
-            }
-          : null,
+        proposal:
+          hasColab || hasAmount
+            ? {
+                amount:
+                  row.proposalAmount != null
+                    ? Number(row.proposalAmount)
+                    : null,
+                distanceKm: raw.distanceKm ?? null,
+                colab: {
+                  id: row.colabId,
+                  name: row.colabName,
+                  lastName: row.colabLastName,
+                  imageProfile: row.colabImage,
+                },
+              }
+            : null,
       };
     };
 
@@ -182,8 +189,9 @@ export class NotificationService {
       ...proposalRows.map(mapProposal),
     ];
 
-    return merged.sort((a, b) =>
-      new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime(),
+    return merged.sort(
+      (a, b) =>
+        new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime(),
     );
   }
 

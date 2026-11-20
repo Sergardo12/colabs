@@ -12,7 +12,6 @@ import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('post_likes')
 export class PostLike extends BaseEntity {
-
   @PrimaryColumn({ name: 'user_id' })
   userId!: string;
 

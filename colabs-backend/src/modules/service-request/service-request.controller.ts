@@ -5,17 +5,15 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ServiceRequestService } from './service-request.service';
 import { CreateServiceRequestDto } from './dto/create-service-request.dto';
 import { UpdateServiceRequestStatusDto } from './dto/update-service-request-status.dto';
+import { GetCancelledWithColabQueryDto } from './dto/get-cancelled-with-colab-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
@@ -29,7 +27,10 @@ export class ServiceRequestController {
 
   @Post()
   @ApiOperation({ summary: 'Crear solicitud de servicio (demandante)' })
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateServiceRequestDto) {
+  create(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateServiceRequestDto,
+  ) {
     return this.serviceRequestService.create(user.id, dto);
   }
 
@@ -45,9 +46,27 @@ export class ServiceRequestController {
     return this.serviceRequestService.findNearby(user.id);
   }
 
+  @Get('cancelled-with-colab')
+  @ApiOperation({
+    summary:
+      'Servicios cancelados con colaborador ganador (para reportar al colaborador)',
+  })
+  findCancelledWithColab(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: GetCancelledWithColabQueryDto,
+  ) {
+    return this.serviceRequestService.findCancelledWithColab(
+      user.id,
+      query.search,
+    );
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Detalle de una solicitud' })
-  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.serviceRequestService.findOne(id, user.id);
   }
 
@@ -74,7 +93,8 @@ export class ServiceRequestController {
 
   @Patch(':id/complete')
   @ApiOperation({
-    summary: 'Finalizar servicio (colaborador ganador: in_progress → completed)',
+    summary:
+      'Finalizar servicio (colaborador ganador: in_progress → completed)',
   })
   completeWork(
     @Param('id', ParseUUIDPipe) id: string,

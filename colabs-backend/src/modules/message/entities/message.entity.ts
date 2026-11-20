@@ -11,8 +11,7 @@ import { Conversation } from '../../conversation/entities/conversation.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('messages')
-export class Message extends BaseEntity{
-
+export class Message extends BaseEntity {
   @Column({ name: 'conversation_id' })
   conversationId!: string;
 

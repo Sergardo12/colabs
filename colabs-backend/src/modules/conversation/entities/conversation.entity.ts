@@ -16,7 +16,6 @@ import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('conversations')
 export class Conversation extends BaseEntity {
-
   @Column({ name: 'user_id' })
   userId!: string;
 
@@ -29,10 +28,8 @@ export class Conversation extends BaseEntity {
   @Column({ name: 'service_request_id', nullable: true })
   serviceRequestId?: string;
 
-
   @Column({ name: 'expires_at', nullable: true, type: 'timestamptz' })
   expiresAt?: Date;
-
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

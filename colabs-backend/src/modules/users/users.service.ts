@@ -23,10 +23,7 @@ export class UsersService {
   async getMyProfile(userId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: [
-        'profileColab',
-        'profileColab.occupations',
-      ],
+      relations: ['profileColab', 'profileColab.occupations'],
     });
 
     if (!user) throw new NotFoundException('Usuario no encontrado');

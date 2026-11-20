@@ -38,6 +38,8 @@ import { SupportModule } from './modules/support/support.module';
         password: configService.get<string>('database.password'),
         database: configService.get<string>('database.database'),
         entities: [__dirname + '/modules/**/entities/*.entity{.ts,.js}'],
+        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+        migrationsRun: process.env.NODE_ENV !== 'production',
         synchronize: process.env.NODE_ENV !== 'production',
         logging: process.env.NODE_ENV === 'development',
         timezone: 'Z',

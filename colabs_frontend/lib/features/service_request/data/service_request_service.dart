@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../models/proposal_model.dart';
+import '../models/reportable_service_model.dart';
 import '../models/service_request_model.dart';
 
 class ServiceRequestService {
@@ -31,6 +32,27 @@ class ServiceRequestService {
     );
     return (response.data as List<dynamic>)
         .map((e) => ServiceRequestModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Servicios cancelados con colaborador ganador (para reportar)
+  Future<List<ReportableServiceModel>> getCancelledWithColab({
+    required String token,
+    String? search,
+  }) async {
+    final response = await _dio.get(
+      '/service-requests/cancelled-with-colab',
+      queryParameters: {
+        if (search != null && search.trim().isNotEmpty)
+          'search': search.trim(),
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return (response.data as List<dynamic>)
+        .map(
+          (e) => ReportableServiceModel.fromJson(e as Map<String, dynamic>),
+        )
         .toList();
   }
 

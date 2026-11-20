@@ -8,11 +8,7 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
@@ -43,7 +39,10 @@ export class ConversationController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Detalle de una conversación' })
-  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.conversationService.findOne(id, user.id);
   }
 
@@ -59,12 +58,17 @@ export class ConversationController {
 
   @Get(':id/messages')
   @ApiOperation({ summary: 'Ver mensajes de una conversación' })
-  findMessages(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+  findMessages(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.conversationService.findMessages(id, user.id);
   }
 
   @Patch(':id/accept-offer')
-  @ApiOperation({ summary: 'Aceptar oferta y crear service request automáticamente' })
+  @ApiOperation({
+    summary: 'Aceptar oferta y crear service request automáticamente',
+  })
   acceptOffer(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,
@@ -84,7 +88,9 @@ export class ConversationController {
   }
 
   @Get(':id/quote')
-  @ApiOperation({ summary: 'Estado de la cotización de una conversación Flow A' })
+  @ApiOperation({
+    summary: 'Estado de la cotización de una conversación Flow A',
+  })
   getQuoteStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: JwtPayload,

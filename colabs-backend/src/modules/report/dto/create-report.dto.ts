@@ -1,12 +1,25 @@
 import { IsUUID, IsString, IsOptional } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateReportDto {
-  @ApiProperty({ example: 'uuid-del-usuario-reportado' })
+  @ApiPropertyOptional({
+    example: 'uuid-del-usuario-reportado',
+    description:
+      'ID del usuario reportado. Si no se envía, se resuelve desde profileColabId.',
+  })
   @IsUUID()
-  reportedUserId!: string;
+  @IsOptional()
+  reportedUserId?: string;
 
-  @ApiProperty({ example: 'uuid-del-service-request', required: false })
+  @ApiPropertyOptional({
+    example: 'uuid-del-profile-colab',
+    description: 'ID del colaborador ganador (profile_colab).',
+  })
+  @IsUUID()
+  @IsOptional()
+  profileColabId?: string;
+
+  @ApiPropertyOptional({ example: 'uuid-del-service-request' })
   @IsUUID()
   @IsOptional()
   serviceRequestId?: string;
@@ -15,7 +28,9 @@ export class CreateReportDto {
   @IsString()
   category!: string;
 
-  @ApiProperty({ example: 'El colaborador no llegó a la cita acordada', required: false })
+  @ApiPropertyOptional({
+    example: 'El colaborador no llegó a la cita acordada',
+  })
   @IsString()
   @IsOptional()
   description?: string;

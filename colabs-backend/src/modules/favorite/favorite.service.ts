@@ -54,7 +54,10 @@ export class FavoriteService {
     const byId = new Map(
       entities.map((p, i) => [
         p.id,
-        { profile: p, avgRating: Math.round(Number(raw[i]?.avg_rating ?? 0) * 10) / 10 },
+        {
+          profile: p,
+          avgRating: Math.round(Number(raw[i]?.avg_rating ?? 0) * 10) / 10,
+        },
       ]),
     );
 
@@ -62,22 +65,22 @@ export class FavoriteService {
       .map((id) => byId.get(id))
       .filter((entry) => entry !== undefined)
       .map((entry) => ({
-        id: entry!.profile.id,
-        userId: entry!.profile.userId,
-        description: entry!.profile.description,
-        experience: entry!.profile.experience,
-        verificationStatus: entry!.profile.verificationStatus,
-        avgRating: entry!.avgRating,
-        occupations: entry!.profile.occupations.map((o) => ({
+        id: entry.profile.id,
+        userId: entry.profile.userId,
+        description: entry.profile.description,
+        experience: entry.profile.experience,
+        verificationStatus: entry.profile.verificationStatus,
+        avgRating: entry.avgRating,
+        occupations: entry.profile.occupations.map((o) => ({
           id: o.id,
           name: o.name,
           image: o.image,
         })),
         user: {
-          id: entry!.profile.user.id,
-          name: entry!.profile.user.name,
-          lastName: entry!.profile.user.lastName,
-          imageProfile: entry!.profile.user.imageProfile,
+          id: entry.profile.user.id,
+          name: entry.profile.user.name,
+          lastName: entry.profile.user.lastName,
+          imageProfile: entry.profile.user.imageProfile,
         },
       }));
 

@@ -33,12 +33,16 @@ export class CommentRequestService {
 
     // Solo el dueño puede calificar
     if (serviceRequest.userId !== userId) {
-      throw new ForbiddenException('Solo puedes calificar tus propias solicitudes');
+      throw new ForbiddenException(
+        'Solo puedes calificar tus propias solicitudes',
+      );
     }
 
     // Solo se califica si el servicio está completado
     if (serviceRequest.status !== ServiceRequestStatus.COMPLETED) {
-      throw new ForbiddenException('Solo puedes calificar servicios completados');
+      throw new ForbiddenException(
+        'Solo puedes calificar servicios completados',
+      );
     }
 
     // Verificar que no haya calificado ya
@@ -76,15 +80,19 @@ export class CommentRequestService {
       .innerJoinAndSelect('cr.serviceRequest', 'sr')
       .innerJoinAndSelect('sr.occupation', 'occupation')
       .innerJoinAndSelect('cr.user', 'user')
-      .where('sr.occupationId IN (SELECT occupation_id FROM profile_colab_occupations WHERE profile_colab_id = :profileColabId)', 
-        { profileColabId })
+      .where(
+        'sr.occupationId IN (SELECT occupation_id FROM profile_colab_occupations WHERE profile_colab_id = :profileColabId)',
+        { profileColabId },
+      )
       .orderBy('cr.creationDate', 'DESC')
       .getMany();
 
     // Calcular rating promedio
-    const averageRating = comments.length > 0
-      ? comments.reduce((sum, c) => sum + (c.rating ?? 0), 0) / comments.length
-      : 0;
+    const averageRating =
+      comments.length > 0
+        ? comments.reduce((sum, c) => sum + (c.rating ?? 0), 0) /
+          comments.length
+        : 0;
 
     return {
       averageRating: Math.round(averageRating * 10) / 10,

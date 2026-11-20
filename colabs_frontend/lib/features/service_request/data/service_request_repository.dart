@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/proposal_model.dart';
+import '../models/reportable_service_model.dart';
 import '../models/service_request_model.dart';
 import 'rejected_nearby_requests_store.dart';
 import 'service_request_service.dart';
@@ -31,6 +32,14 @@ class ServiceRequestRepository {
     final token = await _secureStorage.read(key: _tokenKey);
     if (token == null) throw Exception('No hay sesión activa');
     return _service.getNearbyRequests(token: token);
+  }
+
+  Future<List<ReportableServiceModel>> getCancelledWithColab({
+    String? search,
+  }) async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    if (token == null) throw Exception('No hay sesión activa');
+    return _service.getCancelledWithColab(token: token, search: search);
   }
 
   Future<ServiceRequestModel> createRequest({

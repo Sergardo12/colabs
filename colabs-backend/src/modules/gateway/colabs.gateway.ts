@@ -23,7 +23,7 @@ export class CollabsGateway
   server!: Server;
 
   // Mapa de userId → socketId para saber a quién emitir
-  // directorio de quién está conectado 
+  // directorio de quién está conectado
   private connectedUsers = new Map<string, string>();
 
   constructor(private redisService: RedisService) {}
@@ -62,7 +62,9 @@ export class CollabsGateway
     @ConnectedSocket() client: Socket,
   ) {
     client.join(`conversation_${data.conversationId}`);
-    console.log(`Cliente ${client.id} se unió a conversation_${data.conversationId}`);
+    console.log(
+      `Cliente ${client.id} se unió a conversation_${data.conversationId}`,
+    );
   }
 
   // Usuario abandona una sala de conversación
@@ -72,7 +74,9 @@ export class CollabsGateway
     @ConnectedSocket() client: Socket,
   ) {
     client.leave(`conversation_${data.conversationId}`);
-    console.log(`Cliente ${client.id} abandonó conversation_${data.conversationId}`);
+    console.log(
+      `Cliente ${client.id} abandonó conversation_${data.conversationId}`,
+    );
   }
 
   // Emitir nuevo mensaje a todos en la sala — llamado desde ConversationService
@@ -87,7 +91,8 @@ export class CollabsGateway
   // hola soy el usuario X, esta es mi ubicación y mis ocupaciones, guárdame en Redis con TTL para que sepa que estoy disponible
   @SubscribeMessage('update_location')
   async handleUpdateLocation(
-    @MessageBody() data: { userId: string; lat: number; lng: number; occupationIds: string[] },
+    @MessageBody()
+    data: { userId: string; lat: number; lng: number; occupationIds: string[] },
     @ConnectedSocket() client: Socket,
   ) {
     await this.redisService.setCollaboratorLocation(
@@ -100,10 +105,7 @@ export class CollabsGateway
 
   // Emitir nueva solicitud a colaboradores cercanos
   // el backend llama esto cuando se crea una nueva solicitud de servicio, y le dice a Redis "oye Redis, dame los colaboradores cercanos a esta ubicación que tengan esta ocupación", y luego emite la solicitud a esos colaboradores
-  emitNewServiceRequest(
-    collaboratorIds: string[],
-    serviceRequest: any,
-  ) {
+  emitNewServiceRequest(collaboratorIds: string[], serviceRequest: any) {
     for (const userId of collaboratorIds) {
       const socketId = this.connectedUsers.get(userId);
       if (socketId) {

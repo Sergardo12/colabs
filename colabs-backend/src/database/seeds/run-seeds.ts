@@ -15,7 +15,7 @@ async function bootstrap() {
   await app.close();
 }
 
-bootstrap().catch(err => {
+bootstrap().catch((err) => {
   console.error('❌ Error en seeds:', err);
   process.exit(1);
 });

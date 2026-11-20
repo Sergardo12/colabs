@@ -257,7 +257,13 @@ export class ServiceRequestService {
           )
         )`,
         { acceptedStatus: ProposalStatus.ACCEPTED },
-      );
+      ).andWhere(`
+        NOT EXISTS (
+          SELECT 1
+          FROM reports r
+          WHERE r.service_request_id = sr.id
+        )
+      `);
 
     const term = search?.trim();
     if (term) {

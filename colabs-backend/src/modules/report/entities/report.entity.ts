@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { ServiceRequest } from '../../service-request/entities/service-request.entity';
@@ -12,8 +13,11 @@ import { AdminUser } from '../../admin/entities/admin-user.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('reports')
+@Index('uq_reports_service_request_id', ['serviceRequestId'], {
+  unique: true,
+  where: '"service_request_id" IS NOT NULL',
+})
 export class Report extends BaseEntity {
-
   @Column({ name: 'reporter_id' })
   reporterId!: string;
 
@@ -32,7 +36,7 @@ export class Report extends BaseEntity {
   @Column({ nullable: true })
   description?: string;
 
-  @CreateDateColumn({type: 'timestamptz'})
+  @CreateDateColumn({ type: 'timestamptz' })
   date!: Date;
 
   @ManyToOne(() => User)

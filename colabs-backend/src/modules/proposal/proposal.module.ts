@@ -14,7 +14,14 @@ import { RedisModule } from '../../common/redis.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Proposal, ServiceRequest, ProfileColab, User, Conversation, Message]),
+    TypeOrmModule.forFeature([
+      Proposal,
+      ServiceRequest,
+      ProfileColab,
+      User,
+      Conversation,
+      Message,
+    ]),
     NotificationModule,
     GatewayModule,
     RedisModule,

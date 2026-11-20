@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Proposal } from './entities/proposal.entity';
@@ -50,7 +55,9 @@ export class ProposalService {
     });
 
     if (!profile) {
-      throw new ForbiddenException('Solo los colaboradores pueden enviar propuestas');
+      throw new ForbiddenException(
+        'Solo los colaboradores pueden enviar propuestas',
+      );
     }
 
     // Verificar que la solicitud existe y está pending
@@ -79,7 +86,9 @@ export class ProposalService {
     });
 
     if (existing && existing.status === ProposalStatus.ACCEPTED) {
-      throw new ConflictException('Ya enviaste una propuesta para esta solicitud');
+      throw new ConflictException(
+        'Ya enviaste una propuesta para esta solicitud',
+      );
     }
 
     if (existing && existing.status === ProposalStatus.PENDING) {
@@ -96,7 +105,7 @@ export class ProposalService {
 
     const saved = await this.proposalRepository.save(proposal);
 
-// Notifica al demandante de la nueva cotización (con distancia).
+    // Notifica al demandante de la nueva cotización (con distancia).
     await this.notifyProposalReceived(profile, serviceRequest, saved);
 
     // Disponibiliza el chat entre demandante y colaborador aunque la
@@ -128,7 +137,9 @@ export class ProposalService {
     });
 
     if (!profile) {
-      throw new ForbiddenException('Solo los colaboradores pueden enviar propuestas');
+      throw new ForbiddenException(
+        'Solo los colaboradores pueden enviar propuestas',
+      );
     }
 
     const serviceRequest = await this.serviceRequestRepository.findOne({
@@ -207,8 +218,9 @@ export class ProposalService {
     // Si no se puede calcular (sin ubicación), se notifica igual con valor null.
     let distanceKm: number | null = null;
     try {
-      const location =
-        await this.redisService.getCollaboratorLocation(profile.userId);
+      const location = await this.redisService.getCollaboratorLocation(
+        profile.userId,
+      );
       if (location && serviceRequest.location) {
         const distanceResult = await this.serviceRequestRepository
           .createQueryBuilder('sr')
@@ -296,8 +308,6 @@ export class ProposalService {
       await this.conversationRepository.save(conversation);
     }
   }
-
-  
 
   async findMyProposals(userId: string) {
     const profile = await this.profileColabRepository.findOne({
@@ -399,7 +409,7 @@ export class ProposalService {
       { status: ServiceRequestStatus.ACCEPTED, acceptanceDate: new Date() },
     );
 
-    // Notificar al colaborador 
+    // Notificar al colaborador
     const collabNotification = await this.notificationService.notify({
       userId: proposal.profileColab.userId,
       type: 'proposal_accepted',
@@ -436,14 +446,14 @@ export class ProposalService {
 
     // Emitir en tiempo real al colaborador (después de crear la conversación)
     this.gateway.emitNewNotification(proposal.profileColab.userId, {
-      id:           collabNotification.id,
-      userId:       proposal.profileColab.userId,
-      type:         collabNotification.type,
-      title:        collabNotification.title,
-      body:         collabNotification.body,
-      entityType:   collabNotification.entityType,
-      entityId:     collabNotification.entityId,
-      isRead:       false,
+      id: collabNotification.id,
+      userId: proposal.profileColab.userId,
+      type: collabNotification.type,
+      title: collabNotification.title,
+      body: collabNotification.body,
+      entityType: collabNotification.entityType,
+      entityId: collabNotification.entityId,
+      isRead: false,
       creationDate: collabNotification.creationDate,
     });
 
@@ -481,8 +491,8 @@ export class ProposalService {
     // Mensaje de sistema en el chat (si el canal ya existe) + emit en tiempo real
     const conversation = await this.conversationRepository.findOne({
       where: {
-        userId:           proposal.serviceRequest.userId,
-        profileColabId:   proposal.profileColabId,
+        userId: proposal.serviceRequest.userId,
+        profileColabId: proposal.profileColabId,
         serviceRequestId: proposal.serviceRequestId,
       },
     });
@@ -490,24 +500,25 @@ export class ProposalService {
     if (conversation) {
       const systemMessage = this.messageRepository.create({
         conversationId: conversation.id,
-        senderId:       userId,
-        content:        'Cotización rechazada. El colaborador puede enviar una nueva cotización si lo acuerdan.',
-        type:           MessageType.TEXT,
-        isRead:         false,
+        senderId: userId,
+        content:
+          'Cotización rechazada. El colaborador puede enviar una nueva cotización si lo acuerdan.',
+        type: MessageType.TEXT,
+        isRead: false,
       });
       const savedMessage = await this.messageRepository.save(systemMessage);
       this.gateway.emitNewMessage(conversation.id, savedMessage);
     }
 
     this.gateway.emitNewNotification(proposal.profileColab.userId, {
-      id:           notification.id,
-      userId:       proposal.profileColab.userId,
-      type:         notification.type,
-      title:        notification.title,
-      body:         notification.body,
-      entityType:   notification.entityType,
-      entityId:     notification.entityId,
-      isRead:       false,
+      id: notification.id,
+      userId: proposal.profileColab.userId,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      entityType: notification.entityType,
+      entityId: notification.entityId,
+      isRead: false,
       creationDate: notification.creationDate,
     });
 
@@ -520,7 +531,8 @@ export class ProposalService {
       relations: ['profileColab', 'profileColab.user', 'serviceRequest'],
     });
 
-    if (!conversation) throw new NotFoundException('Conversación no encontrada');
+    if (!conversation)
+      throw new NotFoundException('Conversación no encontrada');
 
     if (!conversation.serviceRequestId || conversation.postId) {
       throw new ForbiddenException(
@@ -529,7 +541,9 @@ export class ProposalService {
     }
 
     if (conversation.userId !== userId) {
-      throw new ForbiddenException('Solo el demandante puede aceptar la cotización');
+      throw new ForbiddenException(
+        'Solo el demandante puede aceptar la cotización',
+      );
     }
 
     // Solo se puede aceptar UNA cotización de chat por solicitud (precio
@@ -539,26 +553,30 @@ export class ProposalService {
     const alreadyAcceptedChat = await this.conversationRepository.findOne({
       where: {
         serviceRequestId: conversation.serviceRequestId,
-        postId:           IsNull(),
-        status:           'accepted',
+        postId: IsNull(),
+        status: 'accepted',
       },
     });
 
     if (alreadyAcceptedChat) {
-      throw new ForbiddenException('Ya existe una cotización aceptada para esta solicitud');
+      throw new ForbiddenException(
+        'Ya existe una cotización aceptada para esta solicitud',
+      );
     }
 
     const proposal = await this.proposalRepository.findOne({
       where: {
         serviceRequestId: conversation.serviceRequestId,
-        profileColabId:   conversation.profileColabId,
-        status:           ProposalStatus.PENDING,
+        profileColabId: conversation.profileColabId,
+        status: ProposalStatus.PENDING,
       },
       relations: ['serviceRequest', 'profileColab', 'profileColab.user'],
     });
 
     if (!proposal) {
-      throw new NotFoundException('No hay una cotización pendiente en esta conversación');
+      throw new NotFoundException(
+        'No hay una cotización pendiente en esta conversación',
+      );
     }
 
     const serviceRequest = proposal.serviceRequest;
@@ -585,7 +603,7 @@ export class ProposalService {
       .andWhere('id != :id', { id: proposal.id })
       .execute();
 
-// La solicitud queda "aceptada" con el precio acordado; la transición a
+    // La solicitud queda "aceptada" con el precio acordado; la transición a
     // "en proceso" la realiza únicamente el colaborador ganador desde su card
     // (PATCH /service-requests/:id/start).
     await this.serviceRequestRepository.update(
@@ -620,7 +638,8 @@ export class ProposalService {
       relations: ['profileColab', 'profileColab.user', 'serviceRequest'],
     });
 
-    if (!conversation) throw new NotFoundException('Conversación no encontrada');
+    if (!conversation)
+      throw new NotFoundException('Conversación no encontrada');
 
     if (!conversation.serviceRequestId || conversation.postId) {
       throw new ForbiddenException(
@@ -629,24 +648,30 @@ export class ProposalService {
     }
 
     if (conversation.userId !== userId) {
-      throw new ForbiddenException('Solo el demandante puede rechazar la cotización');
+      throw new ForbiddenException(
+        'Solo el demandante puede rechazar la cotización',
+      );
     }
 
     const proposal = await this.proposalRepository.findOne({
       where: {
         serviceRequestId: conversation.serviceRequestId,
-        profileColabId:   conversation.profileColabId,
-        status:           ProposalStatus.PENDING,
+        profileColabId: conversation.profileColabId,
+        status: ProposalStatus.PENDING,
       },
       relations: ['serviceRequest', 'profileColab'],
     });
 
     if (!proposal) {
-      throw new NotFoundException('No hay una cotización pendiente en esta conversación');
+      throw new NotFoundException(
+        'No hay una cotización pendiente en esta conversación',
+      );
     }
 
-    if (proposal.serviceRequest.status !== ServiceRequestStatus.PENDING &&
-      proposal.serviceRequest.status !== ServiceRequestStatus.ACCEPTED) {
+    if (
+      proposal.serviceRequest.status !== ServiceRequestStatus.PENDING &&
+      proposal.serviceRequest.status !== ServiceRequestStatus.ACCEPTED
+    ) {
       throw new ForbiddenException('Esta solicitud ya no está disponible');
     }
 
@@ -657,7 +682,8 @@ export class ProposalService {
     const systemMessage = this.messageRepository.create({
       conversationId,
       senderId: userId,
-      content: 'Cotización rechazada. El colaborador puede enviar una nueva cotización si lo acuerdan.',
+      content:
+        'Cotización rechazada. El colaborador puede enviar una nueva cotización si lo acuerdan.',
       type: MessageType.TEXT,
       isRead: false,
     });
@@ -675,14 +701,14 @@ export class ProposalService {
     });
 
     this.gateway.emitNewNotification(proposal.profileColab.userId, {
-      id:           notification.id,
-      userId:       proposal.profileColab.userId,
-      type:         notification.type,
-      title:        notification.title,
-      body:         notification.body,
-      entityType:   notification.entityType,
-      entityId:     notification.entityId,
-      isRead:       false,
+      id: notification.id,
+      userId: proposal.profileColab.userId,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      entityType: notification.entityType,
+      entityId: notification.entityId,
+      isRead: false,
       creationDate: notification.creationDate,
     });
 
@@ -695,7 +721,8 @@ export class ProposalService {
       relations: ['profileColab', 'serviceRequest'],
     });
 
-    if (!conversation) throw new NotFoundException('Conversación no encontrada');
+    if (!conversation)
+      throw new NotFoundException('Conversación no encontrada');
 
     const isParticipant =
       conversation.userId === userId ||
@@ -717,7 +744,7 @@ export class ProposalService {
     const proposal = await this.proposalRepository.findOne({
       where: {
         serviceRequestId: conversation.serviceRequestId,
-        profileColabId:   conversation.profileColabId,
+        profileColabId: conversation.profileColabId,
       },
       order: { createdAt: 'DESC' },
     });
@@ -734,8 +761,8 @@ export class ProposalService {
     const acceptedProposal = await this.proposalRepository.findOne({
       where: {
         serviceRequestId: conversation.serviceRequestId,
-        profileColabId:   conversation.profileColabId,
-        status:           ProposalStatus.ACCEPTED,
+        profileColabId: conversation.profileColabId,
+        status: ProposalStatus.ACCEPTED,
       },
       order: { createdAt: 'DESC' },
     });

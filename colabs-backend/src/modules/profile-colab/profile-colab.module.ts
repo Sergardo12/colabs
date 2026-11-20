@@ -10,7 +10,7 @@ import { RedisModule } from 'src/common/redis.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([ProfileColab, Occupation, User]),
-    RedisModule
+    RedisModule,
   ],
   controllers: [ProfileColabController],
   providers: [ProfileColabService],

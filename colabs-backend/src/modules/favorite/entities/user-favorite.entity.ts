@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryColumn,
-  ManyToOne,
-  JoinColumn,
-  Index,
-} from 'typeorm';
+import { Entity, PrimaryColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { ProfileColab } from '../../profile-colab/entities/profile-colab.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
@@ -16,7 +10,6 @@ import { BaseEntity } from 'src/common/entities/base.entity';
   { unique: true },
 )
 export class UserFavorite extends BaseEntity {
-
   @PrimaryColumn({ name: 'user_id' })
   userId!: string;
 

@@ -12,7 +12,6 @@ import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('supports')
 export class Support extends BaseEntity {
-
   @Column({ name: 'user_id' })
   userId!: string;
 
@@ -22,7 +21,7 @@ export class Support extends BaseEntity {
   @Column({ nullable: true })
   description?: string;
 
-  @CreateDateColumn({type: 'timestamptz'})
+  @CreateDateColumn({ type: 'timestamptz' })
   date!: Date;
 
   @ManyToOne(() => User)

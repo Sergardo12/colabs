@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -44,20 +38,20 @@ export class AuthController {
     return this.authService.getMe(user.id);
   }
 
-@Get('google')
-@ApiOperation({ summary: 'Login con Google' })
-@UseGuards(AuthGuard('google'))
-googleAuth() {}
+  @Get('google')
+  @ApiOperation({ summary: 'Login con Google' })
+  @UseGuards(AuthGuard('google'))
+  googleAuth() {}
 
-@Get('google/callback')
-@UseGuards(AuthGuard('google'))
-googleCallback(@CurrentUser() user: any) {
-  return user;
-}
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleCallback(@CurrentUser() user: any) {
+    return user;
+  }
 
-@Post('google/mobile')
-@ApiOperation({ summary: 'Login con Google desde Flutter (mobile)' })
-googleMobile(@Body() dto: GoogleMobileDto) {
-  return this.authService.validateGoogleMobileToken(dto.idToken);
-}
+  @Post('google/mobile')
+  @ApiOperation({ summary: 'Login con Google desde Flutter (mobile)' })
+  googleMobile(@Body() dto: GoogleMobileDto) {
+    return this.authService.validateGoogleMobileToken(dto.idToken);
+  }
 }

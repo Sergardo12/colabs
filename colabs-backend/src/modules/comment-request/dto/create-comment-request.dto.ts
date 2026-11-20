@@ -12,7 +12,10 @@ export class CreateCommentRequestDto {
   @Max(5)
   rating!: number;
 
-  @ApiProperty({ example: 'Excelente trabajo, muy puntual y profesional', required: false })
+  @ApiProperty({
+    example: 'Excelente trabajo, muy puntual y profesional',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   comment?: string;

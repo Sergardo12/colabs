@@ -14,7 +14,9 @@ export class CreatePostDto {
   description!: string;
 
   @ApiProperty({
-    example: ['https://res.cloudinary.com/colabs/image/upload/v1/posts/abc.jpg'],
+    example: [
+      'https://res.cloudinary.com/colabs/image/upload/v1/posts/abc.jpg',
+    ],
     required: false,
   })
   @IsArray()
@@ -22,7 +24,7 @@ export class CreatePostDto {
   @IsOptional()
   media?: string[];
 
-  @ApiProperty({ example: 75.00, required: false })
+  @ApiProperty({ example: 75.0, required: false })
   @IsNumber()
   @Min(0)
   @IsOptional()

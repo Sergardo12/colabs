@@ -66,82 +66,86 @@ export class ProfileColabService {
     return this.profileColabRepository.save(profileColab);
   }
 
- async search(
-  page: number = 1,
-  limit: number = 10,
-  query?: string,
-  name?: string,
-  occupation?: string,
-) {
-  const qb = this.profileColabRepository
-    .createQueryBuilder('profile')
-    .leftJoinAndSelect('profile.user', 'user')
-    .leftJoinAndSelect('profile.occupations', 'occupation')
-    .where('profile.status = :status', { status: 'active' })
-    .addSelect(
-      (sub) =>
-        sub
-          .select('AVG(cr.rating)', 'avg_rating')
-          .from(CommentRequest, 'cr')
-          .innerJoin(Proposal, 'p', 'p.service_request_id = cr.service_request_id')
-          .where('p.profile_colab_id = profile.id')
-          .andWhere('cr.status = :status', { status: 'active' }),
-      'avg_rating',
-    );
-
-  if (query) {
-    // query tiene prioridad — busca en nombre, apellido y ocupación
-    qb.andWhere(
-      '(LOWER(user.name) LIKE :q OR LOWER(user.last_name) LIKE :q OR LOWER(occupation.name) LIKE :q)',
-      { q: `%${query.toLowerCase()}%` },
-    );
-  } else {
-    // filtros individuales para compatibilidad
-    if (name) {
-      qb.andWhere(
-        '(LOWER(user.name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
-        { name: `%${name.toLowerCase()}%` },
+  async search(
+    page: number = 1,
+    limit: number = 10,
+    query?: string,
+    name?: string,
+    occupation?: string,
+  ) {
+    const qb = this.profileColabRepository
+      .createQueryBuilder('profile')
+      .leftJoinAndSelect('profile.user', 'user')
+      .leftJoinAndSelect('profile.occupations', 'occupation')
+      .where('profile.status = :status', { status: 'active' })
+      .addSelect(
+        (sub) =>
+          sub
+            .select('AVG(cr.rating)', 'avg_rating')
+            .from(CommentRequest, 'cr')
+            .innerJoin(
+              Proposal,
+              'p',
+              'p.service_request_id = cr.service_request_id',
+            )
+            .where('p.profile_colab_id = profile.id')
+            .andWhere('cr.status = :status', { status: 'active' }),
+        'avg_rating',
       );
+
+    if (query) {
+      // query tiene prioridad — busca en nombre, apellido y ocupación
+      qb.andWhere(
+        '(LOWER(user.name) LIKE :q OR LOWER(user.last_name) LIKE :q OR LOWER(occupation.name) LIKE :q)',
+        { q: `%${query.toLowerCase()}%` },
+      );
+    } else {
+      // filtros individuales para compatibilidad
+      if (name) {
+        qb.andWhere(
+          '(LOWER(user.name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
+          { name: `%${name.toLowerCase()}%` },
+        );
+      }
+      if (occupation) {
+        qb.andWhere('LOWER(occupation.name) LIKE :occupation', {
+          occupation: `%${occupation.toLowerCase()}%`,
+        });
+      }
     }
-    if (occupation) {
-      qb.andWhere('LOWER(occupation.name) LIKE :occupation', {
-        occupation: `%${occupation.toLowerCase()}%`,
-      });
-    }
-  }
 
-  const total = await qb.getCount();
+    const total = await qb.getCount();
 
-  const { entities, raw } = await qb
-    .skip((page - 1) * limit)
-    .take(limit)
-    .getRawAndEntities();
+    const { entities, raw } = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getRawAndEntities();
 
-  return {
-    data: entities.map((profile, i) => ({
-      id: profile.id,
-      userId: profile.userId,
-      description: profile.description,
-      experience: profile.experience,
-      verificationStatus: profile.verificationStatus,
-      avgRating: Math.round(Number(raw[i]?.avg_rating ?? 0) * 10) / 10,
-      occupations: profile.occupations.map(o => ({
-        id: o.id,
-        name: o.name,
-        image: o.image,
+    return {
+      data: entities.map((profile, i) => ({
+        id: profile.id,
+        userId: profile.userId,
+        description: profile.description,
+        experience: profile.experience,
+        verificationStatus: profile.verificationStatus,
+        avgRating: Math.round(Number(raw[i]?.avg_rating ?? 0) * 10) / 10,
+        occupations: profile.occupations.map((o) => ({
+          id: o.id,
+          name: o.name,
+          image: o.image,
+        })),
+        user: {
+          id: profile.user.id,
+          name: profile.user.name,
+          lastName: profile.user.lastName,
+          imageProfile: profile.user.imageProfile,
+        },
       })),
-      user: {
-        id: profile.user.id,
-        name: profile.user.name,
-        lastName: profile.user.lastName,
-        imageProfile: profile.user.imageProfile,
-      },
-    })),
-    total,
-    page,
-    lastPage: Math.ceil(total / limit),
-  };
-}
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
 
   async getMyProfile(userId: string) {
     const profile = await this.profileColabRepository.findOne({
@@ -192,34 +196,30 @@ export class ProfileColabService {
     return this.profileColabRepository.save(profile);
   }
 
-  async updateLocation(
-  userId: string,
-  lat: number,
-  lng: number,
-) {
-  const profile = await this.profileColabRepository.findOne({
-    where: { userId },
-    relations: ['occupations'],
-  });
+  async updateLocation(userId: string, lat: number, lng: number) {
+    const profile = await this.profileColabRepository.findOne({
+      where: { userId },
+      relations: ['occupations'],
+    });
 
-  if (!profile) {
-    throw new NotFoundException('No tienes perfil de colaborador');
+    if (!profile) {
+      throw new NotFoundException('No tienes perfil de colaborador');
+    }
+
+    const occupationIds = profile.occupations.map((o) => o.id);
+
+    await this.redisService.setCollaboratorLocation(
+      userId,
+      lat,
+      lng,
+      occupationIds,
+    );
+
+    return { message: 'Ubicación actualizada', status: 'available' };
   }
 
-  const occupationIds = profile.occupations.map(o => o.id);
-
-  await this.redisService.setCollaboratorLocation(
-    userId,
-    lat,
-    lng,
-    occupationIds,
-  );
-
-  return { message: 'Ubicación actualizada', status: 'available' };
-}
-
-async deactivateLocation(userId: string) {
-  await this.redisService.removeCollaboratorLocation(userId);
-  return { message: 'Disponibilidad desactivada', status: 'offline' };
-}
+  async deactivateLocation(userId: string) {
+    await this.redisService.removeCollaboratorLocation(userId);
+    return { message: 'Disponibilidad desactivada', status: 'offline' };
+  }
 }

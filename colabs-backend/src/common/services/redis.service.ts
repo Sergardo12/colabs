@@ -55,17 +55,19 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   // Busca colaboradores cercanos por occupation
-  async findNearbyCollaborators(occupationId: string): Promise<Array<{
-    userId: string;
-    lat: number;
-    lng: number;
-  }>> {
+  async findNearbyCollaborators(occupationId: string): Promise<
+    Array<{
+      userId: string;
+      lat: number;
+      lng: number;
+    }>
+  > {
     const keys = await this.client.keys('colab:*');
 
-    const collaborators: Array<{   
-    userId: string;
-    lat: number;
-    lng: number;
+    const collaborators: Array<{
+      userId: string;
+      lat: number;
+      lng: number;
     }> = [];
 
     for (const key of keys) {

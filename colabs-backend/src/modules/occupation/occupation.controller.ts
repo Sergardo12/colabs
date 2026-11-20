@@ -9,11 +9,7 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OccupationService } from './occupation.service';
 import { CreateOccupationDto } from './dto/create-occupation.dto';
 import { UpdateOccupationDto } from './dto/update-occupation.dto';

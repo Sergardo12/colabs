@@ -17,7 +17,6 @@ import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('profile_colab')
 export class ProfileColab extends BaseEntity {
-
   @Column({ name: 'user_id' })
   userId!: string;
 

@@ -7,11 +7,7 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CommentRequestService } from './comment-request.service';
 import { CreateCommentRequestDto } from './dto/create-comment-request.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -27,7 +23,10 @@ export class CommentRequestController {
 
   @Post()
   @ApiOperation({ summary: 'Calificar un servicio completado' })
-  create(@CurrentUser() user: JwtPayload, @Body() dto: CreateCommentRequestDto) {
+  create(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateCommentRequestDto,
+  ) {
     return this.commentRequestService.create(user.id, dto);
   }
 
@@ -39,7 +38,9 @@ export class CommentRequestController {
 
   @Get('colab/:profileColabId')
   @ApiOperation({ summary: 'Calificaciones de un colaborador' })
-  findByProfileColab(@Param('profileColabId', ParseUUIDPipe) profileColabId: string) {
+  findByProfileColab(
+    @Param('profileColabId', ParseUUIDPipe) profileColabId: string,
+  ) {
     return this.commentRequestService.findByProfileColab(profileColabId);
   }
 }

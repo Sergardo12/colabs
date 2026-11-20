@@ -11,7 +11,6 @@ import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('proposals')
 export class Proposal extends BaseEntity {
-
   @Column({ name: 'profile_colab_id' })
   profileColabId!: string;
 

@@ -10,7 +10,6 @@ import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Entity('user_providers')
 export class UserProvider extends BaseEntity {
-
   @Column({ name: 'user_id' })
   userId!: string;
 

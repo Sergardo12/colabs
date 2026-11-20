@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Occupation } from './entities/occupation.entity';
@@ -37,7 +41,9 @@ export class OccupationService {
     });
 
     if (existing) {
-      throw new ConflictException(`El oficio "${createOccupationDto.name}" ya existe`);
+      throw new ConflictException(
+        `El oficio "${createOccupationDto.name}" ya existe`,
+      );
     }
 
     const occupation = this.occupationRepository.create(createOccupationDto);

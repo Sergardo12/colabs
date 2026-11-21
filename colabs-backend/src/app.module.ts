@@ -20,12 +20,14 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { ReportModule } from './modules/report/report.module';
 import { SuggestionModule } from './modules/suggestion/suggestion.module';
 import { SupportModule } from './modules/support/support.module';
+import storageB2Config from './config/storage.config';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, redisConfig, jwtConfig],
+      load: [databaseConfig, redisConfig, jwtConfig, storageB2Config],
       envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({
@@ -62,6 +64,7 @@ import { SupportModule } from './modules/support/support.module';
     ReportModule,
     SuggestionModule,
     SupportModule,
+    StorageModule,
   ],
 })
 export class AppModule {}

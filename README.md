@@ -6,16 +6,16 @@ Aplicación móvil SaaS que conecta usuarios que ofrecen servicios empíricos (c
 
 ## 📊 Progreso del proyecto
 
-**🚀 Lanzamiento objetivo: 27 de diciembre de 2026**
-**🧪 Pruebas con usuarios reales: 1 — 20 de diciembre de 2026**
+**🚀 Lanzamiento objetivo: Finales de enero de diciembre de 2027**
+**🧪 Prueba cerrada de 14 dias: 1 — 20 de enero de 2027 o puede ser antes**
 
 ### Backend (NestJS)
-![Backend Progress](https://progress-bar.xyz/87/?title=Backend&width=500&color=1E41BC)
-`13 de 15 módulos completados`
+![Backend Progress](https://progress-bar.xyz/75/?title=Backend&width=500&color=1E41BC)
+`13 de 18 módulos completados`
 
 ### Frontend (Flutter)
-![Frontend Progress](https://progress-bar.xyz/93/?title=Flutter&width=500&color=017DB0)
-`25 de 27 funcionalidades completadas`
+![Frontend Progress](https://progress-bar.xyz/87/?title=Flutter&width=500&color=017DB0)
+`25 de 28 funcionalidades completadas`
 
 ### Flujos principales
 | Flujo | Estado | Descripción |
@@ -76,7 +76,7 @@ Un colaborador también puede solicitar servicios de otro colaborador.
 | Backend | NestJS (módulos nativos) |
 | Base de datos principal | PostgreSQL + JSONB + PostGIS |
 | Ubicación efímera | Redis (TTL 60s, nunca toca PostgreSQL) |
-| Almacenamiento de media | Cloudinary |
+| Almacenamiento de media | Backblaze B2 (API compatible con S3) + URLs prefirmadas |
 | Autenticación | Passport.js + JWT |
 | Contenedores | Docker + Docker Compose |
 | Reverse proxy | Nginx + SSL (Let's Encrypt) |
@@ -99,7 +99,7 @@ DigitalOcean Droplet (Ubuntu 22.04)
 Flutter (desarrollo local, fuera de Docker)
    ↕ HTTPS
 Nginx → NestJS → PostgreSQL / Redis
-              → Cloudinary (externo)
+              → Backblaze B2 (externo, subida directa desde Flutter vía URL prefirmada)
 ```
  
 ---
@@ -193,6 +193,9 @@ colabs/
 │   │   ├── modules/         → módulos del negocio
 │   │   │   ├── auth/
 │   │   │   ├── users/
+│   │   │   ├── admin/
+│   │   │   ├── gateway/
+│   │   │   ├── comment-request/
 │   │   │   ├── profile-colab/
 │   │   │   ├── occupation/
 │   │   │   ├── service-request/
@@ -205,6 +208,7 @@ colabs/
 │   │   │   ├── report/
 │   │   │   ├── suggestion/
 │   │   │   └── support/
+│   │   │   └── storage/         → URLs prefirmadas para Backblaze B2
 │   │   ├── common/          → código reutilizable
 │   │   │   ├── decorators/
 │   │   │   ├── filters/
@@ -215,9 +219,11 @@ colabs/
 │   │   ├── config/          → configuración centralizada
 │   │   │   ├── database.config.ts
 │   │   │   ├── redis.config.ts
+│   │   │   ├── storage.config.ts
 │   │   │   └── jwt.config.ts
 │   │   ├── database/
 │   │   │   ├── migrations/  → cambios de esquema versionados
+│           ├── data-source.ts
 │   │   │   └── seeds/       → datos iniciales
 │   │   ├── app.module.ts
 │   │   └── main.ts
@@ -290,9 +296,6 @@ features/auth/
 ├── models/                      → JSON → objeto Dart
 └── pages/                       → pantallas y widgets del módulo
 ```
-
-Nota: feed/, chat/ y service_request/ contienen solo stubs vacíos.
-Se implementan en próximas iteraciones.
 ---
  
 ## Autenticación
@@ -322,8 +325,6 @@ Flutter → POST /api/auth/login con email y password
 NestJS  → valida credenciales → emite JWT
 Flutter ← recibe JWT → lo guarda en FlutterSecureStorage
 ```
-
-Providers pendientes: Facebook, Apple
  
 ---
  
@@ -577,7 +578,42 @@ Todos requieren JWT (Bearer token).
 | status | string |
  
 ---
- 
+ ## Almacenamiento de imágenes (Backblaze B2)
+
+El backend **nunca recibe el archivo**: solo entrega una URL prefirmada y Flutter sube directo a B2.
+
+```
+Flutter → comprime la imagen (~1080px, calidad 80)
+Flutter → POST /api/storage/presign { kind, contentType, size }   (JWT)
+NestJS  ← valida tipo y tamaño → devuelve { uploadUrl, key, publicUrl }
+Flutter → PUT uploadUrl (binario, mismo Content-Type)
+Flutter → guarda publicUrl (o key) en el recurso: POST /api/posts, perfil, etc.
+```
+
+| `kind` | Bucket | Qué se guarda en BD |
+|---|---|---|
+| `post` | público | `publicUrl` en `post.media` |
+| `avatar` | público | `publicUrl` en `users.image_profile` |
+| `dni` | **privado** | solo la `key` en `profile_colab.dni_image` |
+
+- Formatos permitidos: `image/jpeg`, `image/png`, `image/webp`. Máximo 5 MB.
+- La URL prefirmada expira en 5 minutos y firma Content-Type y Content-Length.
+- Ruta del objeto: `{kind}/{userId}/{uuid}.{ext}`.
+- Los archivos privados se leen con `presignRead(key)` (aún no expuesto; será para el panel admin).
+
+**Probar con curl:**
+```bash
+curl -X POST http://localhost:8080/api/storage/presign \
+  -H "Authorization: Bearer <JWT>" -H "Content-Type: application/json" \
+  -d '{"kind":"post","contentType":"image/jpeg","size":77389}'
+
+curl -X PUT "<uploadUrl>" -H "Content-Type: image/jpeg" --data-binary @foto.jpg
+
+El PUT no imprime nada: HTTP 200 con cuerpo vacío es lo normal.
+```
+
+---
+
 ## Redis — ubicación de colaboradores
  
 La ubicación del colaborador nunca toca PostgreSQL. Se almacena en Redis con TTL de 60 segundos.
@@ -628,17 +664,35 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=
  
-# OAuth — Facebook
-FACEBOOK_APP_ID=
-FACEBOOK_APP_SECRET=
-FACEBOOK_CALLBACK_URL=
- 
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+# Backblaze B2 (S3-compatible)
+B2_KEY_ID=
+B2_APPLICATION_KEY=
+B2_ENDPOINT=https://s3.us-east-005.backblazeb2.com
+B2_REGION=us-east-005
+B2_PUBLIC_BUCKET=
+B2_PRIVATE_BUCKET=
+B2_PUBLIC_BASE_URL=
+
+Toda variable nueva también debe listarse en environment del servicio backend en docker-compose.yml.
 ```
- 
+
+---
+
+## Fechas y zona horaria
+
+- Los instantes se guardan como `timestamptz` (UTC); `date_birth` es `date`.
+- El backend corre con `TZ=UTC` y la API devuelve fechas ISO con `Z`.
+- Flutter convierte a hora local con `toLocal()`.
+
+## Notas de entorno (Yarn / Docker)
+
+- El proyecto usa **Yarn 1.22.22** (`packageManager` fijado en `package.json`). No usar Yarn Berry: crea `.pnp.*`, `.yarn/` y reescribe `yarn.lock`.
+- Instala dependencias **dentro del contenedor** y, al cambiar `package.json`, reconstruye:
+  ```bash
+  docker compose down
+  docker compose up -d --build
+  ```
+- En Windows: `git config core.autocrlf input` (el repo fuerza LF con `.gitattributes`).
 ---
 
 ## Seeds — datos iniciales
@@ -681,6 +735,12 @@ ioredis @nestjs/cache-manager cache-manager-ioredis
 # Documentación
 @nestjs/swagger swagger-ui-express
  
+# Almacenamiento (Backblaze B2 vía S3)
+@aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+
+# Google (login mobile)
+google-auth-library
+
 # Utilidades
 uuid
 ```
@@ -698,7 +758,7 @@ flutter_secure_storage: ^9.2.2
 smooth_page_indicator: ^1.2.0+3
 google_sign_in: ^6.2.2
 
-# Pendientes de instalar cuando se implemente el módulo
+# image_picker, flutter_image_compress → selección y compresión de imágenes antes de subir a B2
 # google_maps_flutter, geolocator, geocoding → mapa y ubicación
 # socket_io_client → chat en tiempo real
 # image_picker → subida de imágenes
@@ -712,7 +772,7 @@ google_sign_in: ^6.2.2
  
 - **Sin Clean Architecture por ahora** — módulos nativos de NestJS. Se evalúa migrar cuando el proyecto lo justifique.
 - **Sin Firebase** — autenticación, storage y base de datos son completamente independientes de Firebase.
-- **Cloudinary** para almacenamiento y transformación de imágenes.
+- **Backblaze B2** para almacenamiento (Cloudinary se descartó por costo). Subida directa desde Flutter con URLs prefirmadas; la compresión se hace en el cliente. Bucket público para posts/avatars y privado para DNI. Antes de producción: Cloudflare CDN al frente y llaves B2 separadas por bucket.
 - **PostgreSQL en contenedor Docker** para desarrollo. Se evalúa managed database en producción.
 - **Tracking visual de ruta** — se implementa en versión posterior. Primera versión solo muestra estados.
 - **Panel de administración** — se construye después de la app móvil.
@@ -734,6 +794,10 @@ google_sign_in: ^6.2.2
 - [x] Módulo de posts y feed
 - [x] Módulo de conversaciones y mensajes
 - [x] Módulo de service request y propuestas
+- [x] Módulo de almacenamiento (Backblaze B2, URLs prefirmadas)
+- [ ] Módulo de interacccion, rachas y puntuacion
+- [ ] Módulo de suscripcion
+- [ ] Módulo de Maps (Google Maps)
 - [ ] Módulo de notificaciones
 - [ ] Panel de administración
 
@@ -768,13 +832,15 @@ google_sign_in: ^6.2.2
 - [x] Detalle de solicitud con mapa de fondo
 - [x] Lista de conversaciones con interlocutor correcto
 - [x] Burbujas de mensaje estilo WhatsApp
-- [ ] Botón central — solicitud tipo InDriver
+- [x] Botón central — solicitud tipo InDriver
 - [ ] Historial de servicios
 - [x] Favoritos
 - [x] Posts favoritos — like en feed y sección "Publicaciones" en tab Favoritos
 - [ ] Notificaciones
 - [x] Vista pública de colaborador
-- [ ] Subida de imágenes (Cloudinary)
+- [ ] Subida de imágenes (BackBlaze B2)
+- [ ] Modulo de categorias de servicios
+- [ ] Nueva paleta de colores fijos
 - [ ] Panel de administración
 
 ---
@@ -783,12 +849,15 @@ google_sign_in: ^6.2.2
 
 | Issue | Impacto | Prioridad |
 |---|---|---|
-| Zona horaria en mensajes del chat | Visual — hora incorrecta en dev local | Media |
 | WebSocket persistente en chat | Performance — reconecta por cada conversación | Media |
 | currentUserId via ProfileBloc en router | Frágil si perfil no cargado | Baja |
 | withOpacity deprecado (~45 usos) | Warning de lint | Baja |
 | Cruce de datos en Flutter para ícono de mensaje | Performance — backend debería devolver conversationId en my-requests | Media |
 | Google Maps — migrar desde OpenStreetMap | Mejor cobertura en Perú para producción | Alta |
+| Validar en POST /posts que las URLs de media pertenezcan al usuario| Seguridad — hoy se acepta cualquier URL | Alta |
+| Regla de lifecycle para uploads huérfanos en B2 | Costo de almacenamiento | Media |
+| Separar llaves B2 por bucket antes de producción | Seguridad | Alta |
+| PGTZ: America/Lima en el servicio db del docker-compose | Inconsistencia con UTC | Baja |
 
 > Nota: la pantalla "Mis servicios" del colaborador (a cargo de otro equipo) quedó cubierta por la vista HEAD 4 con completadas visibles; por eso el Flujo A se marca Completo.
 
@@ -809,7 +878,9 @@ Para generar una migración nueva:
 docker compose exec backend yarn migration:generate src/database/migrations/NombreDeLaMigracion
 ```
 
-Fuera de producción `migrationsRun` está activo y las migra al arrancar. En producción se ejecutan explícitamente.
+Fuera de producción `migrationsRun` está activo y las migra al arrancar. En producción se ejecutan explícitamente y `synchronize` debe estar en `false`: el esquema solo cambia vía migraciones.
+
+El `DataSource` que usan los comandos está en `src/database/data-source.ts`.
 
 ### Pendiente antes del despliegue
 

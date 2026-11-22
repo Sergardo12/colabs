@@ -24,6 +24,8 @@ import 'features/profile/data/become_colab_service.dart';
 import 'features/profile/data/support_repository.dart';
 import 'features/profile/data/support_service.dart';
 import 'features/profile/bloc/edit_colab_profile_bloc.dart';
+import 'features/statistics/data/mock_statistics_repository.dart';
+import 'features/statistics/data/statistics_repository.dart';
 import 'features/chat/bloc/chat_bloc.dart';
 import 'features/chat/data/chat_repository.dart';
 import 'features/chat/data/chat_service.dart';
@@ -140,6 +142,9 @@ final publicProfileRepository = PublicProfileRepository(
     secureStorage: secureStorage,
   );
 
+  // Statistics
+  final statisticsRepository = MockStatisticsRepository();
+
   runApp(
     MultiRepositoryProvider(
       providers: [
@@ -154,6 +159,9 @@ final publicProfileRepository = PublicProfileRepository(
         ),
         RepositoryProvider<ChatRepository>(
           create: (_) => chatRepository,
+        ),
+        RepositoryProvider<StatisticsRepository>(
+          create: (_) => statisticsRepository,
         ),
       ],
       child: MultiBlocProvider(

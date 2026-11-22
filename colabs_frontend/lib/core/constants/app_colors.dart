@@ -58,3 +58,35 @@ extension AppColorsX on BuildContext {
           ? AppPalette.dark
           : AppPalette.light;
 }
+
+class AppChartColors {
+  AppChartColors._();
+
+  static const List<Color> barPalette = <Color>[
+    Color(0xFFE53935),
+    Color(0xFF1E41BC),
+    Color(0xFF26A69A),
+    Color(0xFFFFB300),
+  ];
+
+  static const Color requested = Color(0xFFB026FF);
+  static const Color offered = Color(0xFF1E41BC);
+  static const Color axis = Color(0xFF2F80ED);
+  static const Color gaugeProgress = Color(0xFF1E41BC);
+  static const Color gaugeTrack = Color(0xFF6FA8FF);
+  static const Color star = Color(0xFFFFB300);
+}
+
+class AppGradients {
+  AppGradients._();
+
+  static const LinearGradient headerBlue = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: <Color>[
+      Color(0xFF0119DD),
+      Color(0xFF0064D8),
+      Color(0xFF3697EB),
+    ],
+  );
+}

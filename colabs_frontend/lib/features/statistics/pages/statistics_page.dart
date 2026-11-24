@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_sizes.dart';
+import '../../../core/constants/app_strings.dart';
 import '../bloc/statistics_bloc.dart';
 import '../bloc/statistics_event.dart';
 import '../bloc/statistics_state.dart';
@@ -50,14 +51,26 @@ class StatisticsView extends StatelessWidget {
             );
         },
         builder: (context, state) {
-          if (state is StatisticsDataState) {
+          final data = switch (state) {
+            StatisticsDataState state => state.data,
+            StatisticsLoading state => state.data,
+            _ => null,
+          };
+
+          if (data != null) {
             return Column(
               children: [
                 const StatisticsHeader(),
+                if (state is StatisticsLoading)
+                  LinearProgressIndicator(
+                    minHeight: 2,
+                    color: context.colors.primary,
+                    backgroundColor: context.colors.surface,
+                  ),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(AppSizes.paddingM),
-                    child: _StatisticsContent(data: state.data),
+                    child: _StatisticsContent(data: data),
                   ),
                 ),
               ],
@@ -69,30 +82,81 @@ class StatisticsView extends StatelessWidget {
               const StatisticsHeader(),
               Expanded(
                 child: Center(
-                  child: state is StatisticsLoading
-                      ? CircularProgressIndicator(
-                          color: context.colors.primary,
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.all(AppSizes.paddingXL),
-                          child: Text(
-                            state is StatisticsError
-                                ? state.message
-                                : 'Cargando estadísticas...',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: state is StatisticsError
-                                  ? context.colors.error
-                                  : context.colors.textSecondary,
-                              fontSize: AppSizes.fontL,
+                  child: state is StatisticsError
+                      ? _ErrorContent(message: state.message)
+                      : state is StatisticsLoading
+                          ? CircularProgressIndicator(
+                              color: context.colors.primary,
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.all(AppSizes.paddingXL),
+                              child: Text(
+                                AppStrings.loadingStatistics,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: context.colors.textSecondary,
+                                  fontSize: AppSizes.fontL,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
                 ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ErrorContent extends StatelessWidget {
+  final String message;
+
+  const _ErrorContent({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSizes.paddingXL),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.colors.error,
+              fontSize: AppSizes.fontL,
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingM),
+          ElevatedButton(
+            onPressed: () {
+              context.read<StatisticsBloc>().add(
+                    const StatisticsLoadRequested(),
+                  );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.colors.primary,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.paddingL,
+                vertical: AppSizes.paddingS,
+              ),
+              minimumSize: const Size(0, AppSizes.inputMedianHeight),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              ),
+            ),
+            child: Text(
+              AppStrings.retry,
+              style: TextStyle(
+                color: context.colors.white,
+                fontSize: AppSizes.fontM,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

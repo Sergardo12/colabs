@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../models/statistics_data.dart';
 import '../../models/statistics_period.dart';
 import 'period_selector.dart';
@@ -22,7 +23,7 @@ class ServicesOfferedSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Servicios Ofrecidos',
+          AppStrings.servicesOffered,
           style: TextStyle(
             color: context.colors.textPrimary,
             fontSize: AppSizes.fontL,
@@ -40,7 +41,7 @@ class ServicesOfferedSection extends StatelessWidget {
           padding: const EdgeInsets.all(AppSizes.paddingM),
           decoration: BoxDecoration(
             color: context.colors.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusM),
+            borderRadius: BorderRadius.circular(AppSizes.radiusL),
           ),
           child: ServicesBarChart(data: data),
         ),

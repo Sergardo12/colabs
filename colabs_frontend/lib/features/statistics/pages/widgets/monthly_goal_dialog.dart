@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 
 Future<String?> showMonthlyGoalDialog(BuildContext context) {
   return showDialog<String>(
@@ -36,7 +37,7 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
     return AlertDialog(
       backgroundColor: context.colors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
       titlePadding: const EdgeInsets.only(
         top: AppSizes.paddingM,
@@ -48,7 +49,7 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
         children: [
           Expanded(
             child: Text(
-              'Ingresar meta',
+              AppStrings.enterGoal,
               style: TextStyle(
                 color: context.colors.textPrimary,
                 fontSize: AppSizes.fontXL,
@@ -73,7 +74,7 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
         onChanged: (_) => setState(() {}),
         style: TextStyle(color: context.colors.textPrimary),
         decoration: InputDecoration(
-          labelText: 'Meta de servicios',
+          labelText: AppStrings.goalFieldLabel,
           labelStyle: TextStyle(color: context.colors.textSecondary),
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: context.colors.textSecondary),
@@ -104,7 +105,7 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
                 borderRadius: BorderRadius.circular(AppSizes.radiusM),
               ),
             ),
-            child: const Text('Guardar'),
+            child: const Text(AppStrings.save),
           ),
         ),
       ],

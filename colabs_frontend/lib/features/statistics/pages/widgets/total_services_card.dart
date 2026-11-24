@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../models/statistics_data.dart';
 
 class TotalServicesCard extends StatelessWidget {
@@ -15,17 +16,17 @@ class TotalServicesCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSizes.paddingM),
       decoration: BoxDecoration(
         color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Servicios Totales\nBrindados',
+            AppStrings.totalServicesTitle,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: context.colors.textSecondary,
+              color: context.colors.textPrimary,
               fontSize: AppSizes.fontM,
             ),
           ),
@@ -34,16 +35,16 @@ class TotalServicesCard extends StatelessWidget {
             '${data.totalServices}',
             style: TextStyle(
               color: context.colors.textPrimary,
-              fontSize: AppSizes.fontXXL,
+              fontSize: AppSizes.fontXXXL,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: AppSizes.paddingXS),
           Text(
-            'Servicios',
+            AppStrings.servicesLabel,
             style: TextStyle(
               color: context.colors.textSecondary,
-              fontSize: AppSizes.fontM,
+              fontSize: AppSizes.fontS,
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../models/statistics_data.dart';
 
 class RatingSummaryCard extends StatelessWidget {
@@ -15,36 +16,45 @@ class RatingSummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSizes.paddingM),
       decoration: BoxDecoration(
         color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Promedio de\nCalificación',
+            AppStrings.ratingTitle,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: context.colors.textSecondary,
+              color: context.colors.textPrimary,
               fontSize: AppSizes.fontM,
             ),
           ),
           const SizedBox(height: AppSizes.paddingS),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.star, color: AppChartColors.star, size: 24),
-              const SizedBox(width: AppSizes.paddingXS),
-              Text(
-                data.isEmpty ? '—' : '${data.averageRating.toStringAsFixed(1)}/5',
-                style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontSize: AppSizes.fontXXL,
-                  fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.star_rounded,
+                  color: AppChartColors.star,
+                  size: AppSizes.fontXXL,
                 ),
-              ),
-            ],
+                const SizedBox(width: AppSizes.paddingXS),
+                Text(
+                  data.isEmpty
+                      ? '—'
+                      : '${data.averageRating.toStringAsFixed(1)}/5',
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
+                    fontSize: AppSizes.fontXXL,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

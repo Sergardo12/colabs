@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 
 class StatisticsHeader extends StatelessWidget {
   const StatisticsHeader({super.key});
@@ -26,16 +27,17 @@ class StatisticsHeader extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () => Navigator.pop(context),
+                iconSize: AppSizes.fontXXL,
                 icon: Icon(Icons.arrow_back, color: context.colors.white),
               ),
               Expanded(
                 child: Text(
-                  'Estadísticas',
+                  AppStrings.statisticsTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: context.colors.white,
-                    fontSize: AppSizes.fontXL,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppSizes.headerTitleFont,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),

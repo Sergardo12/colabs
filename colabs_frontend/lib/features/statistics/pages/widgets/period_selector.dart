@@ -16,7 +16,9 @@ class PeriodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: AppSizes.paddingS,
+      runSpacing: AppSizes.paddingS,
       children: [
         _PeriodButton(
           label: StatisticsLabels.periodTitle(StatisticsPeriod.days),
@@ -51,22 +53,23 @@ class _PeriodButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingXS),
+    return SizedBox(
+      width: AppSizes.periodButtonWidth,
+      height: AppSizes.periodButtonHeight,
+      child: Material(
+        color: isSelected ? context.colors.primary : context.colors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusS),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          borderRadius: BorderRadius.circular(AppSizes.radiusS),
           child: Container(
-            height: AppSizes.inputSmallHeight,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isSelected ? context.colors.primary : context.colors.surface,
-              borderRadius: BorderRadius.circular(AppSizes.radiusM),
+              borderRadius: BorderRadius.circular(AppSizes.radiusS),
               border: Border.all(
                 color: isSelected
                     ? context.colors.primary
-                    : context.colors.textSecondary.withValues(alpha: 0.4),
+                    : context.colors.textSecondary.withValues(alpha: 0.35),
               ),
             ),
             child: Text(
@@ -74,7 +77,7 @@ class _PeriodButton extends StatelessWidget {
               style: TextStyle(
                 color: isSelected
                     ? context.colors.white
-                    : context.colors.textPrimary,
+                    : context.colors.textSecondary,
                 fontSize: AppSizes.fontS,
                 fontWeight: FontWeight.w600,
               ),

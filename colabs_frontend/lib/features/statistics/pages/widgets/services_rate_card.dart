@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../models/statistics_data.dart';
 
 class ServicesRateCard extends StatelessWidget {
@@ -16,7 +17,7 @@ class ServicesRateCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSizes.paddingM),
       decoration: BoxDecoration(
         color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -24,11 +25,11 @@ class ServicesRateCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Tasa de\nservicios',
+            AppStrings.servicesRateTitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: context.colors.textPrimary,
-              fontSize: AppSizes.fontL,
+              fontSize: AppSizes.fontXL,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -38,7 +39,8 @@ class ServicesRateCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingL),
               child: Center(
                 child: Text(
-                  'Aún no tienes servicios',
+                  AppStrings.noServicesYet,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: context.colors.textSecondary,
                     fontSize: AppSizes.fontM,
@@ -47,23 +49,29 @@ class ServicesRateCard extends StatelessWidget {
               ),
             )
           else ...[
-            SizedBox(
-              height: 110,
+            Container(
+              width: AppSizes.pieSize,
+              height: AppSizes.pieSize,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.colors.white,
+              ),
               child: PieChart(
                 PieChartData(
-                  centerSpaceRadius: 30,
+                  centerSpaceRadius: 0,
                   sectionsSpace: 2,
                   sections: [
                     PieChartSectionData(
                       value: data.rate.requested.toDouble(),
                       color: AppChartColors.requested,
-                      radius: 42,
+                      radius: AppSizes.pieRadius,
                       showTitle: false,
                     ),
                     PieChartSectionData(
                       value: data.rate.offered.toDouble(),
                       color: AppChartColors.offered,
-                      radius: 42,
+                      radius: AppSizes.pieRadius,
                       showTitle: false,
                     ),
                   ],
@@ -71,18 +79,19 @@ class ServicesRateCard extends StatelessWidget {
                 duration: const Duration(milliseconds: 350),
               ),
             ),
-            const SizedBox(height: AppSizes.paddingS),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+            const SizedBox(height: AppSizes.paddingM),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: AppSizes.paddingM,
+              runSpacing: AppSizes.paddingXS,
+              children: const [
                 _Legend(
                   color: AppChartColors.requested,
-                  label: 'Solicitados',
+                  label: AppStrings.requestedLegend,
                 ),
-                const SizedBox(width: AppSizes.paddingM),
                 _Legend(
                   color: AppChartColors.offered,
-                  label: 'Ofrecidos',
+                  label: AppStrings.offeredLegend,
                 ),
               ],
             ),
@@ -104,26 +113,30 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(AppSizes.radiusS / 2),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        ),
-        const SizedBox(width: AppSizes.paddingXS),
-        Text(
-          label,
-          style: TextStyle(
-            color: context.colors.textSecondary,
-            fontSize: AppSizes.fontS,
+          const SizedBox(width: AppSizes.paddingXS),
+          Text(
+            label,
+            style: TextStyle(
+              color: context.colors.textSecondary,
+              fontSize: AppSizes.fontS,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

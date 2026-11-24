@@ -47,10 +47,10 @@ class StatisticsData extends Equatable {
 
   int get yAxisInterval {
     final max = _maxBarValue;
-    if (max <= 50) return 10;
+    if (max <= 50) return 5;
     var interval = 10;
-    while (_ceilDiv(max, interval) + 1 > 10) {
-      interval += 10;
+    while (_ceilDiv(max, interval) > 10) {
+      interval += 5;
     }
     return interval;
   }

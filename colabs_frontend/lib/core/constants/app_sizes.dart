@@ -29,4 +29,25 @@ class AppSizes {
   static const double fontL            = 16.0;
   static const double fontXL           = 20.0;
   static const double fontXXL          = 28.0;
+  static const double fontXXXL         = 32.0;
+  static const double headerTitleFont  = 22.0;
+
+  // Statistics
+  static const double periodButtonWidth  = 88.0;
+  static const double periodButtonHeight = 34.0;
+  static const double chartHeight        = 280.0;
+  static const double chartAxisStroke    = 3.5;
+  static const double chartArrowSize     = 10.0;
+  static const double chartLeftInset     = 34.0;
+  static const double chartRightInset    = 52.0;
+  static const double chartTopInset      = 26.0;
+  static const double chartBottomInset   = 50.0;
+  static const double chartLeftReserved  = 28.0;
+  static const double chartBottomReserved = 46.0;
+  static const double chartRodMinWidth   = 12.0;
+  static const double chartRodMaxWidth   = 30.0;
+  static const double chartRodRadius     = 4.0;
+  static const double pieSize            = 116.0;
+  static const double pieRadius          = 52.0;
+  static const double goalImageSize      = 90.0;
 }

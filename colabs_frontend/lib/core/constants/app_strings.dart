@@ -38,4 +38,37 @@ class AppStrings {
   static const String becomeColabBanner = '¿Deseas convertirte en colaborador?';
   static const String whatToPostToday   = '¿Qué publicaremos hoy?';
   static const String upcoming          = 'Próximamente';
+
+  // Statistics
+  static const String statisticsTitle      = 'Estadísticas';
+  static const String servicesOffered      = 'Servicios Ofrecidos';
+  static const String servicesAxis         = 'Servicios';
+  static const String periodDays           = 'Días';
+  static const String periodMonths         = 'Mes';
+  static const String periodYears          = 'Año';
+  static const String axisDays             = 'Días';
+  static const String axisMonths           = 'Meses';
+  static const String axisYears            = 'Años';
+  static const String monthlyGoalQuestion  = '¿Deseas proponerte una meta del mes?';
+  static const String monthlyGoalTitle     = 'Meta del Mes';
+  static const String markGoal             = 'Marcar Meta';
+  static const String editGoal             = 'Editar meta';
+  static const String enterGoal            = 'Ingresar meta';
+  static const String goalFieldLabel       = 'Meta de servicios';
+  static const String save                 = 'Guardar';
+  static const String retry                = 'Reintentar';
+  static const String servicesRateTitle    = 'Tasa de\nservicios';
+  static const String requestedLegend      = 'Solicitados';
+  static const String offeredLegend        = 'Ofrecidos';
+  static const String noServicesYet        = 'Aún no tienes servicios';
+  static const String ratingTitle          = 'Promedio de\nCalificación';
+  static const String totalServicesTitle   = 'Servicios Totales\nBrindados';
+  static const String servicesLabel        = 'Servicios';
+  static const String loadingStatistics    = 'Cargando estadísticas...';
+  static const String loadStatisticsError  = 'No se pudieron cargar las estadísticas';
+  static const String changePeriodError    = 'No se pudo cambiar el período';
+  static const String saveGoalError        = 'No se pudo guardar la meta';
+  static const String goalSummaryLabel     = 'Meta';
+  static const String goalSummarySeparator = '·';
+  static const String goalProgressLabel    = 'Llevas';
 }

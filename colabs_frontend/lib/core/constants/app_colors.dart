@@ -63,10 +63,18 @@ class AppChartColors {
   AppChartColors._();
 
   static const List<Color> barPalette = <Color>[
-    Color(0xFFE53935),
-    Color(0xFF1E41BC),
-    Color(0xFF26A69A),
-    Color(0xFFFFB300),
+    Color(0xFFD32F2F),
+    Color(0xFF1976D2),
+    Color(0xFF00A86B),
+    Color(0xFFFBC02D),
+    Color(0xFFF57C00),
+    Color(0xFF8E24AA),
+    Color(0xFF00ACC1),
+    Color(0xFFE91E63),
+    Color(0xFF7CB342),
+    Color(0xFF3949AB),
+    Color(0xFF00897B),
+    Color(0xFF8D6E63),
   ];
 
   static const Color requested = Color(0xFFB026FF);
@@ -74,7 +82,7 @@ class AppChartColors {
   static const Color axis = Color(0xFF2F80ED);
   static const Color gaugeProgress = Color(0xFF1E41BC);
   static const Color gaugeTrack = Color(0xFF6FA8FF);
-  static const Color star = Color(0xFFFFB300);
+  static const Color star = Color(0xFF2F80ED);
 }
 
 class AppGradients {

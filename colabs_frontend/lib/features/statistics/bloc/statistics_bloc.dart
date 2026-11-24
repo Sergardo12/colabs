@@ -1,5 +1,6 @@
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_strings.dart';
 import '../data/statistics_repository.dart';
 import '../models/statistics_data.dart';
 import '../models/statistics_period.dart';
@@ -24,9 +25,10 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
     Emitter<StatisticsState> emit,
   ) async {
     final previous = state;
-    emit(const StatisticsLoading());
+    final period = previous.period;
+    emit(StatisticsLoading(period: period, data: _dataOf(previous)));
     await _load(
-      StatisticsPeriod.days,
+      period,
       emit,
       withErrorState: true,
       previousState: previous,
@@ -39,7 +41,7 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
   ) async {
     if (state.period == event.period) return;
     final previous = state;
-    emit(StatisticsLoading(period: event.period));
+    emit(StatisticsLoading(period: event.period, data: _dataOf(previous)));
     await _load(
       event.period,
       emit,
@@ -54,13 +56,19 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
   ) async {
     final current = state;
     if (current is! StatisticsDataState) return;
+    final period = current.period;
 
     try {
       await _repository.saveMonthlyGoal(event.amount);
-      final data = await _repository.getStatistics(current.period);
-      emit(_stateFor(data, current.period));
+      if (state.period != period) return;
+
+      final data = await _repository.getStatistics(period);
+      if (state.period != period) return;
+
+      emit(_stateFor(data, period));
     } catch (_) {
-      emit(_failureState(current, 'No se pudo guardar la meta'));
+      if (state.period != period) return;
+      emit(_failureState(current, AppStrings.saveGoalError));
     }
   }
 
@@ -72,12 +80,14 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
   }) async {
     try {
       final data = await _repository.getStatistics(period);
+      if (state.period != period) return;
       emit(_stateFor(data, period));
     } catch (_) {
+      if (state.period != period) return;
       if (withErrorState) {
         emit(
           StatisticsError(
-            message: 'No se pudieron cargar las estadísticas',
+            message: AppStrings.loadStatisticsError,
             period: period,
           ),
         );
@@ -85,11 +95,15 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
         emit(
           _failureState(
             previousState ?? state,
-            'No se pudo cambiar el período',
+            AppStrings.changePeriodError,
           ),
         );
       }
     }
+  }
+
+  StatisticsData? _dataOf(StatisticsState state) {
+    return state is StatisticsDataState ? state.data : null;
   }
 
   StatisticsState _stateFor(StatisticsData data, StatisticsPeriod period) {

@@ -20,7 +20,12 @@ class StatisticsInitial extends StatisticsState {
 }
 
 class StatisticsLoading extends StatisticsState {
-  const StatisticsLoading({super.period});
+  const StatisticsLoading({super.period, this.data});
+
+  final StatisticsData? data;
+
+  @override
+  List<Object?> get props => [...super.props, data];
 }
 
 abstract class StatisticsDataState extends StatisticsState {

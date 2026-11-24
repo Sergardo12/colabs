@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:colabs_frontend/core/constants/app_strings.dart';
 import 'package:colabs_frontend/features/statistics/bloc/statistics_bloc.dart';
 import 'package:colabs_frontend/features/statistics/bloc/statistics_event.dart';
 import 'package:colabs_frontend/features/statistics/bloc/statistics_state.dart';
@@ -37,6 +40,25 @@ class FakeStatisticsRepository implements StatisticsRepository {
   }
 }
 
+class ControlledStatisticsRepository implements StatisticsRepository {
+  final Map<StatisticsPeriod, Completer<StatisticsData>> _pending =
+      <StatisticsPeriod, Completer<StatisticsData>>{};
+
+  @override
+  Future<StatisticsData> getStatistics(StatisticsPeriod period) {
+    final completer = Completer<StatisticsData>();
+    _pending[period] = completer;
+    return completer.future;
+  }
+
+  @override
+  Future<void> saveMonthlyGoal(int amount) async {}
+
+  void complete(StatisticsPeriod period, StatisticsData data) {
+    _pending[period]!.complete(data);
+  }
+}
+
 StatisticsData _data() {
   return StatisticsData(
     period: StatisticsPeriod.days,
@@ -50,9 +72,11 @@ StatisticsData _data() {
 
 void main() {
   late FakeStatisticsRepository repository;
+  late ControlledStatisticsRepository controlled;
 
   setUp(() {
     repository = FakeStatisticsRepository(data: _data());
+    controlled = ControlledStatisticsRepository();
   });
 
   group('StatisticsBloc', () {
@@ -78,7 +102,7 @@ void main() {
       act: (bloc) =>
           bloc.add(const StatisticsPeriodChanged(StatisticsPeriod.months)),
       expect: () => [
-        const StatisticsLoading(period: StatisticsPeriod.months),
+        StatisticsLoading(period: StatisticsPeriod.months, data: _data()),
         StatisticsLoaded(
           data: _data().copyWith(period: StatisticsPeriod.months),
           period: StatisticsPeriod.months,
@@ -101,11 +125,11 @@ void main() {
       act: (bloc) =>
           bloc.add(const StatisticsPeriodChanged(StatisticsPeriod.months)),
       expect: () => [
-        const StatisticsLoading(period: StatisticsPeriod.months),
+        StatisticsLoading(period: StatisticsPeriod.months, data: _data()),
         StatisticsLoaded(
           data: _data(),
           period: StatisticsPeriod.days,
-          snackMessage: 'No se pudo cambiar el período',
+          snackMessage: AppStrings.changePeriodError,
         ),
       ],
     );
@@ -133,6 +157,50 @@ void main() {
       verify: (_) {
         expect(repository.savedAmount, 70);
       },
+    );
+
+    blocTest<StatisticsBloc, StatisticsState>(
+      'reintenta usando el período del estado de error',
+      build: () => StatisticsBloc(
+        repository: FakeStatisticsRepository(data: _data()),
+      ),
+      seed: () => const StatisticsError(
+        message: AppStrings.loadStatisticsError,
+        period: StatisticsPeriod.months,
+      ),
+      act: (bloc) => bloc.add(const StatisticsLoadRequested()),
+      expect: () => [
+        const StatisticsLoading(period: StatisticsPeriod.months),
+        StatisticsLoaded(
+          data: _data().copyWith(period: StatisticsPeriod.months),
+          period: StatisticsPeriod.months,
+        ),
+      ],
+    );
+
+    blocTest<StatisticsBloc, StatisticsState>(
+      'ignora respuestas de un período que ya no es el actual',
+      build: () => StatisticsBloc(repository: controlled),
+      act: (bloc) async {
+        bloc.add(const StatisticsLoadRequested());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const StatisticsPeriodChanged(StatisticsPeriod.months));
+        await Future<void>.delayed(Duration.zero);
+        controlled.complete(StatisticsPeriod.days, _data());
+        await Future<void>.delayed(Duration.zero);
+        controlled.complete(
+          StatisticsPeriod.months,
+          _data().copyWith(period: StatisticsPeriod.months),
+        );
+      },
+      expect: () => [
+        const StatisticsLoading(period: StatisticsPeriod.days),
+        const StatisticsLoading(period: StatisticsPeriod.months),
+        StatisticsLoaded(
+          data: _data().copyWith(period: StatisticsPeriod.months),
+          period: StatisticsPeriod.months,
+        ),
+      ],
     );
   });
 }

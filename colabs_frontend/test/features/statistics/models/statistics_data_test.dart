@@ -18,16 +18,18 @@ StatisticsData _dataWithMax(double max) {
 
 void main() {
   group('StatisticsData', () {
-    test('yAxisMax usa 50 con valores pequeños', () {
+    test('yAxisMax usa 50 con escala de 5 en 5', () {
       expect(_dataWithMax(48).yAxisMax, 50);
-      expect(_dataWithMax(48).yAxisInterval, 10);
+      expect(_dataWithMax(48).yAxisInterval, 5);
     });
 
-    test('yAxisMax crece en intervalos adaptativos', () {
+    test('yAxisMax crece en pasos múltiplos de 5', () {
       expect(_dataWithMax(95).yAxisMax, 100);
-      expect(_dataWithMax(95).yAxisInterval, 20);
-      expect(_dataWithMax(130).yAxisMax, 140);
-      expect(_dataWithMax(190).yAxisMax, 210);
+      expect(_dataWithMax(95).yAxisInterval, 10);
+      expect(_dataWithMax(130).yAxisMax, 135);
+      expect(_dataWithMax(130).yAxisInterval, 15);
+      expect(_dataWithMax(190).yAxisMax, 200);
+      expect(_dataWithMax(190).yAxisInterval, 20);
     });
 
     test('goalPercent calcula, limita y maneja metas inválidas', () {

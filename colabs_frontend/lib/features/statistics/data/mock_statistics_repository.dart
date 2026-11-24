@@ -1,18 +1,20 @@
 import '../models/bar_datum.dart';
-import '../models/statistics_period.dart';
 import '../models/monthly_goal.dart';
 import '../models/services_rate.dart';
 import '../models/statistics_data.dart';
+import '../models/statistics_period.dart';
 import 'statistics_repository.dart';
 
 class MockStatisticsRepository implements StatisticsRepository {
   MockStatisticsRepository({
     DateTime Function()? now,
+    this._accountCreatedYear,
     this._empty = false,
     this._delay = const Duration(milliseconds: 400),
   }) : _now = now ?? DateTime.now;
 
   final DateTime Function() _now;
+  final int? _accountCreatedYear;
   final bool _empty;
   final Duration _delay;
   MonthlyGoal? _goal;
@@ -28,10 +30,10 @@ class MockStatisticsRepository implements StatisticsRepository {
     return StatisticsData(
       period: period,
       bars: _barsFor(period),
-      rate: const ServicesRate(requested: 3, offered: 42),
+      rate: const ServicesRate(requested: 25, offered: 75),
       averageRating: 4.7,
-      totalServices: 42,
-      monthlyOffered: 28,
+      totalServices: 150,
+      monthlyOffered: 30,
       monthlyGoal: goal,
     );
   }
@@ -44,18 +46,43 @@ class MockStatisticsRepository implements StatisticsRepository {
   }
 
   List<BarDatum> _barsFor(StatisticsPeriod period) {
-    final values = switch (period) {
-      StatisticsPeriod.days => const <double>[12, 18, 9, 24, 15, 6, 3],
-      StatisticsPeriod.months => const <double>[
-          22, 18, 30, 26, 35, 28, 40, 33, 45, 38, 50, 42,
-        ],
-      StatisticsPeriod.years => const <double>[60, 95, 120, 130],
+    return switch (period) {
+      StatisticsPeriod.days => _dayBars,
+      StatisticsPeriod.months => _monthBars,
+      StatisticsPeriod.years => _yearBars(),
     };
+  }
 
-    final baseYear = _now().year - values.length + 1;
+  List<BarDatum> get _dayBars {
+    const values = <double>[15, 24, 33, 44, 30, 20, 10];
     return List<BarDatum>.generate(
       values.length,
-      (index) => BarDatum(key: baseYear + index, value: values[index]),
+      (index) => BarDatum(key: index + 1, value: values[index]),
+    );
+  }
+
+  List<BarDatum> get _monthBars {
+    const values = <double>[
+      22, 18, 30, 26, 35, 28, 40, 33, 45, 38, 50, 42,
+    ];
+    return List<BarDatum>.generate(
+      values.length,
+      (index) => BarDatum(key: index + 1, value: values[index]),
+    );
+  }
+
+  List<BarDatum> _yearBars() {
+    final currentYear = _now().year;
+    final startYear = _accountCreatedYear ?? currentYear - 3;
+    final count = currentYear - startYear + 1;
+    const values = <double>[60, 95, 120, 130, 140];
+
+    return List<BarDatum>.generate(
+      count,
+      (index) => BarDatum(
+        key: startYear + index,
+        value: values[index % values.length],
+      ),
     );
   }
 }

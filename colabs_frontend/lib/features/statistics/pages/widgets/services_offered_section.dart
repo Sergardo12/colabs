@@ -5,7 +5,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../models/statistics_data.dart';
 import '../../models/statistics_period.dart';
 import 'period_selector.dart';
-import 'services_bar_chart.dart';
+import 'services_area_chart.dart';
 
 class ServicesOfferedSection extends StatelessWidget {
   final StatisticsData data;
@@ -43,7 +43,7 @@ class ServicesOfferedSection extends StatelessWidget {
             color: context.colors.surface,
             borderRadius: BorderRadius.circular(AppSizes.radiusL),
           ),
-          child: ServicesBarChart(data: data),
+          child: ServicesAreaChart(data: data),
         ),
       ],
     );

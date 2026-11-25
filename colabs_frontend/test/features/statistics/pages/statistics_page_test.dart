@@ -14,7 +14,7 @@ import 'package:colabs_frontend/features/statistics/models/services_rate.dart';
 import 'package:colabs_frontend/features/statistics/models/statistics_data.dart';
 import 'package:colabs_frontend/features/statistics/models/statistics_period.dart';
 import 'package:colabs_frontend/features/statistics/pages/statistics_page.dart';
-import 'package:colabs_frontend/features/statistics/pages/widgets/services_bar_chart.dart';
+import 'package:colabs_frontend/features/statistics/pages/widgets/services_area_chart.dart';
 
 void main() {
   testWidgets('renderiza el módulo sin overflow en pantalla pequeña', (
@@ -194,11 +194,11 @@ void main() {
       );
       await _pumpChart(tester, data);
 
-      final chartRect = tester.getRect(find.byType(ServicesBarChart));
+      final chartRect = tester.getRect(find.byType(ServicesAreaChart));
       final axisLeft =
           chartRect.left + AppSizes.chartLeftInsetForMax(data.yAxisMax);
       final labelFinder = find.descendant(
-        of: find.byType(ServicesBarChart),
+        of: find.byType(ServicesAreaChart),
         matching: find.text(data.yAxisMax.toString()),
       );
 
@@ -219,17 +219,17 @@ void main() {
     final data = StatisticsData.empty(StatisticsPeriod.days);
     await _pumpChart(tester, data);
 
-    final chartRect = tester.getRect(find.byType(ServicesBarChart));
+    final chartRect = tester.getRect(find.byType(ServicesAreaChart));
     final axisLeft =
         chartRect.left + AppSizes.chartLeftInsetForMax(data.yAxisMax);
     final axisBottom =
         chartRect.top + AppSizes.chartHeight - AppSizes.chartBottomInset;
     final dayFinder = find.descendant(
-      of: find.byType(ServicesBarChart),
+      of: find.byType(ServicesAreaChart),
       matching: find.text('L'),
     );
     final yFinder = find.descendant(
-      of: find.byType(ServicesBarChart),
+      of: find.byType(ServicesAreaChart),
       matching: find.text(data.yAxisMax.toString()),
     );
 
@@ -361,7 +361,7 @@ Future<void> _pumpChart(WidgetTester tester, StatisticsData data) async {
         body: Center(
           child: SizedBox(
             width: chartWidth,
-            child: ServicesBarChart(data: data),
+            child: ServicesAreaChart(data: data),
           ),
         ),
       ),

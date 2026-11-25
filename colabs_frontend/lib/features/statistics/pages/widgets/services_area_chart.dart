@@ -7,36 +7,41 @@ import '../../models/statistics_data.dart';
 import '../../models/statistics_labels.dart';
 import '../../models/statistics_period.dart';
 
-class ServicesBarChart extends StatelessWidget {
+class ServicesAreaChart extends StatelessWidget {
   final StatisticsData data;
 
-  const ServicesBarChart({super.key, required this.data});
+  const ServicesAreaChart({super.key, required this.data});
+
+  static const Color _lineColor = Color.fromARGB(255, 255, 136, 0);
+  static const double _lineWidth = 3.0;
+  static const double _dotRadius = 2.5;
+  static const Color _gridColor = Color.fromARGB(30, 108, 92, 231);
+  static const double _gridStroke = 1.0;
+  static const double _axisEpsilon = 1e-6;
 
   @override
   Widget build(BuildContext context) {
     final interval = data.yAxisInterval.toDouble();
-    final yAxisMax = data.yAxisMax;
+    final yAxisMax = data.yAxisMax.toDouble();
     final axisColor = AppChartColors.axis;
+    final count = data.bars.length;
+    final minX = -0.5;
+    final maxX = count - 0.5;
 
     return SizedBox(
       height: AppSizes.chartHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final left = AppSizes.chartLeftInsetForMax(yAxisMax);
+          final left = AppSizes.chartLeftInsetForMax(data.yAxisMax);
           final right = constraints.maxWidth - AppSizes.chartRightInset;
           final top = AppSizes.chartTopInset;
           final bottom = AppSizes.chartHeight - AppSizes.chartBottomInset;
-          final barsLeft =
+          final lineLeft =
               left - AppSizes.chartLeftReserved + AppSizes.chartAxisStroke / 2;
-          final barsRightInset =
+          final lineRightInset =
               AppSizes.chartRightInset + AppSizes.chartAxisStroke / 2;
-          final barsBottomInset =
+          final lineBottomInset =
               AppSizes.chartBottomInset - AppSizes.chartBottomReserved;
-          final rodWidth = AppSizes.chartRodWidth(
-            barCount: data.bars.length,
-            chartWidth: constraints.maxWidth,
-            yAxisMax: yAxisMax,
-          );
 
           return Stack(
             children: [
@@ -52,39 +57,63 @@ class ServicesBarChart extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: barsLeft,
-                right: barsRightInset,
+                left: lineLeft,
+                right: lineRightInset,
                 top: top,
-                bottom: barsBottomInset,
-                child: BarChart(
-                  BarChartData(
+                bottom: lineBottomInset,
+                child: LineChart(
+                  LineChartData(
+                    minX: minX,
+                    maxX: maxX,
                     minY: 0,
-                    maxY: yAxisMax.toDouble(),
-                    alignment: BarChartAlignment.spaceAround,
-                    barTouchData: const BarTouchData(enabled: false),
+                    maxY: yAxisMax,
+                    lineTouchData: const LineTouchData(enabled: false),
                     borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(show: false),
-                    barGroups: List<BarChartGroupData>.generate(
-                      data.bars.length,
-                      (index) {
-                        final bar = data.bars[index];
-                        return BarChartGroupData(
-                          x: index,
-                          barRods: [
-                            BarChartRodData(
-                              toY: bar.value,
-                              color:
-                                  AppChartColors.barPalette[index %
-                                      AppChartColors.barPalette.length],
-                              width: rodWidth,
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(AppSizes.chartRodRadius),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: interval,
+                      getDrawingHorizontalLine: (_) => const FlLine(
+                        color: _gridColor,
+                        strokeWidth: _gridStroke,
+                      ),
                     ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: List<FlSpot>.generate(
+                          count,
+                          (index) => FlSpot(
+                            index.toDouble(),
+                            data.bars[index].value,
+                          ),
+                        ),
+                        color: _lineColor,
+                        barWidth: _lineWidth,
+                        isCurved: true,
+                        isStrokeCapRound: true,
+                        isStrokeJoinRound: true,
+                        dotData: FlDotData(
+                          show: true,
+                          getDotPainter: (_, __, ___, ____) =>
+                              FlDotCirclePainter(
+                            radius: _dotRadius,
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                            strokeWidth: 0,
+                          ),
+                        ),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: <Color>[
+                              Color.fromARGB(255, 255, 136, 0),
+                              Color.fromARGB(0, 0, 85, 255),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                     titlesData: FlTitlesData(
                       topTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
@@ -120,7 +149,9 @@ class ServicesBarChart extends StatelessWidget {
                           reservedSize: AppSizes.chartBottomReserved,
                           getTitlesWidget: (value, meta) {
                             final index = value.round();
-                            if (index < 0 || index >= data.bars.length) {
+                            if ((value - index).abs() > _axisEpsilon ||
+                                index < 0 ||
+                                index >= data.bars.length) {
                               return const SizedBox.shrink();
                             }
                             final isDays = data.period == StatisticsPeriod.days;

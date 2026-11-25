@@ -38,7 +38,7 @@ class AppSizes {
   static const double periodButtonWidth = 88.0;
   static const double periodButtonHeight = 34.0;
   static const double chartHeight = 280.0;
-  static const double chartAxisStroke = 3.5;
+  static const double chartAxisStroke = 2.0;
   static const double chartArrowSize = 10.0;
   static const double chartLeftInset = 46.0;
   static const double chartRightInset = 52.0;

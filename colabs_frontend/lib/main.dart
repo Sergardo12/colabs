@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'app.dart';
 import 'core/network/api_client.dart';
+import 'core/network/interceptors/auth_interceptor.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/data/auth_service.dart';
@@ -24,7 +25,8 @@ import 'features/profile/data/become_colab_service.dart';
 import 'features/profile/data/support_repository.dart';
 import 'features/profile/data/support_service.dart';
 import 'features/profile/bloc/edit_colab_profile_bloc.dart';
-import 'features/statistics/data/mock_statistics_repository.dart';
+import 'features/statistics/data/statistics_api_repository.dart';
+import 'features/statistics/data/statistics_api_service.dart';
 import 'features/statistics/data/statistics_repository.dart';
 import 'features/chat/bloc/chat_bloc.dart';
 import 'features/chat/data/chat_repository.dart';
@@ -53,8 +55,9 @@ Future<void> main() async {
   final themeRepository = const ThemeRepository();
   final initialIsDark = await themeRepository.isDark();
 
-  final dio = ApiClient.create();
   final secureStorage = const FlutterSecureStorage();
+  final dio = ApiClient.create();
+  dio.interceptors.add(AuthInterceptor(secureStorage));
 
   // Auth
   final authService = AuthService(dio);
@@ -143,7 +146,8 @@ final publicProfileRepository = PublicProfileRepository(
   );
 
   // Statistics
-  final statisticsRepository = MockStatisticsRepository();
+  final statisticsService = StatisticsApiService(dio);
+  final statisticsRepository = StatisticsApiRepository(statisticsService);
 
   runApp(
     MultiRepositoryProvider(

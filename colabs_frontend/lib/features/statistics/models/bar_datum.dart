@@ -6,6 +6,13 @@ class BarDatum extends Equatable {
 
   const BarDatum({required this.key, required this.value});
 
+  factory BarDatum.fromJson(Map<String, dynamic> json) {
+    return BarDatum(
+      key: (json['key'] as num).toInt(),
+      value: (json['value'] as num).toDouble(),
+    );
+  }
+
   @override
   List<Object?> get props => [key, value];
 }

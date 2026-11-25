@@ -71,4 +71,7 @@ class AppStrings {
   static const String goalSummaryLabel     = 'Meta';
   static const String goalSummarySeparator = '·';
   static const String goalProgressLabel    = 'Llevas';
+
+  static String goalProgressSummary(int offered, int amount) =>
+      'Acumulas $offered/$amount servicios';
 }

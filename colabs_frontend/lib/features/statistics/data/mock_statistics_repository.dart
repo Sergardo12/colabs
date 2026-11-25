@@ -1,7 +1,7 @@
 import '../models/bar_datum.dart';
 import '../models/monthly_goal.dart';
+import '../models/services_offered_response.dart';
 import '../models/services_rate.dart';
-import '../models/statistics_data.dart';
 import '../models/statistics_period.dart';
 import 'statistics_repository.dart';
 
@@ -18,31 +18,67 @@ class MockStatisticsRepository implements StatisticsRepository {
   final bool _empty;
   final Duration _delay;
   MonthlyGoal? _goal;
+  final int _offeredInMonth = 30;
 
   @override
-  Future<StatisticsData> getStatistics(StatisticsPeriod period) async {
+  Future<ServicesOfferedResponse> getServicesOffered(
+    StatisticsPeriod period,
+  ) async {
     await Future<void>.delayed(_delay);
-    if (_empty) return StatisticsData.empty(period, now: _now());
-
-    final now = _now();
-    final goal = _goal != null && _goal!.isCurrent(now) ? _goal : null;
-
-    return StatisticsData(
+    return ServicesOfferedResponse(
       period: period,
-      bars: _barsFor(period),
-      rate: const ServicesRate(requested: 25, offered: 75),
-      averageRating: 4.7,
-      totalServices: 150,
-      monthlyOffered: 30,
-      monthlyGoal: goal,
+      accountCreatedYear:
+          _accountCreatedYear ?? _now().year - 3,
+      bars: _empty
+          ? List<BarDatum>.generate(
+              period == StatisticsPeriod.days
+                  ? 7
+                  : period == StatisticsPeriod.months
+                      ? 12
+                      : 1,
+              (index) => BarDatum(key: index + 1, value: 0),
+            )
+          : _barsFor(period),
     );
   }
 
   @override
-  Future<void> saveMonthlyGoal(int amount) async {
+  Future<int> getServicesTotal(StatisticsPeriod period) async {
+    await Future<void>.delayed(_delay);
+    return _empty ? 0 : 150;
+  }
+
+  @override
+  Future<ServicesRate> getServicesRate() async {
+    await Future<void>.delayed(_delay);
+    return _empty ? ServicesRate.empty : const ServicesRate(requested: 25, offered: 75);
+  }
+
+  @override
+  Future<double?> getAverageRating() async {
+    await Future<void>.delayed(_delay);
+    return _empty ? null : 4.7;
+  }
+
+  @override
+  Future<MonthlyGoal?> getMonthlyGoal() async {
     await Future<void>.delayed(_delay);
     final now = _now();
-    _goal = MonthlyGoal(amount: amount, month: now.month, year: now.year);
+    if (_goal == null || !_goal!.isCurrent(now)) return null;
+    return _goal!.copyWith(offered: _offeredInMonth);
+  }
+
+  @override
+  Future<MonthlyGoal> saveMonthlyGoal(int amount) async {
+    await Future<void>.delayed(_delay);
+    final now = _now();
+    _goal = MonthlyGoal(
+      amount: amount,
+      month: now.month,
+      year: now.year,
+      offered: _offeredInMonth,
+    );
+    return _goal!;
   }
 
   List<BarDatum> _barsFor(StatisticsPeriod period) {

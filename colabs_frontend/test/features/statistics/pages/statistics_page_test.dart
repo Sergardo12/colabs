@@ -29,4 +29,26 @@ void main() {
     expect(find.text(AppStrings.servicesLabel), findsWidgets);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('colaborador nuevo sin servicios, calificaciones ni meta',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: RepositoryProvider<StatisticsRepository>(
+          create: (_) => MockStatisticsRepository(
+            empty: true,
+            delay: Duration.zero,
+          ),
+          child: const StatisticsPage(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.noServicesYet), findsOneWidget);
+    expect(find.text('—'), findsOneWidget);
+    expect(find.text(AppStrings.monthlyGoalQuestion), findsOneWidget);
+    expect(find.text(AppStrings.loadStatisticsError), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -13,6 +13,7 @@ StatisticsData _dataWithMax(double max) {
     averageRating: 4.5,
     totalServices: 1,
     monthlyOffered: 1,
+    accountCreatedYear: 2026,
   );
 }
 

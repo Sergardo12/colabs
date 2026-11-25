@@ -44,9 +44,9 @@ class RatingSummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSizes.paddingXS),
                 Text(
-                  data.isEmpty
+                  data.averageRating == null
                       ? '—'
-                      : '${data.averageRating.toStringAsFixed(1)}/5',
+                      : '${data.averageRating!.toStringAsFixed(1)}/5',
                   style: TextStyle(
                     color: context.colors.textPrimary,
                     fontSize: AppSizes.fontXXL,

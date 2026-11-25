@@ -8,10 +8,11 @@ class StatisticsData extends Equatable {
   final StatisticsPeriod period;
   final List<BarDatum> bars;
   final ServicesRate rate;
-  final double averageRating;
+  final double? averageRating;
   final int totalServices;
   final int monthlyOffered;
   final MonthlyGoal? monthlyGoal;
+  final int accountCreatedYear;
 
   const StatisticsData({
     required this.period,
@@ -20,11 +21,36 @@ class StatisticsData extends Equatable {
     required this.averageRating,
     required this.totalServices,
     required this.monthlyOffered,
+    required this.accountCreatedYear,
     this.monthlyGoal,
   });
 
+  factory StatisticsData.fromJson(Map<String, dynamic> json) {
+    final goalJson = json['monthlyGoal'] as Map<String, dynamic>?;
+    final goal = goalJson == null ? null : MonthlyGoal.fromJson(goalJson);
+    final now = DateTime.now();
+    return StatisticsData(
+      period: statisticsPeriodFromValue(json['period'] as String? ?? 'days'),
+      bars: (json['bars'] as List<dynamic>? ?? const [])
+          .map((item) => BarDatum.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      rate: json['rate'] == null
+          ? ServicesRate.empty
+          : ServicesRate.fromJson(json['rate'] as Map<String, dynamic>),
+      averageRating: (json['averageRating'] as num?)?.toDouble(),
+      totalServices: (json['totalServices'] as num?)?.toInt() ?? 0,
+      monthlyOffered: goal?.offered ??
+          (json['monthlyOffered'] as num?)?.toInt() ??
+          0,
+      monthlyGoal: goal,
+      accountCreatedYear:
+          (json['accountCreatedYear'] as num?)?.toInt() ?? now.year,
+    );
+  }
+
   factory StatisticsData.empty(StatisticsPeriod period, {DateTime? now}) {
-    final year = (now ?? DateTime.now()).year;
+    final current = now ?? DateTime.now();
+    final year = current.year;
     final keys = switch (period) {
       StatisticsPeriod.days => List<int>.generate(7, (i) => i + 1),
       StatisticsPeriod.months => List<int>.generate(12, (i) => i + 1),
@@ -34,9 +60,10 @@ class StatisticsData extends Equatable {
       period: period,
       bars: keys.map((key) => BarDatum(key: key, value: 0)).toList(),
       rate: ServicesRate.empty,
-      averageRating: 0,
+      averageRating: null,
       totalServices: 0,
       monthlyOffered: 0,
+      accountCreatedYear: year,
     );
   }
 
@@ -81,19 +108,23 @@ class StatisticsData extends Equatable {
     List<BarDatum>? bars,
     ServicesRate? rate,
     double? averageRating,
+    bool clearAverageRating = false,
     int? totalServices,
     int? monthlyOffered,
     MonthlyGoal? monthlyGoal,
     bool clearGoal = false,
+    int? accountCreatedYear,
   }) {
     return StatisticsData(
       period: period ?? this.period,
       bars: bars ?? this.bars,
       rate: rate ?? this.rate,
-      averageRating: averageRating ?? this.averageRating,
+      averageRating:
+          clearAverageRating ? null : (averageRating ?? this.averageRating),
       totalServices: totalServices ?? this.totalServices,
       monthlyOffered: monthlyOffered ?? this.monthlyOffered,
       monthlyGoal: clearGoal ? null : (monthlyGoal ?? this.monthlyGoal),
+      accountCreatedYear: accountCreatedYear ?? this.accountCreatedYear,
     );
   }
 
@@ -108,5 +139,6 @@ class StatisticsData extends Equatable {
         totalServices,
         monthlyOffered,
         monthlyGoal,
+        accountCreatedYear,
       ];
 }

@@ -7,3 +7,10 @@ extension StatisticsPeriodX on StatisticsPeriod {
         StatisticsPeriod.years => 'years',
       };
 }
+
+StatisticsPeriod statisticsPeriodFromValue(String value) => switch (value) {
+      'days' => StatisticsPeriod.days,
+      'months' => StatisticsPeriod.months,
+      'years' => StatisticsPeriod.years,
+      _ => StatisticsPeriod.days,
+    };

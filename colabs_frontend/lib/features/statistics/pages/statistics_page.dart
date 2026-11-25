@@ -189,12 +189,7 @@ class _StatisticsContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                    child: MonthlyGoalCard(
-                      data: data,
-                      onSave: (amount) {
-                        bloc.add(MonthlyGoalSaveRequested(amount));
-                      },
-                    ),
+                    child: MonthlyGoalCard(data: data, bloc: bloc),
                   ),
                   const SizedBox(width: AppSizes.paddingM),
                   Expanded(child: ServicesRateCard(data: data)),

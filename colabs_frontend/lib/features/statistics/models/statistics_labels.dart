@@ -14,6 +14,16 @@ class StatisticsLabels {
     'Domingo',
   ];
 
+  static const List<String> weekdayInitials = <String>[
+    'L',
+    'M',
+    'X',
+    'J',
+    'V',
+    'S',
+    'D',
+  ];
+
   static const List<String> _months = <String>[
     'Ene',
     'Feb',

@@ -10,6 +10,18 @@ void main() {
       expect(StatisticsLabels.forBar(7, StatisticsPeriod.days), 'Domingo');
     });
 
+    test('usa iniciales para los días del eje', () {
+      expect(StatisticsLabels.weekdayInitials, <String>[
+        'L',
+        'M',
+        'X',
+        'J',
+        'V',
+        'S',
+        'D',
+      ]);
+    });
+
     test('etiqueta los meses del año en español', () {
       expect(StatisticsLabels.forBar(1, StatisticsPeriod.months), 'Ene');
       expect(StatisticsLabels.forBar(8, StatisticsPeriod.months), 'Ago');

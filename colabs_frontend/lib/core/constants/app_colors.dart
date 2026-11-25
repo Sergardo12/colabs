@@ -78,8 +78,8 @@ class AppChartColors {
 
   static const Color requested = Color(0xFFB026FF);
   static const Color offered = Color(0xFF1E41BC);
-  static const Color axis = Color(0xFF2F80ED);
-  static const Color gaugeProgress = Color.fromARGB(255, 255, 119, 0);
+  static const Color axis = Color.fromARGB(255, 255, 128, 0);
+  static const Color gaugeProgress = Color.fromARGB(255, 255, 128, 0);
   static const Color gaugeTrack = Color.fromARGB(255, 255, 255, 255);
   static const Color star = Color(0xFF2F80ED);
 }

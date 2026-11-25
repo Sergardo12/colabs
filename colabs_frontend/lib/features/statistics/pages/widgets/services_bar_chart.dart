@@ -5,6 +5,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../models/statistics_data.dart';
 import '../../models/statistics_labels.dart';
+import '../../models/statistics_period.dart';
 
 class ServicesBarChart extends StatelessWidget {
   final StatisticsData data;
@@ -14,19 +15,28 @@ class ServicesBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final interval = data.yAxisInterval.toDouble();
+    final yAxisMax = data.yAxisMax;
     final axisColor = AppChartColors.axis;
-    final rodWidth = (180 / data.bars.length)
-        .clamp(AppSizes.chartRodMinWidth, AppSizes.chartRodMaxWidth)
-        .toDouble();
 
     return SizedBox(
       height: AppSizes.chartHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final left = AppSizes.chartLeftInset;
+          final left = AppSizes.chartLeftInsetForMax(yAxisMax);
           final right = constraints.maxWidth - AppSizes.chartRightInset;
           final top = AppSizes.chartTopInset;
           final bottom = AppSizes.chartHeight - AppSizes.chartBottomInset;
+          final barsLeft =
+              left - AppSizes.chartLeftReserved + AppSizes.chartAxisStroke / 2;
+          final barsRightInset =
+              AppSizes.chartRightInset + AppSizes.chartAxisStroke / 2;
+          final barsBottomInset =
+              AppSizes.chartBottomInset - AppSizes.chartBottomReserved;
+          final rodWidth = AppSizes.chartRodWidth(
+            barCount: data.bars.length,
+            chartWidth: constraints.maxWidth,
+            yAxisMax: yAxisMax,
+          );
 
           return Stack(
             children: [
@@ -42,14 +52,14 @@ class ServicesBarChart extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: left,
-                right: AppSizes.chartRightInset,
+                left: barsLeft,
+                right: barsRightInset,
                 top: top,
-                bottom: AppSizes.chartBottomInset,
+                bottom: barsBottomInset,
                 child: BarChart(
                   BarChartData(
                     minY: 0,
-                    maxY: data.yAxisMax.toDouble(),
+                    maxY: yAxisMax.toDouble(),
                     alignment: BarChartAlignment.spaceAround,
                     barTouchData: const BarTouchData(enabled: false),
                     borderData: FlBorderData(show: false),
@@ -63,8 +73,9 @@ class ServicesBarChart extends StatelessWidget {
                           barRods: [
                             BarChartRodData(
                               toY: bar.value,
-                              color: AppChartColors.barPalette[
-                                  index % AppChartColors.barPalette.length],
+                              color:
+                                  AppChartColors.barPalette[index %
+                                      AppChartColors.barPalette.length],
                               width: rodWidth,
                               borderRadius: BorderRadius.vertical(
                                 top: Radius.circular(AppSizes.chartRodRadius),
@@ -90,6 +101,7 @@ class ServicesBarChart extends StatelessWidget {
                             if (value <= 0) return const SizedBox.shrink();
                             return SideTitleWidget(
                               meta: meta,
+                              space: AppSizes.chartTitleSpace,
                               child: Text(
                                 value.toInt().toString(),
                                 style: TextStyle(
@@ -111,16 +123,36 @@ class ServicesBarChart extends StatelessWidget {
                             if (index < 0 || index >= data.bars.length) {
                               return const SizedBox.shrink();
                             }
+                            final isDays = data.period == StatisticsPeriod.days;
+                            final label = isDays
+                                ? StatisticsLabels.weekdayInitials[(data
+                                              .bars[index]
+                                              .key -
+                                          1)
+                                      .clamp(
+                                        0,
+                                        StatisticsLabels
+                                                .weekdayInitials
+                                                .length -
+                                            1,
+                                      )]
+                                : StatisticsLabels.forBar(
+                                    data.bars[index].key,
+                                    data.period,
+                                  );
                             return SideTitleWidget(
                               meta: meta,
-                              angle: -0.9,
-                              fitInside:
-                                  SideTitleFitInsideData.fromTitleMeta(meta),
+                              space: AppSizes.chartTitleSpace,
+                              angle: isDays ? 0 : AppSizes.chartMonthLabelAngle,
+                              fitInside: isDays
+                                  ? SideTitleFitInsideData.disable()
+                                  : SideTitleFitInsideData.fromTitleMeta(
+                                      meta,
+                                      distanceFromEdge:
+                                          AppSizes.chartTitleSpace,
+                                    ),
                               child: Text(
-                                StatisticsLabels.forBar(
-                                  data.bars[index].key,
-                                  data.period,
-                                ),
+                                label,
                                 style: TextStyle(
                                   color: context.colors.textSecondary,
                                   fontSize: AppSizes.fontS,

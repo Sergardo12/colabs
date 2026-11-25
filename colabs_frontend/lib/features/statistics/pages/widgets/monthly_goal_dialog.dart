@@ -11,7 +11,7 @@ import '../../bloc/statistics_state.dart';
 Future<void> showMonthlyGoalDialog(
   BuildContext context, {
   required StatisticsBloc bloc,
-  required int amount,
+  int? amount,
 }) {
   return showDialog<void>(
     context: context,
@@ -21,13 +21,9 @@ Future<void> showMonthlyGoalDialog(
 
 class MonthlyGoalDialog extends StatefulWidget {
   final StatisticsBloc bloc;
-  final int amount;
+  final int? amount;
 
-  const MonthlyGoalDialog({
-    super.key,
-    required this.bloc,
-    required this.amount,
-  });
+  const MonthlyGoalDialog({super.key, required this.bloc, this.amount});
 
   @override
   State<MonthlyGoalDialog> createState() => _MonthlyGoalDialogState();
@@ -37,15 +33,13 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
   final _controller = TextEditingController();
   late int _initialRevision;
   String? _error;
+  bool _saveRequested = false;
 
   @override
   void initState() {
     super.initState();
-    _controller.text = widget.amount.toString();
+    _controller.text = widget.amount?.toString() ?? '';
     _initialRevision = widget.bloc.state.goalSaveRevision;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.bloc.add(MonthlyGoalSaveRequested(widget.amount));
-    });
   }
 
   @override
@@ -54,15 +48,17 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
     super.dispose();
   }
 
-  bool get _canSave {
-    final text = _controller.text;
-    return text.isNotEmpty && int.tryParse(text) != null && int.parse(text) > 0;
-  }
+  bool _isValidAmount(int? amount) =>
+      amount != null && amount >= 1 && amount <= 999;
+
+  bool get _canSave => _isValidAmount(int.tryParse(_controller.text));
 
   void _save() {
-    final amount = int.tryParse(_controller.text);
-    if (amount == null || amount <= 0) return;
+    final parsedAmount = int.tryParse(_controller.text);
+    if (!_isValidAmount(parsedAmount)) return;
+    final amount = parsedAmount!;
     setState(() => _error = null);
+    _saveRequested = true;
     _initialRevision = widget.bloc.state.goalSaveRevision;
     widget.bloc.add(MonthlyGoalSaveRequested(amount));
   }
@@ -72,7 +68,8 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
     return BlocConsumer<StatisticsBloc, StatisticsState>(
       bloc: widget.bloc,
       listener: (context, state) {
-        if (state.goalSaveRevision > _initialRevision &&
+        if (_saveRequested &&
+            state.goalSaveRevision > _initialRevision &&
             !state.goalSaving &&
             state.goalError == null) {
           Navigator.of(context).pop();
@@ -165,7 +162,9 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
                 onPressed: _canSave && !saving ? _save : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
-                  minimumSize: const Size.fromHeight(AppSizes.inputMedianHeight),
+                  minimumSize: const Size.fromHeight(
+                    AppSizes.inputMedianHeight,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppSizes.radiusM),
                   ),
@@ -175,8 +174,9 @@ class _MonthlyGoalDialogState extends State<MonthlyGoalDialog> {
                         dimension: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(context.colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            context.colors.white,
+                          ),
                         ),
                       )
                     : const Text(AppStrings.save),

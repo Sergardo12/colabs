@@ -11,11 +11,7 @@ class MonthlyGoalCard extends StatelessWidget {
   final StatisticsData data;
   final StatisticsBloc bloc;
 
-  const MonthlyGoalCard({
-    super.key,
-    required this.data,
-    required this.bloc,
-  });
+  const MonthlyGoalCard({super.key, required this.data, required this.bloc});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +34,7 @@ class MonthlyGoalCard extends StatelessWidget {
 Future<void> _openGoalDialog(
   BuildContext context,
   StatisticsBloc bloc,
-  int amount,
+  int? amount,
 ) async {
   await showMonthlyGoalDialog(context, bloc: bloc, amount: amount);
 }
@@ -47,10 +43,7 @@ class _GoalButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
 
-  const _GoalButton({
-    required this.label,
-    required this.onPressed,
-  });
+  const _GoalButton({required this.label, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +107,7 @@ class _NoGoalContent extends StatelessWidget {
         const SizedBox(height: AppSizes.paddingM),
         _GoalButton(
           label: AppStrings.markGoal,
-          onPressed: () => _openGoalDialog(context, bloc, 1),
+          onPressed: () => _openGoalDialog(context, bloc, null),
         ),
       ],
     );
@@ -125,10 +118,7 @@ class _GoalContent extends StatelessWidget {
   final StatisticsData data;
   final StatisticsBloc bloc;
 
-  const _GoalContent({
-    required this.data,
-    required this.bloc,
-  });
+  const _GoalContent({required this.data, required this.bloc});
 
   @override
   Widget build(BuildContext context) {

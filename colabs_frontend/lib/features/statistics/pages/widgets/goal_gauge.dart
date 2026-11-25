@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 
+double goalGaugeSweepAngle(num percent) {
+  final clamped = percent.clamp(0, 100).toDouble();
+  return math.pi * clamped / 100;
+}
+
 class GoalGauge extends StatefulWidget {
   final int percent;
 
@@ -25,7 +30,10 @@ class _GoalGaugeState extends State<GoalGauge>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
     _controller.forward();
   }
 
@@ -50,13 +58,14 @@ class _GoalGaugeState extends State<GoalGauge>
       child: AnimatedBuilder(
         animation: _animation,
         builder: (context, _) {
-          final percent = (_animation.value * widget.percent).round();
+          final animatedPercent = _animation.value * widget.percent;
+          final percent = animatedPercent.round();
           return Stack(
             alignment: Alignment.bottomCenter,
             children: [
               Positioned.fill(
                 child: CustomPaint(
-                  painter: _GoalGaugePainter(progress: _animation.value),
+                  painter: _GoalGaugePainter(percent: animatedPercent),
                 ),
               ),
               Positioned(
@@ -79,9 +88,9 @@ class _GoalGaugeState extends State<GoalGauge>
 }
 
 class _GoalGaugePainter extends CustomPainter {
-  final double progress;
+  final double percent;
 
-  const _GoalGaugePainter({required this.progress});
+  const _GoalGaugePainter({required this.percent});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -96,7 +105,7 @@ class _GoalGaugePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
-      ..color = AppChartColors.gaugeTrack.withValues(alpha: 0.35);
+      ..color = AppChartColors.gaugeTrack;
 
     final progressPaint = Paint()
       ..style = PaintingStyle.stroke
@@ -105,12 +114,13 @@ class _GoalGaugePainter extends CustomPainter {
       ..color = AppChartColors.gaugeProgress;
 
     canvas.drawArc(rect, math.pi, math.pi, false, trackPaint);
-    if (progress > 0) {
-      canvas.drawArc(rect, math.pi, math.pi * progress, false, progressPaint);
+    final sweepAngle = goalGaugeSweepAngle(percent);
+    if (sweepAngle > 0) {
+      canvas.drawArc(rect, math.pi, sweepAngle, false, progressPaint);
     }
   }
 
   @override
   bool shouldRepaint(covariant _GoalGaugePainter oldDelegate) =>
-      oldDelegate.progress != progress;
+      oldDelegate.percent != percent;
 }

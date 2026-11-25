@@ -22,6 +22,7 @@ import { SuggestionModule } from './modules/suggestion/suggestion.module';
 import { SupportModule } from './modules/support/support.module';
 import storageB2Config from './config/storage.config';
 import { StorageModule } from './modules/storage/storage.module';
+import { StatisticsModule } from './modules/statistics/statistics.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { StorageModule } from './modules/storage/storage.module';
     SuggestionModule,
     SupportModule,
     StorageModule,
+    StatisticsModule,
   ],
 })
 export class AppModule {}

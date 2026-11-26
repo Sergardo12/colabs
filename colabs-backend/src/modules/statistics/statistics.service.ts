@@ -4,7 +4,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { User } from '../users/entities/user.entity';
 import { ServiceRequest } from '../service-request/entities/service-request.entity';
-import { CommentRequest } from '../service-request/entities/comment-request.entity';
+import { CommentRequestService } from '../comment-request/comment-request.service';
 import { ProposalStatus } from '../../common/enums/proposal-status.enum';
 import { ServiceRequestStatus } from '../../common/enums/service-request-status.enum';
 import { MonthlyGoal } from './entities/monthly-goal.entity';
@@ -58,8 +58,7 @@ export class StatisticsService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(ServiceRequest)
     private readonly serviceRequestRepository: Repository<ServiceRequest>,
-    @InjectRepository(CommentRequest)
-    private readonly commentRequestRepository: Repository<CommentRequest>,
+    private readonly commentRequestService: CommentRequestService,
   ) {}
 
   async getServicesOffered(
@@ -122,34 +121,13 @@ export class StatisticsService {
 
   async getAverageRating(
     profileColab: ProfileColab,
+
   ): Promise<AverageRatingResult> {
-    const query = this.commentRequestRepository
-      .createQueryBuilder('cr')
-      .select(['cr.id', 'cr.rating'])
-      .distinct(true)
-      .innerJoin('cr.serviceRequest', 'sr')
-      .leftJoin(
-        'sr.proposals',
-        'acceptedProposal',
-        'acceptedProposal.status = :acceptedStatus',
-      )
-      .where('cr.status = :active', { active: 'active' })
-      .andWhere('sr.status = :completed', {
-        completed: ServiceRequestStatus.COMPLETED,
-      })
-      .andWhere('sr.completionDate IS NOT NULL')
-      .andWhere(this.winnerCondition())
-      .setParameters({
-        profileColabId: profileColab.id,
-        acceptedStatus: ProposalStatus.ACCEPTED,
-      });
+    const { averageRating, totalReviews } =
+      await this.commentRequestService.findByProfileColab(profileColab.id);
 
-    const comments = this.uniqueById(await query.getMany());
-    if (comments.length === 0) return { averageRating: null };
-
-    const sum = comments.reduce((total, comment) => total + comment.rating, 0);
     return {
-      averageRating: Math.round((sum / comments.length) * 10) / 10,
+      averageRating: totalReviews === 0 ? null : averageRating,
     };
   }
 

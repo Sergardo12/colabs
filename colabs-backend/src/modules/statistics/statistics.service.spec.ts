@@ -27,11 +27,10 @@ describe('StatisticsService', () => {
   let monthlyGoalRepository: any;
   let userRepository: any;
   let serviceRequestRepository: any;
-  let commentRequestRepository: any;
+  let commentRequestService: any;
   let service: StatisticsService;
   let srQuery: QueryBuilderMock;
   let userQuery: QueryBuilderMock;
-  let commentQuery: QueryBuilderMock;
 
   beforeEach(() => {
     monthlyGoalRepository = {
@@ -41,20 +40,18 @@ describe('StatisticsService', () => {
     };
     userRepository = { createQueryBuilder: jest.fn() };
     serviceRequestRepository = { createQueryBuilder: jest.fn() };
-    commentRequestRepository = { createQueryBuilder: jest.fn() };
+    commentRequestService = { findByProfileColab: jest.fn() };
 
     srQuery = new QueryBuilderMock();
     userQuery = new QueryBuilderMock();
-    commentQuery = new QueryBuilderMock();
     userRepository.createQueryBuilder.mockReturnValue(userQuery);
     serviceRequestRepository.createQueryBuilder.mockReturnValue(srQuery);
-    commentRequestRepository.createQueryBuilder.mockReturnValue(commentQuery);
 
     service = new StatisticsService(
       monthlyGoalRepository,
       userRepository,
       serviceRequestRepository,
-      commentRequestRepository,
+      commentRequestService,
     );
     jest.spyOn(service as any, 'now').mockReturnValue(utc(2026, 11, 22));
     userQuery.getOne.mockResolvedValue({ registrationDate: utc(2024, 5, 10) });
@@ -135,24 +132,28 @@ describe('StatisticsService', () => {
     );
   });
 
-  it('devuelve null de promedio sin calificaciones y redondea cuando hay', async () => {
-    commentQuery.getMany.mockResolvedValueOnce([]);
-    await expect(service.getAverageRating(profile)).resolves.toEqual({
-      averageRating: null,
+  it('usa el mismo promedio del perfil publico y devuelve null sin resenas', async () => {
+    commentRequestService.findByProfileColab.mockResolvedValueOnce({
+      averageRating: 4.7,
+      totalReviews: 3,
+      comments: [],
     });
 
-    const conditions = commentQuery.andWhere.mock.calls
-      .map(([sql]) => sql)
-      .join(' ');
-    expect(conditions).toContain('sr.completionDate IS NOT NULL');
-
-    commentQuery.getMany.mockResolvedValueOnce([
-      { id: 'c1', rating: 5 },
-      { id: 'c1', rating: 5 },
-      { id: 'c2', rating: 4 },
-    ]);
     await expect(service.getAverageRating(profile)).resolves.toEqual({
-      averageRating: 4.5,
+      averageRating: 4.7,
+    });
+    expect(commentRequestService.findByProfileColab).toHaveBeenCalledWith(
+      profile.id,
+    );
+
+    commentRequestService.findByProfileColab.mockResolvedValueOnce({
+      averageRating: 0,
+      totalReviews: 0,
+      comments: [],
+    });
+
+    await expect(service.getAverageRating(profile)).resolves.toEqual({
+      averageRating: null,
     });
   });
 

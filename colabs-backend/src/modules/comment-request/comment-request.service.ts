@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { ServiceRequest } from '../service-request/entities/service-request.entity';
 import { CreateCommentRequestDto } from './dto/create-comment-request.dto';
 import { ServiceRequestStatus } from '../../common/enums/service-request-status.enum';
+import { ProposalStatus } from '../../common/enums/proposal-status.enum';
 import { CommentRequest } from '../service-request/entities/comment-request.entity';
 
 @Injectable()
@@ -74,20 +75,53 @@ export class CommentRequestService {
   }
 
   async findByProfileColab(profileColabId: string) {
-    // Busca todas las calificaciones de los servicios del colaborador
     const comments = await this.commentRequestRepository
       .createQueryBuilder('cr')
       .innerJoinAndSelect('cr.serviceRequest', 'sr')
       .innerJoinAndSelect('sr.occupation', 'occupation')
       .innerJoinAndSelect('cr.user', 'user')
-      .where(
-        'sr.occupationId IN (SELECT occupation_id FROM profile_colab_occupations WHERE profile_colab_id = :profileColabId)',
-        { profileColabId },
+      .where('cr.status = :active', { active: 'active' })
+      .andWhere('sr.status = :completed', {
+        completed: ServiceRequestStatus.COMPLETED,
+      })
+      .andWhere(
+        `(
+          sr.profile_colab_id = :profileColabId
+          OR (
+            sr.profile_colab_id IS NULL
+            AND EXISTS (
+              SELECT 1
+              FROM proposals acceptedProposal
+              WHERE acceptedProposal.service_request_id = sr.id
+                AND acceptedProposal.status = :acceptedStatus
+                AND acceptedProposal.profile_colab_id = :profileColabId
+            )
+          )
+          OR (
+            sr.profile_colab_id IS NULL
+            AND NOT EXISTS (
+              SELECT 1
+              FROM proposals anyAcceptedProposal
+              WHERE anyAcceptedProposal.service_request_id = sr.id
+                AND anyAcceptedProposal.status = :acceptedStatus
+            )
+            AND EXISTS (
+              SELECT 1
+              FROM conversations flowBConversation
+              WHERE flowBConversation.service_request_id = sr.id
+                AND flowBConversation.post_id IS NOT NULL
+                AND flowBConversation.profile_colab_id = :profileColabId
+            )
+          )
+        )`,
       )
+      .setParameters({
+        profileColabId,
+        acceptedStatus: ProposalStatus.ACCEPTED,
+      })
       .orderBy('cr.creationDate', 'DESC')
       .getMany();
 
-    // Calcular rating promedio
     const averageRating =
       comments.length > 0
         ? comments.reduce((sum, c) => sum + (c.rating ?? 0), 0) /

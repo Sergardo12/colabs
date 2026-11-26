@@ -131,19 +131,19 @@ class _GoalContent extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             color: context.colors.textPrimary,
-            fontSize: AppSizes.fontM,
+            fontSize: AppSizes.fontL,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: AppSizes.paddingS),
+        const SizedBox(height: 0),
         GoalGauge(percent: data.goalPercent),
-        const SizedBox(height: AppSizes.paddingS),
+        const SizedBox(height: 20),
         Text(
           AppStrings.goalProgressSummary(data.monthlyOffered, goal.amount),
           textAlign: TextAlign.center,
           style: TextStyle(
             color: context.colors.textSecondary,
-            fontSize: AppSizes.fontM,
+            fontSize: AppSizes.fontS,
           ),
         ),
         const SizedBox(height: AppSizes.paddingM),

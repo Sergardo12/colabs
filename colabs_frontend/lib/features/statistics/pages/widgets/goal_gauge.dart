@@ -74,7 +74,7 @@ class _GoalGaugeState extends State<GoalGauge>
                   '$percent%',
                   style: TextStyle(
                     color: context.colors.textPrimary,
-                    fontSize: AppSizes.fontXXL,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

@@ -14,7 +14,7 @@ class ServicesRateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.paddingM),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusL),
@@ -29,11 +29,11 @@ class ServicesRateCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: context.colors.textPrimary,
-              fontSize: AppSizes.fontXL,
+              fontSize: AppSizes.fontL,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: AppSizes.paddingS),
+          const SizedBox(height: AppSizes.paddingL),
           if (data.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingL),
@@ -52,7 +52,7 @@ class ServicesRateCard extends StatelessWidget {
             Container(
               width: AppSizes.pieSize,
               height: AppSizes.pieSize,
-              padding: const EdgeInsets.all(3),
+              padding: const EdgeInsets.all(1),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: context.colors.white,
@@ -70,7 +70,7 @@ class ServicesRateCard extends StatelessWidget {
                     ),
                     PieChartSectionData(
                       value: data.rate.offered.toDouble(),
-                      color: AppChartColors.offered,
+                      color: const Color.fromARGB(255, 255, 136, 0),
                       radius: AppSizes.pieRadius,
                       showTitle: false,
                     ),
@@ -90,7 +90,7 @@ class ServicesRateCard extends StatelessWidget {
                   label: AppStrings.requestedLegend,
                 ),
                 _Legend(
-                  color: AppChartColors.offered,
+                  color: Color.fromARGB(255, 255, 136, 0),
                   label: AppStrings.offeredLegend,
                 ),
               ],

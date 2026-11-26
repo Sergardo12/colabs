@@ -53,7 +53,7 @@ class AppSizes {
   static const double chartRodMaxWidth = 30.0;
   static const double chartRodGap = 2.0;
   static const double chartRodRadius = 4.0;
-  static const double pieSize = 116.0;
+  static const double pieSize = 110.0;
   static const double pieRadius = 52.0;
   static const double goalImageSize = 90.0;
 

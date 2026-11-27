@@ -207,7 +207,8 @@ colabs/
 │   │   │   ├── notification/
 │   │   │   ├── report/
 │   │   │   ├── suggestion/
-│   │   │   └── support/
+│   │   │   ├── support/
+│   │   │   ├── statistics/
 │   │   │   └── storage/         → URLs prefirmadas para Backblaze B2
 │   │   ├── common/          → código reutilizable
 │   │   │   ├── decorators/
@@ -264,7 +265,7 @@ colabs_frontend/
 │ ├── app.dart → MaterialApp, tema y rutas
 │ ├── core/ → código transversal
 │ │ ├── constants/ → colores, textos, tamaños
-│ │ ├── network/ → cliente Dio (sin interceptors aún)
+│ │ ├── network/ → cliente Dio + AuthInterceptor
 │ │ ├── routes/ → 8 rutas nombradas en app_router.dart
 │ │ ├── storage/ → pendiente: wrapper de secure storage
 │ │ └── theme/ → tema global Material
@@ -275,6 +276,7 @@ colabs_frontend/
 │ │ ├── profile/ → drawer, perfil, become colab, edit colab
 │ │ ├── search/ → búsqueda de colaboradores con paginación
 │ │ ├── favorites/ → favoritos del demandante (bloc, data) + posts likeados (PostFavoritesBloc)
+│ │ ├── statistics/ → estadísticas de servicios, tasa, promedio y meta mensual
 │ │ ├── feed/ → pendiente
 │ │ ├── chat/ → pendiente
 │ │ └── service_request/ → pendiente
@@ -776,6 +778,8 @@ google_sign_in: ^6.2.2
 - **PostgreSQL en contenedor Docker** para desarrollo. Se evalúa managed database en producción.
 - **Tracking visual de ruta** — se implementa en versión posterior. Primera versión solo muestra estados.
 - **Panel de administración** — se construye después de la app móvil.
+- **Estadísticas de servicios** — un “servicio ofrecido” es un `service_request` con estado `completed`, `completion_date` no nulo y colaborador ganador (`profile_colab_id` o propuesta aceptada). Esta definición aplica solo a barras, total y tasa. Los cortes de fecha se calculan en UTC. El Flujo B queda excluido de esas tres métricas por ahora; hay un `TODO` en `statistics.service.ts`.
+- **Reseñas y promedio** — una reseña pertenece al colaborador que hizo el servicio: `comment_request` activa, `service_request` completado, ganador por `sr.profile_colab_id` o propuesta aceptada; en el Flujo B, si no hay propuesta aceptada, por la conversación vinculada con `post_id`. El promedio de Estadísticas usa la misma fuente que el perfil público y no exige `completion_date`.
 ---
  
 ## Estado del proyecto
@@ -794,6 +798,7 @@ google_sign_in: ^6.2.2
 - [x] Módulo de posts y feed
 - [x] Módulo de conversaciones y mensajes
 - [x] Módulo de service request y propuestas
+- [x] Módulo de estadísticas (servicios, tasa, promedio y meta mensual)
 - [x] Módulo de almacenamiento (Backblaze B2, URLs prefirmadas)
 - [ ] Módulo de interacccion, rachas y puntuacion
 - [ ] Módulo de suscripcion
@@ -836,6 +841,7 @@ google_sign_in: ^6.2.2
 - [ ] Historial de servicios
 - [x] Favoritos
 - [x] Posts favoritos — like en feed y sección "Publicaciones" en tab Favoritos
+- [x] Vista de estadísticas (barras, total, tasa, promedio y meta mensual)
 - [ ] Notificaciones
 - [x] Vista pública de colaborador
 - [ ] Subida de imágenes (BackBlaze B2)

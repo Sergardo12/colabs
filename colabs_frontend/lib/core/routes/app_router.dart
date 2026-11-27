@@ -17,6 +17,7 @@ import '../../features/chat/models/conversation_model.dart';
 import '../../features/home/models/post_model.dart';
 import '../../features/service_request/pages/request_map_page.dart';
 import '../../features/favorites/pages/favorites_page.dart';
+import '../../features/statistics/pages/statistics_page.dart';
 import '../../features/notifications/pages/notifications_page.dart';
 import '../../features/notifications/models/notification_model.dart';
 import '../../features/service_request/pages/service_request_detail_page.dart';
@@ -46,6 +47,7 @@ class AppRouter {
   static const String conversations = '/conversations';
   static const String requestMap = '/request-map';
   static const String favorites = '/favorites';
+  static const String statistics = '/statistics';
   static const String notifications = '/notifications';
   static const String serviceRequestDetail = '/service-request-detail';
   static const String myRequestDetail      = '/my-request-detail';
@@ -99,6 +101,8 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const StandaloneFavoritesPage(),
         );
+      case statistics:
+        return MaterialPageRoute(builder: (_) => const StatisticsPage());
       case notifications:
         return MaterialPageRoute(builder: (_) => const NotificationsPage());
       case serviceRequestDetail:

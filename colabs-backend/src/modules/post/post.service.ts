@@ -3,14 +3,16 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm'; // 1. Decorador
+import { Repository } from 'typeorm';  
 import { Post } from './entities/post.entity';
 import { PostLike } from './entities/post-like.entity';
 import { PostComment } from './entities/post-comment.entity';
 import { ProfileColab } from '../profile-colab/entities/profile-colab.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreatePostCommentDto } from './dto/create-post-comment.dto';
+import { StorageService } from '../storage/storage.service';
+import { UploadKind } from '../storage/dto/presign-upload.dto';
 
 @Injectable()
 export class PostService {
@@ -26,6 +28,8 @@ export class PostService {
 
     @InjectRepository(ProfileColab)
     private profileColabRepository: Repository<ProfileColab>,
+
+    private storageService: StorageService,
   ) {}
 
   async create(userId: string, dto: CreatePostDto) {
@@ -38,6 +42,12 @@ export class PostService {
         'Solo los colaboradores pueden publicar posts',
       );
     }
+    // Validamos que las URLs de media sean propiedad del usuario y sean públicas
+    await this.storageService.assertOwnedPublicUploads(
+      userId,
+      UploadKind.POST,
+      dto.media,
+    );
 
     const post = this.postRepository.create({
       profileColabId: profile.id,

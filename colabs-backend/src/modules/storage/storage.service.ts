@@ -1,13 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,   BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
 import { PresignUploadDto, UploadKind } from './dto/presign-upload.dto';
+
 
 const EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -66,5 +63,57 @@ export class StorageService {
       Key: key,
     });
     return getSignedUrl(this.s3, command, { expiresIn: 300 });
+  }
+
+    /**
+   * Verifica que cada URL sea una imagen PÚBLICA subida por este usuario
+   * y que exista realmente en B2. Lanza excepción si algo no cuadra.
+   * Reutilizable para posts, avatares, y en el futuro videos.
+   */
+  async assertOwnedPublicUploads(
+    userId: string,
+    kind: UploadKind,
+    urls: string[],
+  ): Promise<void> {
+    if (kind === UploadKind.DNI) {
+      throw new BadRequestException('Este tipo de archivo no es público');
+    }
+
+    const prefix = `${this.publicBaseUrl}/${kind}/${userId}/`;
+    const fileNameRegex = new RegExp(
+      `^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(${Object.values(EXT).join('|')})$`,
+      'i',
+    );
+
+    const keys = urls.map((url) => {
+      if (!url.startsWith(prefix)) {
+        throw new BadRequestException('Una de las imágenes no es válida');
+      }
+      const fileName = url.slice(prefix.length);
+      if (!fileNameRegex.test(fileName)) {
+        throw new BadRequestException('Una de las imágenes no es válida');
+      }
+      return `${kind}/${userId}/${fileName}`;
+    });
+
+    await Promise.all(keys.map((key) => this.assertObjectExists(key)));
+  }
+
+  private async assertObjectExists(key: string): Promise<void> {
+    try {
+      await this.s3.send(
+        new HeadObjectCommand({ Bucket: this.publicBucket, Key: key }),
+      );
+    } catch (err: any) {
+      if (err?.name === 'NotFound' || err?.$metadata?.httpStatusCode === 404) {
+        throw new BadRequestException(
+          'Una de las imágenes no se encontró, vuelve a subirla',
+        );
+      }
+      // Cualquier otro error (red, permisos, B2 caído) no es culpa del usuario
+      throw new ServiceUnavailableException(
+        'No se pudo verificar la imagen, intenta de nuevo',
+      );
+    }
   }
 }

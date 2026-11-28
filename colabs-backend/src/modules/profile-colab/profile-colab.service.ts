@@ -63,7 +63,8 @@ export class ProfileColabService {
       occupations,
     });
 
-    return this.profileColabRepository.save(profileColab);
+    await this.profileColabRepository.save(profileColab);
+    return this.getMyProfile(userId);
   }
 
   async search(
@@ -193,7 +194,9 @@ export class ProfileColabService {
       certifications: dto.certifications ?? profile.certifications,
     });
 
-    return this.profileColabRepository.save(profile);
+    await this.profileColabRepository.save(profile);
+
+    return this.getMyProfile(userId);
   }
 
   async updateLocation(userId: string, lat: number, lng: number) {

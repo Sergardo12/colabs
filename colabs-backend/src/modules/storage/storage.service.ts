@@ -47,7 +47,12 @@ export class StorageService {
       ContentLength: dto.size,
     });
 
-    const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 300 });
+    const uploadUrl = await getSignedUrl(this.s3, command, {
+      expiresIn: 300,
+      // Firma también el Content-Type: el PUT debe usar exactamente el tipo
+      // declarado en el presign, o B2 lo rechaza (evita subir text/html como .jpg)
+      signableHeaders: new Set(['content-type']),
+    });
 
     return {
       uploadUrl,

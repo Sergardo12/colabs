@@ -26,13 +26,13 @@ export class ProfileColab extends BaseEntity {
   @Column({ nullable: true })
   experience?: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, select: false })
   dni?: string;
 
   @Column({ name: 'verification_status', default: 'pending' })
   verificationStatus!: string;
 
-  @Column({ name: 'dni_image', nullable: true })
+  @Column({ name: 'dni_image', nullable: true, select: false })
   dniImage?: string;
 
   @Column({ nullable: true })
